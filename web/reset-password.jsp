@@ -4,9 +4,9 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>FreshStore - Đặt lại mật khẩu</title>
+        <title>GreenStock - Đặt lại mật khẩu</title>
         <style>
-            /* ===== CSS GIỐNG LOGIN ===== */
+         
             * {
                 margin:0;
                 padding:0;
