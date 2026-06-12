@@ -25,7 +25,9 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
         
-        request.getRequestDispatcher("/change-password.jsp").forward(request, response);
+        Authen user = (Authen) session.getAttribute("user");
+        String jspPath = "Shop Owner".equals(user.getRole()) ? "/change_password_shop_owner.jsp" : "/change-password.jsp";
+        request.getRequestDispatcher(jspPath).forward(request, response);
     }
 
     @Override
@@ -41,6 +43,7 @@ public class ChangePasswordServlet extends HttpServlet {
         }
         
         Authen user = (Authen) session.getAttribute("user");
+        String jspPath = "Shop Owner".equals(user.getRole()) ? "/change_password_shop_owner.jsp" : "/change-password.jsp";
         
         String oldPassword = request.getParameter("oldPassword");
         String newPassword = request.getParameter("newPassword");
@@ -51,19 +54,19 @@ public class ChangePasswordServlet extends HttpServlet {
             confirmPassword == null || confirmPassword.trim().isEmpty()) {
             
             request.setAttribute("error", "Vui lòng nhập đầy đủ thông tin!");
-            request.getRequestDispatcher("/change-password.jsp").forward(request, response);
+            request.getRequestDispatcher(jspPath).forward(request, response);
             return;
         }
         
         if (!newPassword.equals(confirmPassword)) {
             request.setAttribute("error", "Mật khẩu xác nhận không khớp!");
-            request.getRequestDispatcher("/change-password.jsp").forward(request, response);
+            request.getRequestDispatcher(jspPath).forward(request, response);
             return;
         }
         
         if (newPassword.equals(oldPassword)) {
             request.setAttribute("error", "Mật khẩu mới không được trùng với mật khẩu cũ!");
-            request.getRequestDispatcher("/change-password.jsp").forward(request, response);
+            request.getRequestDispatcher(jspPath).forward(request, response);
             return;
         }
         
@@ -71,13 +74,17 @@ public class ChangePasswordServlet extends HttpServlet {
         boolean isOldPasswordCorrect = authenDAO.checkOldPassword(user.getId(), oldPassword);
         if (!isOldPasswordCorrect) {
             request.setAttribute("error", "Mật khẩu cũ không chính xác!");
-            request.getRequestDispatcher("/change-password.jsp").forward(request, response);
+            request.getRequestDispatcher(jspPath).forward(request, response);
             return;
         }
         
         // Cập nhật mật khẩu mới
         authenDAO.updatePassword(user.getId(), newPassword);
         
-        response.sendRedirect(request.getContextPath() + "/profile?success=password");
+        if ("Shop Owner".equals(user.getRole())) {
+            response.sendRedirect(request.getContextPath() + "/shop-owner-profile?success=password");
+        } else {
+            response.sendRedirect(request.getContextPath() + "/profile?success=password");
+        }
     }
 }

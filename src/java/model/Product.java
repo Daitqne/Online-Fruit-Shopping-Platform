@@ -7,9 +7,14 @@ public class Product {
     private int id;
     private String name;
     private double price;
+    private double discountPrice;
+    private String unit;
+    private String origin;
+    private String status;
     private String image;
     private String description;
     private String category;
+    private int categoryId;
     private boolean isFeatured;
 
     public Product() {
@@ -23,6 +28,36 @@ public class Product {
         this.description = description;
         this.category = category;
         this.isFeatured = isFeatured;
+        this.status = isFeatured ? "Featured" : "Available";
+    }
+
+    public Product(int id, String name, double price, double discountPrice, String unit, String origin, String status, String image, String description, String category) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.discountPrice = discountPrice;
+        this.unit = unit;
+        this.origin = origin;
+        this.status = status;
+        this.image = image;
+        this.description = description;
+        this.category = category;
+        this.isFeatured = "Featured".equalsIgnoreCase(status);
+    }
+
+    public Product(int id, String name, double price, double discountPrice, String unit, String origin, String status, String image, String description, String category, int categoryId) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.discountPrice = discountPrice;
+        this.unit = unit;
+        this.origin = origin;
+        this.status = status;
+        this.image = image;
+        this.description = description;
+        this.category = category;
+        this.categoryId = categoryId;
+        this.isFeatured = "Featured".equalsIgnoreCase(status);
     }
 
     public int getId() {
@@ -47,6 +82,39 @@ public class Product {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public double getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(double discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+        this.isFeatured = "Featured".equalsIgnoreCase(status);
     }
 
     public String getImage() {
@@ -74,11 +142,16 @@ public class Product {
     }
 
     public boolean isFeatured() {
-        return isFeatured;
+        return "Featured".equalsIgnoreCase(status) || isFeatured;
     }
 
     public void setFeatured(boolean isFeatured) {
         this.isFeatured = isFeatured;
+        if (isFeatured) {
+            this.status = "Featured";
+        } else if (this.status == null || "Featured".equalsIgnoreCase(this.status)) {
+            this.status = "Available";
+        }
     }
 
     @Override
@@ -87,9 +160,14 @@ public class Product {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", price=" + price +
+                ", discountPrice=" + discountPrice +
+                ", unit='" + unit + '\'' +
+                ", origin='" + origin + '\'' +
+                ", status='" + status + '\'' +
                 ", image='" + image + '\'' +
                 ", category='" + category + '\'' +
-                ", isFeatured=" + isFeatured +
+                ", isFeatured=" + isFeatured() +
                 '}';
     }
 }
+

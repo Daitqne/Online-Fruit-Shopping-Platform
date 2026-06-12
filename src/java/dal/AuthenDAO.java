@@ -16,6 +16,7 @@ public class AuthenDAO extends DBContext{
         String sql = """
             SELECT u.user_id, u.username, u.password, u.status,
                    ui.full_name, ui.phone, ui.email,
+                   ui.avatar, ui.gender, ui.dob, ui.address,
                    r.role_id, r.role_name
             FROM Users u
             JOIN UserInfo ui ON u.user_id = ui.user_id
@@ -46,6 +47,11 @@ public class AuthenDAO extends DBContext{
                 a.setFullName(rs.getString("full_name"));
                 a.setPhone(rs.getString("phone"));
                 a.setEmail(rs.getString("email"));
+                a.setAvatar(rs.getString("avatar"));
+                a.setGender(rs.getString("gender"));
+                java.sql.Date dob = rs.getDate("dob");
+                a.setDob(dob != null ? dob.toString() : null);
+                a.setAddress(rs.getString("address"));
 
                 a.setRoleId(rs.getInt("role_id"));
                 a.setRole(rs.getString("role_name"));
