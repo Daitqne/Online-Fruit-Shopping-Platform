@@ -6,7 +6,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Hồ sơ cá nhân - GreenStock</title>
+        <title>Đổi mật khẩu - GreenStock</title>
 
         <!-- Google Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -376,10 +376,71 @@
                 color: var(--slate-300);
             }
 
-            .alert-success {
-                background-color: #DEF7EC;
-                border: 1px solid #31C48D;
-                color: #03543F;
+            /* --- FORM CONTROLS --- */
+            .form-group {
+                margin-bottom: 1.25rem;
+            }
+            .form-group label {
+                display: block;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                color: var(--slate-600);
+                font-size: 0.9rem;
+            }
+            .form-control {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border-radius: 12px;
+                border: 1px solid var(--slate-300);
+                font-family: var(--font-body);
+                font-size: 0.95rem;
+                outline: none;
+                transition: all 0.3s ease;
+                background-color: var(--light);
+            }
+            .form-control:focus {
+                border-color: var(--primary);
+                background-color: var(--white);
+                box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+            }
+            .btn-save {
+                background-color: var(--primary);
+                color: var(--white);
+                border: none;
+                padding: 0.8rem 2rem;
+                border-radius: 12px;
+                font-family: var(--font-body);
+                font-weight: 600;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+            }
+            .btn-save:hover {
+                background-color: var(--primary-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+            }
+            .btn-cancel {
+                background-color: var(--slate-200);
+                color: var(--slate-600);
+                text-decoration: none;
+                padding: 0.8rem 2rem;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                display: inline-block;
+                text-align: center;
+            }
+            .btn-cancel:hover {
+                background-color: var(--slate-300);
+                color: var(--dark);
+            }
+            .alert-danger {
+                background-color: #FDE8E8;
+                border: 1px solid #F8B4B4;
+                color: #9B1C1C;
                 padding: 1rem;
                 border-radius: 16px;
                 margin-bottom: 1.5rem;
@@ -472,103 +533,54 @@
                             Thành viên từ 2026
                         </p>
 
-                        <a href="edit-profile" class="btn-edit">
-                            <i class="fa-solid fa-pen"></i>
-                            Chỉnh sửa hồ sơ
+                        <a href="profile" class="btn-edit" style="background-color: var(--slate-200); color: var(--slate-600);">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Quay lại hồ sơ
                         </a>
                     </div>
                 </div>
 
-                <!-- RIGHT CONTENT -->
+                <!-- RIGHT CONTENT (CHANGE PASSWORD FORM) -->
                 <div class="profile-content">
-                    
-                    <!-- Alert Success -->
-                    <c:if test="${param.success eq 'true'}">
-                        <div class="alert-success">
-                            <i class="fa-solid fa-circle-check" style="font-size: 1.25rem;"></i>
-                            <span>Cập nhật thông tin cá nhân thành công!</span>
-                        </div>
-                    </c:if>
-                    <c:if test="${param.success eq 'password'}">
-                        <div class="alert-success">
-                            <i class="fa-solid fa-circle-check" style="font-size: 1.25rem;"></i>
-                            <span>Đổi mật khẩu thành công!</span>
+
+                    <!-- Alert Error -->
+                    <c:if test="${not empty error}">
+                        <div class="alert-danger">
+                            <i class="fa-solid fa-circle-exclamation" style="font-size: 1.25rem;"></i>
+                            <span>${error}</span>
                         </div>
                     </c:if>
 
-                    <!-- Info Box -->
+                    <!-- Form Box -->
                     <div class="info-box">
                         <div class="box-title">
-                            <i class="fa-solid fa-user"></i>
-                            Thông tin cá nhân
+                            <i class="fa-solid fa-key"></i>
+                            Thay đổi mật khẩu tài khoản
                         </div>
 
-                        <div class="profile-grid">
-                            <div class="info-item">
-                                <label>Email</label>
-                                <span>${sessionScope.user.email}</span>
+                        <form action="change-password" method="POST">
+                            
+                            <div class="form-group">
+                                <label for="oldPassword">Mật khẩu hiện tại <span style="color:red;">*</span></label>
+                                <input type="password" id="oldPassword" name="oldPassword" class="form-control" placeholder="Nhập mật khẩu hiện tại" required>
                             </div>
 
-                            <div class="info-item">
-                                <label>Số điện thoại</label>
-                                <span>${sessionScope.user.phone}</span>
+                            <div class="form-group">
+                                <label for="newPassword">Mật khẩu mới <span style="color:red;">*</span></label>
+                                <input type="password" id="newPassword" name="newPassword" class="form-control" placeholder="Nhập mật khẩu mới" required>
                             </div>
 
-                            <div class="info-item">
-                                <label>Giới tính</label>
-                                <span>${not empty sessionScope.user.gender ? sessionScope.user.gender : 'Chưa cập nhật'}</span>
+                            <div class="form-group">
+                                <label for="confirmPassword">Xác nhận mật khẩu mới <span style="color:red;">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Xác nhận lại mật khẩu mới" required>
                             </div>
 
-                            <div class="info-item">
-                                <label>Ngày sinh</label>
-                                <span>
-                                    <c:choose>
-                                        <c:when test="${not empty sessionScope.user.dob}">
-                                            ${sessionScope.user.dob}
-                                        </c:when>
-                                        <c:otherwise>
-                                            Chưa cập nhật
-                                        </c:otherwise>
-                                    </c:choose>
-                                </span>
+                            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                                <button type="submit" class="btn-save">Cập nhật mật khẩu</button>
+                                <a href="profile" class="btn-cancel">Hủy</a>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Address Box -->
-                    <div class="info-box">
-                        <div class="box-title">
-                            <i class="fa-solid fa-location-dot"></i>
-                            Địa chỉ giao hàng
-                        </div>
-
-                        <div class="address-box">
-                            <c:choose>
-                                <c:when test="${not empty sessionScope.user.address}">
-                                    ${sessionScope.user.address}
-                                </c:when>
-                                <c:otherwise>
-                                    <span style="color: var(--slate-600); font-style: italic;">Chưa cập nhật địa chỉ giao hàng.</span>
-                                </c:otherwise>
-                            </c:choose>
-                        </div>
-                    </div>
-
-                    <!-- Security Actions -->
-                    <div class="info-box">
-                        <div class="box-title">
-                            <i class="fa-solid fa-shield"></i>
-                            Bảo mật & Tài khoản
-                        </div>
-
-                        <div class="security-actions">
-                            <a href="change-password" class="btn-secondary">
-                                Đổi mật khẩu
-                            </a>
-                            <a href="logout" class="btn-danger">
-                                Đăng xuất
-                            </a>
-                        </div>
+                        </form>
                     </div>
 
                 </div>

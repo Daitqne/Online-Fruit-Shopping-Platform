@@ -178,6 +178,23 @@ public class AuthenDAO extends DBContext{
         return null;
     }
 
+// check old password
+    public boolean checkOldPassword(int userId, String oldPassword) {
+        String sql = "SELECT password FROM Users WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String hashedPassword = rs.getString("password");
+                    return BCrypt.checkpw(oldPassword, hashedPassword);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 // update password
     public void updatePassword(int userId, String rawPassword) {
 
