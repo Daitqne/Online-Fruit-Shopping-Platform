@@ -195,6 +195,42 @@ public class AuthenDAO extends DBContext{
             e.printStackTrace();
         }
     }
+    
+    // =====================================================
+    // UPDATE PROFILE
+    // =====================================================
+    public boolean updateProfile(Authen a) {
+        String sql = """
+            UPDATE UserInfo
+            SET full_name = ?, phone = ?, email = ?, avatar = ?, gender = ?, dob = ?, address = ?
+            WHERE user_id = ?
+        """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, a.getFullName());
+            ps.setString(2, a.getPhone());
+            ps.setString(3, a.getEmail());
+            ps.setString(4, a.getAvatar());
+            ps.setString(5, a.getGender());
+            
+            if (a.getDob() == null || a.getDob().trim().isEmpty()) {
+                ps.setNull(6, java.sql.Types.DATE);
+            } else {
+                try {
+                    ps.setDate(6, java.sql.Date.valueOf(a.getDob()));
+                } catch (IllegalArgumentException e) {
+                    ps.setNull(6, java.sql.Types.DATE);
+                }
+            }
+            
+            ps.setString(7, a.getAddress());
+            ps.setInt(8, a.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     // =====================================================
     // TEST
