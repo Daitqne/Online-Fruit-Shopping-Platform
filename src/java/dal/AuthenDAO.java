@@ -15,7 +15,7 @@ public class AuthenDAO extends DBContext{
 
         String sql = """
             SELECT u.user_id, u.username, u.password, u.status,
-                   ui.full_name, ui.phone, ui.email,
+                   ui.full_name, ui.phone, ui.email, ui.avatar, ui.gender, ui.dob, ui.address,
                    r.role_id, r.role_name
             FROM Users u
             JOIN UserInfo ui ON u.user_id = ui.user_id
@@ -46,6 +46,10 @@ public class AuthenDAO extends DBContext{
                 a.setFullName(rs.getString("full_name"));
                 a.setPhone(rs.getString("phone"));
                 a.setEmail(rs.getString("email"));
+                a.setAvatar(rs.getString("avatar"));
+                a.setGender(rs.getString("gender"));
+                a.setDob(rs.getString("dob"));
+                a.setAddress(rs.getString("address"));
 
                 a.setRoleId(rs.getInt("role_id"));
                 a.setRole(rs.getString("role_name"));
@@ -58,6 +62,7 @@ public class AuthenDAO extends DBContext{
         }
         return null;
     }
+
 
     // =====================================================
     // CHECK USERNAME
@@ -195,6 +200,43 @@ public class AuthenDAO extends DBContext{
             e.printStackTrace();
         }
     }
+
+    // =====================================================
+    // UPDATE PROFILE
+    // =====================================================
+    public boolean updateProfile(Authen a) {
+        String sql = """
+            UPDATE UserInfo
+            SET full_name = ?, phone = ?, email = ?, avatar = ?, gender = ?, dob = ?, address = ?
+            WHERE user_id = ?
+        """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, a.getFullName());
+            ps.setString(2, a.getPhone());
+            ps.setString(3, a.getEmail());
+            ps.setString(4, a.getAvatar());
+            ps.setString(5, a.getGender());
+            
+            if (a.getDob() == null || a.getDob().trim().isEmpty()) {
+                ps.setNull(6, java.sql.Types.DATE);
+            } else {
+                try {
+                    ps.setDate(6, java.sql.Date.valueOf(a.getDob()));
+                } catch (IllegalArgumentException e) {
+                    ps.setNull(6, java.sql.Types.DATE);
+                }
+            }
+            
+            ps.setString(7, a.getAddress());
+            ps.setInt(8, a.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 
     // =====================================================
     // TEST

@@ -17,6 +17,8 @@ import java.sql.PreparedStatement;
  * @author LAPTOP-WIN
  */
 public class UserDAO extends DBContext{
+    
+    
 
     public User login(String username, String password) {
         String sql = "SELECT * FROM Users "
@@ -41,6 +43,8 @@ public class UserDAO extends DBContext{
         }
         return null;
     }
+    
+    
 
     public List<User> getAll() throws Exception {
         List<User> list = new ArrayList<>();

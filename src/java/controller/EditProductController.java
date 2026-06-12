@@ -55,13 +55,16 @@ public class EditProductController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        String idStr    = request.getParameter("id");
-        String name     = request.getParameter("name");
-        String priceStr = request.getParameter("price");
-        String image    = request.getParameter("image");
-        String desc     = request.getParameter("description");
-        String category = request.getParameter("category");
-        String featStr  = request.getParameter("isFeatured");
+        String idStr       = request.getParameter("id");
+        String name        = request.getParameter("name");
+        String priceStr    = request.getParameter("price");
+        String discountStr = request.getParameter("discountPrice");
+        String image       = request.getParameter("image");
+        String desc        = request.getParameter("description");
+        String category    = request.getParameter("category");
+        String unit        = request.getParameter("unit");
+        String origin      = request.getParameter("origin");
+        String status      = request.getParameter("status");
 
         int id;
         try {
@@ -81,32 +84,34 @@ public class EditProductController extends HttpServlet {
 
         double price = 0.0;
         if (priceStr != null && !priceStr.trim().isEmpty()) {
-            try {
-                price = Double.parseDouble(priceStr);
-                if (price < 0) price = 0.0;
-            } catch (NumberFormatException e) {
-                price = 0.0;
-            }
+            try { price = Double.parseDouble(priceStr); if (price < 0) price = 0.0; }
+            catch (NumberFormatException e) { price = 0.0; }
         }
 
-        if (image == null || image.trim().isEmpty()) {
-            image = DEFAULT_FRUIT_IMAGE;
+        double discountPrice = 0.0;
+        if (discountStr != null && !discountStr.trim().isEmpty()) {
+            try { discountPrice = Double.parseDouble(discountStr); if (discountPrice < 0) discountPrice = 0.0; }
+            catch (NumberFormatException e) { discountPrice = 0.0; }
         }
 
-        if (category == null || category.trim().isEmpty()) {
-            category = "Trái cây khác";
-        }
-
-        boolean isFeatured = "on".equals(featStr) || "true".equals(featStr);
+        if (image    == null || image.trim().isEmpty())    image    = DEFAULT_FRUIT_IMAGE;
+        if (category == null || category.trim().isEmpty()) category = "Fruit";
+        if (unit     == null || unit.trim().isEmpty())     unit     = "kg";
+        if (origin   == null || origin.trim().isEmpty())   origin   = "Vietnam";
+        if (status   == null || status.trim().isEmpty())   status   = "Available";
 
         Product p = new Product();
         p.setId(id);
         p.setName(name.trim());
         p.setPrice(price);
+        p.setDiscountPrice(discountPrice);
         p.setImage(image.trim());
         p.setDescription(desc != null ? desc.trim() : "");
         p.setCategory(category.trim());
-        p.setFeatured(isFeatured);
+        p.setUnit(unit.trim());
+        p.setOrigin(origin.trim());
+        p.setStatus(status.trim());
+
 
         ProductDAO dao = new ProductDAO();
         boolean success = dao.updateProduct(p);

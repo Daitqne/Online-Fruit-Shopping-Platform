@@ -819,14 +819,15 @@
                             <div class="user-menu">
                                 <button class="user-menu-btn">
                                     <i class="fa-solid fa-circle-user"></i>
-                                    Xin chào, ${sessionScope.user}
+                                    Xin chào, ${sessionScope.user.fullName}
                                     <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
                                 </button>
                                 <div class="user-dropdown">
-                                    <a href="#"><i class="fa-solid fa-user"></i> Tài khoản</a>
+                                    <a href="profile"><i class="fa-solid fa-user"></i> Tài khoản</a>
                                     <a href="#"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
                                     <a href="logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
                                 </div>
+
                             </div>
                         </c:when>
                         <c:otherwise>
@@ -862,9 +863,20 @@
                         </button>
                     </form>
 
-                    <a href="add-product" class="btn-search" style="background-color: var(--secondary); text-decoration: none; white-space: nowrap;">
-                        Thêm sản phẩm <i class="fa-solid fa-plus"></i>
-                    </a>
+                    <c:if test="${sessionScope.user != null 
+                                  && (sessionScope.user.role == '2'
+                                  || sessionScope.user.role == '2')}">
+
+                          <a href="add-product"
+                             class="btn-search"
+                             style="background-color: var(--secondary); text-decoration:none; white-space:nowrap;">
+
+                              Thêm sản phẩm
+                              <i class="fa-solid fa-plus"></i>
+
+                          </a>
+
+                    </c:if>
                 </div>
 
                 <!-- Categories Filter -->
@@ -900,15 +912,29 @@
                             <div class="product-card">
                                 <div class="product-image-container">
                                     <span class="product-category">${p.category}</span>
-                                    <img src="${p.image}" alt="${p.name}" loading="lazy">
+                                    <c:if test="${p.discountPrice > 0}">
+                                        <span style="position:absolute;top:1rem;right:1rem;background:#EF4444;color:#fff;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:50px;">SALE</span>
+                                    </c:if>
+                                    <img src="${p.image}" alt="${p.name}" loading="lazy"
+                                         onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
                                 </div>
                                 <div class="product-info">
                                     <a href="#" class="product-title">${p.name}</a>
                                     <p class="product-description">${p.description}</p>
                                     <div class="product-footer">
-                                        <span class="product-price">
-                                            <fmt:formatNumber value="${p.price}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
-                                        </span>
+                                        <div>
+                                            <c:choose>
+                                                <c:when test="${p.discountPrice > 0}">
+                                                    <span class="product-price"><fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                    <span style="font-size:0.78rem;color:#94a3b8;text-decoration:line-through;display:block;">
+                                                        <fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="product-price"><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
                                         <button class="btn-add-cart" title="Thêm vào giỏ hàng">
                                             <i class="fa-solid fa-cart-plus"></i>
                                         </button>
