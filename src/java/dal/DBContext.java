@@ -15,6 +15,10 @@ public class DBContext {
 
     static {
         try {
+            String user = "sa";
+            String pass = "123456";
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
+            
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
             System.err.println("[DBContext Error] SQL Server Driver not found in classpath!");
@@ -51,7 +55,11 @@ public class DBContext {
     public Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
-                connection = establishConnection();
+                String user = "sa";
+                String pass = "123456";
+                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                connection = DriverManager.getConnection(url, user, pass);
             }
         } catch (Exception e) {
             Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, e);

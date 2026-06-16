@@ -32,6 +32,7 @@ public class HomeController extends HttpServlet {
         ProductDAO productDAO = new ProductDAO();
         
         List<Product> featuredProducts = productDAO.getTop8FeaturedProducts();
+    
         
         request.setAttribute("products", featuredProducts);
         

@@ -48,7 +48,9 @@ public class ProductDAO extends DBContext {
         return products;
     }
 
-    public List<Product> getFilteredProducts(String search, String category) {
+    public List<Product> getFilteredProducts(String search, String category,
+                                              Double minPrice, Double maxPrice,
+                                              String availability) {
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
                                               "FROM Product p " +
@@ -61,25 +63,26 @@ public class ProductDAO extends DBContext {
                                               ") pi ON pi.product_id = p.product_id " +
                                               "WHERE 1=1 ");
 
-        boolean hasSearch = (search != null && !search.trim().isEmpty());
-        boolean hasCategory = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All"));
+        boolean hasSearch       = (search != null && !search.trim().isEmpty());
+        boolean hasCategory     = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All"));
+        boolean hasMinPrice     = (minPrice != null && minPrice > 0);
+        boolean hasMaxPrice     = (maxPrice != null && maxPrice > 0);
+        boolean hasAvailability = (availability != null && !availability.trim().isEmpty() && !availability.equalsIgnoreCase("All"));
 
-        if (hasSearch) {
-            sql.append("AND p.product_name LIKE ? ");
-        }
-        if (hasCategory) {
-            sql.append("AND c.category_name = ? ");
-        }
+        if (hasSearch)       sql.append("AND p.product_name LIKE ? ");
+        if (hasCategory)     sql.append("AND c.category_name = ? ");
+        if (hasMinPrice)     sql.append("AND p.price >= ? ");
+        if (hasMaxPrice)     sql.append("AND p.price <= ? ");
+        if (hasAvailability) sql.append("AND p.status = ? ");
         sql.append("ORDER BY p.product_id DESC");
 
         try (PreparedStatement st = getConnection().prepareStatement(sql.toString())) {
             int paramIndex = 1;
-            if (hasSearch) {
-                st.setNString(paramIndex++, "%" + search.trim() + "%");
-            }
-            if (hasCategory) {
-                st.setNString(paramIndex++, category.trim());
-            }
+            if (hasSearch)       st.setNString(paramIndex++, "%" + search.trim() + "%");
+            if (hasCategory)     st.setNString(paramIndex++, category.trim());
+            if (hasMinPrice)     st.setDouble(paramIndex++, minPrice);
+            if (hasMaxPrice)     st.setDouble(paramIndex++, maxPrice);
+            if (hasAvailability) st.setNString(paramIndex++, availability.trim());
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -367,7 +370,7 @@ public class ProductDAO extends DBContext {
 
     public static void main(String[] args) {
         ProductDAO dao = new ProductDAO();
-        List<Product> list = dao.getFilteredProducts("Cam", "All");
+        List<Product> list = dao.getFilteredProducts("Cam", "All", null, null, "All");
         System.out.println("Search 'Cam' in 'All': " + list.size());
         for (Product p : list) {
             System.out.println(p);
