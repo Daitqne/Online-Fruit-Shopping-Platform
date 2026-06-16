@@ -1,7 +1,7 @@
 package model;
 
 /**
- * Product Entity Class representing fruit products.
+ * Product Entity Class representing fruit products, updated for GreenStockDB.
  */
 public class Product {
     private int id;
@@ -58,6 +58,21 @@ public class Product {
         this.category = category;
         this.categoryId = categoryId;
         this.isFeatured = "Featured".equalsIgnoreCase(status);
+    }
+
+    public Product(int id, String name, double price, String image, String description, String category, boolean isFeatured, int categoryId, double discountPrice, String unit, String origin, String status) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.image = image;
+        this.description = description;
+        this.category = category;
+        this.isFeatured = isFeatured;
+        this.categoryId = categoryId;
+        this.discountPrice = discountPrice;
+        this.unit = unit;
+        this.origin = origin;
+        this.status = status;
     }
 
     public int getId() {
@@ -154,6 +169,14 @@ public class Product {
         }
     }
 
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
     @Override
     public String toString() {
         return "Product{" +
@@ -167,7 +190,7 @@ public class Product {
                 ", image='" + image + '\'' +
                 ", category='" + category + '\'' +
                 ", isFeatured=" + isFeatured() +
+                ", categoryId=" + categoryId +
                 '}';
     }
 }
-
