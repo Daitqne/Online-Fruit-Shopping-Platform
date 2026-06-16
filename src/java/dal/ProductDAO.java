@@ -48,7 +48,9 @@ public class ProductDAO extends DBContext {
         return products;
     }
 
-    public List<Product> getFilteredProducts(String search, String category) {
+    public List<Product> getFilteredProducts(String search, String category,
+                                              Double minPrice, Double maxPrice,
+                                              String availability) {
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
                                               "FROM Product p " +
@@ -61,25 +63,26 @@ public class ProductDAO extends DBContext {
                                               ") pi ON pi.product_id = p.product_id " +
                                               "WHERE 1=1 ");
 
-        boolean hasSearch = (search != null && !search.trim().isEmpty());
-        boolean hasCategory = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All"));
+        boolean hasSearch       = (search != null && !search.trim().isEmpty());
+        boolean hasCategory     = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All"));
+        boolean hasMinPrice     = (minPrice != null && minPrice > 0);
+        boolean hasMaxPrice     = (maxPrice != null && maxPrice > 0);
+        boolean hasAvailability = (availability != null && !availability.trim().isEmpty() && !availability.equalsIgnoreCase("All"));
 
-        if (hasSearch) {
-            sql.append("AND p.product_name LIKE ? ");
-        }
-        if (hasCategory) {
-            sql.append("AND c.category_name = ? ");
-        }
+        if (hasSearch)       sql.append("AND p.product_name LIKE ? ");
+        if (hasCategory)     sql.append("AND c.category_name = ? ");
+        if (hasMinPrice)     sql.append("AND p.price >= ? ");
+        if (hasMaxPrice)     sql.append("AND p.price <= ? ");
+        if (hasAvailability) sql.append("AND p.status = ? ");
         sql.append("ORDER BY p.product_id DESC");
 
         try (PreparedStatement st = getConnection().prepareStatement(sql.toString())) {
             int paramIndex = 1;
-            if (hasSearch) {
-                st.setNString(paramIndex++, "%" + search.trim() + "%");
-            }
-            if (hasCategory) {
-                st.setNString(paramIndex++, category.trim());
-            }
+            if (hasSearch)       st.setNString(paramIndex++, "%" + search.trim() + "%");
+            if (hasCategory)     st.setNString(paramIndex++, category.trim());
+            if (hasMinPrice)     st.setDouble(paramIndex++, minPrice);
+            if (hasMaxPrice)     st.setDouble(paramIndex++, maxPrice);
+            if (hasAvailability) st.setNString(paramIndex++, availability.trim());
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -110,8 +113,8 @@ public class ProductDAO extends DBContext {
     }
 
     public boolean addProduct(Product p) {
-        String sql = "INSERT INTO Product (product_name, category_id, price, discount_price, unit, origin, status, description) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlProduct = "INSERT INTO Product (product_name, category_id, price, discount_price, unit, origin, status, description) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             int categoryId = getCategoryIdOrCreate(p.getCategory());
@@ -124,28 +127,55 @@ public class ProductDAO extends DBContext {
             }
             String status = p.getStatus() != null ? p.getStatus() : (p.isFeatured() ? FEATURED_STATUS : DEFAULT_STATUS);
 
-            try (PreparedStatement st = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                st.setNString(1, p.getName());
-                st.setInt(2, categoryId);
-                st.setDouble(3, p.getPrice());
-                st.setDouble(4, p.getDiscountPrice());
-                st.setNString(5, p.getUnit());
-                st.setNString(6, p.getOrigin());
-                st.setNString(7, status);
-                st.setNString(8, p.getDescription());
+            getConnection().setAutoCommit(false);
+            
+            // 1. Insert product
+            try (PreparedStatement stProduct = getConnection().prepareStatement(sqlProduct, Statement.RETURN_GENERATED_KEYS)) {
+                stProduct.setNString(1, p.getName());
+                stProduct.setInt(2, categoryId);
+                stProduct.setDouble(3, p.getPrice());
+                stProduct.setDouble(4, p.getDiscountPrice());
+                stProduct.setNString(5, p.getUnit() != null ? p.getUnit() : "kg");
+                stProduct.setNString(6, p.getOrigin() != null ? p.getOrigin() : "Vietnam");
+                stProduct.setNString(7, status);
+                stProduct.setNString(8, p.getDescription());
 
-                int rowsAffected = st.executeUpdate();
+                int rowsAffected = stProduct.executeUpdate();
                 if (rowsAffected > 0) {
-                    try (ResultSet generatedKeys = st.getGeneratedKeys()) {
+                    int productId = 0;
+                    try (ResultSet generatedKeys = stProduct.getGeneratedKeys()) {
                         if (generatedKeys.next()) {
-                            int productId = generatedKeys.getInt(1);
-                            saveProductImage(productId, p.getImage());
+                            productId = generatedKeys.getInt(1);
                         }
                     }
-                    return true;
+                    
+                    if (productId > 0) {
+                        // 2. Save image url
+                        saveProductImage(productId, p.getImage());
+                        
+                        // 3. Initialize inventory (default stock 100)
+                        String sqlInv = "INSERT INTO Inventory (product_id, quantity, last_updated) VALUES (?, ?, GETDATE())";
+                        try (PreparedStatement stInv = getConnection().prepareStatement(sqlInv)) {
+                            stInv.setInt(1, productId);
+                            stInv.setInt(2, 100);
+                            stInv.executeUpdate();
+                        }
+                        
+                        getConnection().commit();
+                        getConnection().setAutoCommit(true);
+                        return true;
+                    }
                 }
             }
+            getConnection().rollback();
+            getConnection().setAutoCommit(true);
         } catch (SQLException ex) {
+            try {
+                getConnection().rollback();
+                getConnection().setAutoCommit(true);
+            } catch (SQLException rollbackEx) {
+                Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, rollbackEx);
+            }
             System.err.println("[ProductDAO Error] Failed to insert new product!");
             Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -163,7 +193,6 @@ public class ProductDAO extends DBContext {
                      "    ) t WHERE rn = 1" +
                      ") pi ON pi.product_id = p.product_id " +
                      "WHERE p.product_id = ?";
-
         try (PreparedStatement st = getConnection().prepareStatement(sql)) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) {
@@ -189,6 +218,7 @@ public class ProductDAO extends DBContext {
             }
             String status = p.getStatus() != null ? p.getStatus() : (p.isFeatured() ? FEATURED_STATUS : DEFAULT_STATUS);
 
+            getConnection().setAutoCommit(false);
             try (PreparedStatement st = getConnection().prepareStatement(sql)) {
                 st.setNString(1, p.getName());
                 st.setInt(2, categoryId);
@@ -203,10 +233,20 @@ public class ProductDAO extends DBContext {
                 int rowsAffected = st.executeUpdate();
                 if (rowsAffected > 0) {
                     saveProductImage(p.getId(), p.getImage());
+                    getConnection().commit();
+                    getConnection().setAutoCommit(true);
                     return true;
                 }
             }
+            getConnection().rollback();
+            getConnection().setAutoCommit(true);
         } catch (SQLException ex) {
+            try {
+                getConnection().rollback();
+                getConnection().setAutoCommit(true);
+            } catch (SQLException rollbackEx) {
+                Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, rollbackEx);
+            }
             System.err.println("[ProductDAO Error] Failed to update product!");
             Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -214,19 +254,41 @@ public class ProductDAO extends DBContext {
     }
 
     public boolean deleteProduct(int id) {
-        String deleteImageSql = "DELETE FROM Product_Image WHERE product_id = ?";
-        String deleteProductSql = "DELETE FROM Product WHERE product_id = ?";
+        String sqlDelInv = "DELETE FROM Inventory WHERE product_id = ?";
+        String sqlDelImg = "DELETE FROM Product_Image WHERE product_id = ?";
+        String sqlDelProd = "DELETE FROM Product WHERE product_id = ?";
 
-        try (PreparedStatement stImage = getConnection().prepareStatement(deleteImageSql);
-             PreparedStatement stProduct = getConnection().prepareStatement(deleteProductSql)) {
+        try {
+            getConnection().setAutoCommit(false);
 
-            stImage.setInt(1, id);
-            stImage.executeUpdate();
+            try (PreparedStatement stDelInv = getConnection().prepareStatement(sqlDelInv);
+                 PreparedStatement stDelImg = getConnection().prepareStatement(sqlDelImg);
+                 PreparedStatement stDelProd = getConnection().prepareStatement(sqlDelProd)) {
 
-            stProduct.setInt(1, id);
-            int rowsAffected = stProduct.executeUpdate();
-            return rowsAffected > 0;
+                stDelInv.setInt(1, id);
+                stDelInv.executeUpdate();
+
+                stDelImg.setInt(1, id);
+                stDelImg.executeUpdate();
+
+                stDelProd.setInt(1, id);
+                int rowsAffected = stDelProd.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    getConnection().commit();
+                    getConnection().setAutoCommit(true);
+                    return true;
+                }
+            }
+            getConnection().rollback();
+            getConnection().setAutoCommit(true);
         } catch (SQLException ex) {
+            try {
+                getConnection().rollback();
+                getConnection().setAutoCommit(true);
+            } catch (SQLException rollbackEx) {
+                Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, rollbackEx);
+            }
             System.err.println("[ProductDAO Error] Failed to delete product!");
             Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -308,7 +370,7 @@ public class ProductDAO extends DBContext {
 
     public static void main(String[] args) {
         ProductDAO dao = new ProductDAO();
-        List<Product> list = dao.getFilteredProducts("Cam", "All");
+        List<Product> list = dao.getFilteredProducts("Cam", "All", null, null, "All");
         System.out.println("Search 'Cam' in 'All': " + list.size());
         for (Product p : list) {
             System.out.println(p);

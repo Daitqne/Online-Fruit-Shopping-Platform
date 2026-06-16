@@ -31,7 +31,7 @@ public class ShopOwnerProfileServlet extends HttpServlet {
 
       
         dal.ProductDAO productDAO = new dal.ProductDAO();
-        java.util.List<model.Product> allProducts = productDAO.getFilteredProducts("", "All");
+        java.util.List<model.Product> allProducts = productDAO.getFilteredProducts("", "All", null, null, "All");
         java.util.List<String> categories = productDAO.getAllCategories();
         
         long totalProducts = allProducts.size();

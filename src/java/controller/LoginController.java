@@ -52,6 +52,16 @@ public class LoginController extends HttpServlet {
         session.setAttribute("user", user);
         session.setAttribute("role", user.getRole());
 
+        // 3.5. Initialize cart and load cart count
+        if ("Customer".equals(user.getRole())) {
+            dal.CartDAO cartDAO = new dal.CartDAO();
+            model.Cart cart = cartDAO.getCartByUserId(user.getId());
+            if (cart != null) {
+                session.setAttribute("cartCount", cartDAO.getCartItemsCount(cart.getCartId()));
+            }
+        }
+
+        // 4. Phân quyền
         switch (user.getRole()) {
 
             case "Admin":
@@ -59,7 +69,13 @@ public class LoginController extends HttpServlet {
                 break;
 
             case "Customer":
-                response.sendRedirect(request.getContextPath() + "/home");
+                String redirectUrl = (String) session.getAttribute("redirectUrl");
+                if (redirectUrl != null) {
+                    session.removeAttribute("redirectUrl");
+                    response.sendRedirect(redirectUrl);
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/home");
+                }
                 break;
 
             case "Staff":

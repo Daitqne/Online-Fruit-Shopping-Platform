@@ -829,9 +829,9 @@
 
                 <div class="nav-actions">
                     <a href="#" style="color: var(--slate-600); font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass"></i></a>
-                    <a href="#" style="color: var(--slate-600); font-size: 1.25rem; position: relative;">
+                    <a href="cart" style="color: var(--slate-600); font-size: 1.25rem; position: relative; text-decoration: none;">
                         <i class="fa-solid fa-cart-shopping"></i>
-                        <span style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">0</span>
+                        <span style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${sessionScope.cartCount != null ? sessionScope.cartCount : 0}</span>
                     </a>
                     <c:choose>
                         <c:when test="${not empty sessionScope.user}">
@@ -974,25 +974,25 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </div>
-                                        <button class="btn-add-cart" title="Thêm vào giỏ hàng">
+                                        <a href="cart?action=add&productId=${p.id}" class="btn-add-cart" title="Thêm vào giỏ hàng" style="text-decoration: none;">
                                             <i class="fa-solid fa-cart-plus"></i>
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
-                            </div>
-                        </c:forEach>
-                    </c:when>
-                    <c:otherwise>
-                        <!-- Fallback UI if products are empty -->
-                        <div style="grid-column: span 4; text-align: center; padding: 3rem; background: var(--white); border-radius: 20px;">
-                            <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: var(--secondary); margin-bottom: 1rem;"></i>
-                            <h3>Chưa có sản phẩm nào nổi bật</h3>
-                            <p style="color: var(--slate-600); margin-top: 0.5rem;">Vui lòng kết nối database và chạy script database.sql để nạp dữ liệu mẫu!</p>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </section>
+                             </div>
+                         </c:forEach>
+                     </c:when>
+                     <c:otherwise>
+                         <!-- Fallback UI if products are empty -->
+                         <div style="grid-column: span 4; text-align: center; padding: 3rem; background: var(--white); border-radius: 20px;">
+                             <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+                             <h3>Chưa có sản phẩm nào nổi bật</h3>
+                             <p style="color: var(--slate-600); margin-top: 0.5rem;">Vui lòng kết nối database và chạy script database.sql để nạp dữ liệu mẫu!</p>
+                         </div>
+                     </c:otherwise>
+                 </c:choose>
+             </div>
+         </section>
 
         <!-- FOOTER -->
         <footer>

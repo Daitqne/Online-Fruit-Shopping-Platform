@@ -42,11 +42,11 @@ public class ShopOwnerProductsController extends HttpServlet {
         
      
         ProductDAO productDAO = new ProductDAO();
-        List<Product> products = productDAO.getFilteredProducts(search, category);
+        List<Product> products = productDAO.getFilteredProducts(search, category, null, null, "All");
         List<String> categories = productDAO.getAllCategories();
         
-   
-        List<Product> allProducts = productDAO.getFilteredProducts("", "All");
+        // Thống kê dữ liệu
+        List<Product> allProducts = productDAO.getFilteredProducts("", "All", null, null, "All");
         long totalProducts = allProducts.size();
         long featuredProducts = allProducts.stream()
                 .filter(p -> "Featured".equalsIgnoreCase(p.getStatus()))
