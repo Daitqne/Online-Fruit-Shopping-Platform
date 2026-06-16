@@ -320,6 +320,10 @@ CREATE TABLE [dbo].[UserInfo](
 	[full_name] [nvarchar](150) NOT NULL,
 	[phone] [nvarchar](20) NULL,
 	[email] [nvarchar](150) NULL,
+	[avatar] [nvarchar](255) NULL,
+	[gender] [nvarchar](20) NULL,
+	[dob] [date] NULL,
+	[address] [nvarchar](255) NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[user_info_id] ASC
