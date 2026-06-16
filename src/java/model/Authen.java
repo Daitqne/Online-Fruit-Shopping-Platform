@@ -12,6 +12,10 @@ public class Authen {
     private String fullName;
     private String phone;
     private String email;
+    private String avatar;
+    private String gender;
+    private String dob;
+    private String address;
 
     // ===== Role =====
     private int roleId;
@@ -77,6 +81,38 @@ public class Authen {
         this.email = email;
     }
 
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getDob() {
+        return dob;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public int getRoleId() {
         return roleId;
     }
@@ -93,3 +129,4 @@ public class Authen {
         this.role = role;
     }
 }
+

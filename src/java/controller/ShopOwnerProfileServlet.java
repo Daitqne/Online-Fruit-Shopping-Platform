@@ -1,68 +1,50 @@
 package controller;
 
-import dal.ProductDAO;
-import model.Product;
-import model.Authen;
-import java.io.IOException;
-import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import model.Authen;
 
-@WebServlet(name = "ShopOwnerProductsController", urlPatterns = {"/products-shop-owner"})
-public class ShopOwnerProductsController extends HttpServlet {
+@WebServlet(name = "ShopOwnerProfileServlet", urlPatterns = {"/shop-owner-profile"})
+public class ShopOwnerProfileServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        // 1. Phân quyền
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        
+
+        // Ensure only Shop Owner can access
         Authen user = (Authen) session.getAttribute("user");
         if (!"Shop Owner".equals(user.getRole())) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này!");
+            response.sendRedirect(request.getContextPath() + "/profile");
             return;
         }
 
-        // 2. Tiếp nhận tham số lọc/tìm kiếm
-        String search = request.getParameter("search");
-        String category = request.getParameter("category");
+        // Thống kê dữ liệu thực tế từ database
+        dal.ProductDAO productDAO = new dal.ProductDAO();
+        java.util.List<model.Product> allProducts = productDAO.getFilteredProducts("", "All");
+        java.util.List<String> categories = productDAO.getAllCategories();
         
-        if (category == null || category.trim().isEmpty()) {
-            category = "All";
-        }
-        
-        // 3. Truy vấn dữ liệu
-        ProductDAO productDAO = new ProductDAO();
-        List<Product> products = productDAO.getFilteredProducts(search, category);
-        List<String> categories = productDAO.getAllCategories();
-        
-        // Thống kê dữ liệu
-        List<Product> allProducts = productDAO.getFilteredProducts("", "All");
         long totalProducts = allProducts.size();
         long featuredProducts = allProducts.stream()
                 .filter(p -> "Featured".equalsIgnoreCase(p.getStatus()))
                 .count();
         long totalCategories = categories.size();
         
-        // 4. Thiết lập thuộc tính
-        request.setAttribute("products", products);
-        request.setAttribute("categories", categories);
-        request.setAttribute("searchQuery", search != null ? search : "");
-        request.setAttribute("selectedCategory", category);
         request.setAttribute("totalProducts", totalProducts);
         request.setAttribute("featuredProducts", featuredProducts);
         request.setAttribute("totalCategories", totalCategories);
-        
-        request.getRequestDispatcher("products_shop_owner.jsp").forward(request, response);
+
+        request.getRequestDispatcher("/profile_shop_owner.jsp").forward(request, response);
     }
 
     @Override

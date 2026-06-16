@@ -900,15 +900,36 @@
                             <div class="product-card">
                                 <div class="product-image-container">
                                     <span class="product-category">${p.category}</span>
-                                    <img src="${p.image}" alt="${p.name}" loading="lazy">
+                                    <c:if test="${p.discountPrice > 0}">
+                                        <span style="position:absolute;top:1rem;right:1rem;background:#EF4444;color:#fff;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:50px;z-index:1;">
+                                            SALE
+                                        </span>
+                                    </c:if>
+                                    <img src="${p.image}" alt="${p.name}" loading="lazy"
+                                         onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
                                 </div>
                                 <div class="product-info">
                                     <a href="#" class="product-title">${p.name}</a>
+                                    <c:if test="${not empty p.origin}">
+                                        <div style="font-size:0.78rem;color:#64748b;margin-bottom:0.5rem;">
+                                            <i class="fa-solid fa-earth-asia" style="margin-right:0.25rem;color:var(--primary);"></i> Xuất xứ: ${p.origin}
+                                        </div>
+                                    </c:if>
                                     <p class="product-description">${p.description}</p>
                                     <div class="product-footer">
-                                        <span class="product-price">
-                                            <fmt:formatNumber value="${p.price}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
-                                        </span>
+                                        <div>
+                                            <c:choose>
+                                                <c:when test="${p.discountPrice > 0}">
+                                                    <span class="product-price"><fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                    <span style="font-size:0.78rem;color:#94a3b8;text-decoration:line-through;display:block;">
+                                                        <fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="product-price"><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
                                         <a href="cart?action=add&productId=${p.id}" class="btn-add-cart" title="Thêm vào giỏ hàng" style="text-decoration: none;">
                                             <i class="fa-solid fa-cart-plus"></i>
                                         </a>
