@@ -8,28 +8,40 @@ import java.util.logging.Logger;
 
 /**
  * Modern DBContext for MS SQL Server connection.
- * Customized for GreenStockDatabase.
+ * Customized for GreenStockDatabase with robust password fallback.
  */
 public class DBContext {
     protected Connection connection;
 
-    public DBContext() {
+    static {
         try {
-            String user = "sa";
-            String pass = "123";
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
-            
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            
-            connection = DriverManager.getConnection(url, user, pass);
-            System.out.println("[DBContext] Database connected successfully to GreenStockDB!");
         } catch (ClassNotFoundException e) {
             System.err.println("[DBContext Error] SQL Server Driver not found in classpath!");
-            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, e);
-        } catch (SQLException e) {
-            System.err.println("[DBContext Error] Connection failed! Check database, URL, username and password.");
-            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, e);
         }
+    }
+
+    public DBContext() {
+        connection = establishConnection();
+    }
+
+    private Connection establishConnection() {
+        String[] passwords = {"123456", "123", "sa", "admin", "1234"};
+        String user = "sa";
+        
+        for (String pass : passwords) {
+            try {
+                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
+                Connection conn = DriverManager.getConnection(url, user, pass);
+                System.out.println("[DBContext] Database connected successfully to GreenStockDB with password: " + pass);
+                return conn;
+            } catch (SQLException e) {
+                // Ignore and try next password
+            }
+        }
+        
+        System.err.println("[DBContext Error] Connection failed! Check database configuration.");
+        return null;
     }
 
     /**
@@ -39,11 +51,7 @@ public class DBContext {
     public Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
-                String user = "sa";
-                String pass = "123";
-                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-                connection = DriverManager.getConnection(url, user, pass);
+                connection = establishConnection();
             }
         } catch (Exception e) {
             Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, e);

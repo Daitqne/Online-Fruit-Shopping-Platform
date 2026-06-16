@@ -1,7 +1,7 @@
 package model;
 
 /**
- * Product Entity Class representing fruit products.
+ * Product Entity Class representing fruit products, updated for GreenStockDB.
  */
 public class Product {
     private int id;
@@ -11,6 +11,13 @@ public class Product {
     private String description;
     private String category;
     private boolean isFeatured;
+
+    // Additional fields mapping to GreenStockDB Product table
+    private int categoryId;
+    private double discountPrice;
+    private String unit;
+    private String origin;
+    private String status;
 
     public Product() {
     }
@@ -23,6 +30,21 @@ public class Product {
         this.description = description;
         this.category = category;
         this.isFeatured = isFeatured;
+    }
+
+    public Product(int id, String name, double price, String image, String description, String category, boolean isFeatured, int categoryId, double discountPrice, String unit, String origin, String status) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.image = image;
+        this.description = description;
+        this.category = category;
+        this.isFeatured = isFeatured;
+        this.categoryId = categoryId;
+        this.discountPrice = discountPrice;
+        this.unit = unit;
+        this.origin = origin;
+        this.status = status;
     }
 
     public int getId() {
@@ -81,6 +103,46 @@ public class Product {
         this.isFeatured = isFeatured;
     }
 
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public double getDiscountPrice() {
+        return discountPrice;
+    }
+
+    public void setDiscountPrice(double discountPrice) {
+        this.discountPrice = discountPrice;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "Product{" +
@@ -90,6 +152,11 @@ public class Product {
                 ", image='" + image + '\'' +
                 ", category='" + category + '\'' +
                 ", isFeatured=" + isFeatured +
+                ", categoryId=" + categoryId +
+                ", discountPrice=" + discountPrice +
+                ", unit='" + unit + '\'' +
+                ", origin='" + origin + '\'' +
+                ", status='" + status + '\'' +
                 '}';
     }
 }
