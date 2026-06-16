@@ -32,7 +32,6 @@ public class LoginController extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        // 1. Validate
         if (username == null || password == null ||
             username.trim().isEmpty() || password.trim().isEmpty()) {
 
@@ -41,7 +40,6 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 2. Login (BCrypt check nằm trong DAO)
         Authen user = authenDAO.login(username, password);
 
         if (user == null) {
@@ -50,12 +48,10 @@ public class LoginController extends HttpServlet {
             return;
         }
 
-        // 3. Set session
         HttpSession session = request.getSession(true);
         session.setAttribute("user", user);
         session.setAttribute("role", user.getRole());
 
-        // 4. Phân quyền
         switch (user.getRole()) {
 
             case "Admin":

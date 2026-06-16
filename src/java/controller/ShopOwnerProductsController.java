@@ -19,7 +19,7 @@ public class ShopOwnerProductsController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // 1. Phân quyền
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -32,7 +32,7 @@ public class ShopOwnerProductsController extends HttpServlet {
             return;
         }
 
-        // 2. Tiếp nhận tham số lọc/tìm kiếm
+  
         String search = request.getParameter("search");
         String category = request.getParameter("category");
         
@@ -40,12 +40,12 @@ public class ShopOwnerProductsController extends HttpServlet {
             category = "All";
         }
         
-        // 3. Truy vấn dữ liệu
+     
         ProductDAO productDAO = new ProductDAO();
         List<Product> products = productDAO.getFilteredProducts(search, category);
         List<String> categories = productDAO.getAllCategories();
         
-        // Thống kê dữ liệu
+   
         List<Product> allProducts = productDAO.getFilteredProducts("", "All");
         long totalProducts = allProducts.size();
         long featuredProducts = allProducts.stream()
@@ -53,7 +53,7 @@ public class ShopOwnerProductsController extends HttpServlet {
                 .count();
         long totalCategories = categories.size();
         
-        // 4. Thiết lập thuộc tính
+    
         request.setAttribute("products", products);
         request.setAttribute("categories", categories);
         request.setAttribute("searchQuery", search != null ? search : "");

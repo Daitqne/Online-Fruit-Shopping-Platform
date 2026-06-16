@@ -29,7 +29,7 @@
 <body data-theme="default" data-layout="fluid" data-sidebar-position="left" data-sidebar-layout="default">
     <div class="wrapper">
 
-        <!-- ========== SIDEBAR ========== -->
+        
         <nav id="sidebar" class="sidebar js-sidebar">
             <div class="sidebar-content js-simplebar">
                 <a class="sidebar-brand" href="products-shop-owner">

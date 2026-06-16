@@ -19,10 +19,10 @@
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&amp;display=swap"
                     rel="stylesheet">
 
-                <!-- AdminKit CSS -->
+                
                 <link href="${pageContext.request.contextPath}/css/light.css" rel="stylesheet">
                 <style>
-                    /* ---- Profile Card Styles ---- */
+                   
                     .profile-hero {
                         background: linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%);
                         border-radius: 12px;
