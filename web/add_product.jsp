@@ -17,7 +17,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&amp;display=swap" rel="stylesheet">
 
-    <!-- AdminKit CSS -->
+    
     <link href="${pageContext.request.contextPath}/css/light.css" rel="stylesheet">
     <style>
         body {

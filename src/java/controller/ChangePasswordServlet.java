@@ -70,7 +70,6 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
         
-        // Kiểm tra mật khẩu cũ
         boolean isOldPasswordCorrect = authenDAO.checkOldPassword(user.getId(), oldPassword);
         if (!isOldPasswordCorrect) {
             request.setAttribute("error", "Mật khẩu cũ không chính xác!");
@@ -78,7 +77,6 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
         
-        // Cập nhật mật khẩu mới
         authenDAO.updatePassword(user.getId(), newPassword);
         
         if ("Shop Owner".equals(user.getRole())) {

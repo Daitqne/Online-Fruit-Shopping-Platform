@@ -5,9 +5,7 @@ import dal.DBContext;
 
 public class ResetPasswordTokenDAO extends DBContext{
 
-    // ===============================
-    // SAVE TOKEN
-    // ===============================
+   
     public void saveToken(int userId, String token, Timestamp expiry) {
 
         String sql = """
@@ -29,9 +27,7 @@ public class ResetPasswordTokenDAO extends DBContext{
         }
     }
 
-    // ===============================
-    // CHECK TOKEN VALID
-    // ===============================
+
     public boolean isValidToken(String token) {
 
         String sql = """
@@ -56,9 +52,7 @@ public class ResetPasswordTokenDAO extends DBContext{
         return false;
     }
 
-    // ===============================
-    // GET USER ID BY TOKEN
-    // ===============================
+
     public Integer getUserIdByToken(String token) {
 
         String sql = """
@@ -85,9 +79,6 @@ public class ResetPasswordTokenDAO extends DBContext{
         return null;
     }
 
-    // ===============================
-    // MARK TOKEN USED
-    // ===============================
     public void markTokenUsed(String token) {
 
         String sql = """

@@ -22,14 +22,14 @@ public class ShopOwnerProfileServlet extends HttpServlet {
             return;
         }
 
-        // Ensure only Shop Owner can access
+  
         Authen user = (Authen) session.getAttribute("user");
         if (!"Shop Owner".equals(user.getRole())) {
             response.sendRedirect(request.getContextPath() + "/profile");
             return;
         }
 
-        // Thống kê dữ liệu thực tế từ database
+      
         dal.ProductDAO productDAO = new dal.ProductDAO();
         java.util.List<model.Product> allProducts = productDAO.getFilteredProducts("", "All", null, null, "All");
         java.util.List<String> categories = productDAO.getAllCategories();
