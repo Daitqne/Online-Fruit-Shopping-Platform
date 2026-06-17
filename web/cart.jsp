@@ -683,13 +683,63 @@
                         </span>
                     </div>
                     <div class="summary-row">
-                        <span>Giao hàng</span>
-                        <span>Miễn phí</span>
+                        <span>Phí vận chuyển</span>
+                        <span class="price-text">
+                            <c:choose>
+                                <c:when test="${shippingFee > 0}">
+                                    <fmt:formatNumber value="${shippingFee}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
+                                </c:when>
+                                <c:otherwise>Miễn phí</c:otherwise>
+                            </c:choose>
+                        </span>
                     </div>
+                    
+                    <c:if test="${discount > 0}">
+                        <div class="summary-row" style="color: var(--primary); font-weight: 600;">
+                            <span>Giảm giá (${appliedPromo.promoCode})</span>
+                            <span class="price-text">
+                                -<fmt:formatNumber value="${discount}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
+                            </span>
+                        </div>
+                    </c:if>
+
+                    <!-- Promo Code Area -->
+                    <div class="promo-section" style="border-top: 1px solid var(--slate-200); padding-top: 1.25rem; margin-top: 0.5rem;">
+                        <h4 style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--dark);">Mã khuyến mãi</h4>
+                        <c:choose>
+                            <c:when test="${not empty appliedPromo}">
+                                <div class="applied-promo-badge" style="display: flex; justify-content: space-between; align-items: center; background: var(--primary-light); border: 1px solid var(--primary); padding: 0.5rem 0.75rem; border-radius: 10px; font-size: 0.9rem; color: var(--primary-hover); font-weight: 600;">
+                                    <span><i class="fa-solid fa-tag"></i> ${appliedPromo.promoCode}</span>
+                                    <a href="cart?action=removePromo" style="color: #EF4444; text-decoration: none; font-size: 0.85rem;" title="Gỡ mã"><i class="fa-solid fa-circle-xmark"></i> Gỡ</a>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <form action="cart" method="GET" style="display: flex; gap: 0.5rem;">
+                                    <input type="hidden" name="action" value="applyPromo">
+                                    <input type="text" name="promoCode" placeholder="Nhập mã giảm giá..." required 
+                                           style="flex: 1; padding: 0.6rem 0.8rem; border: 1px solid var(--slate-300); border-radius: 10px; font-family: var(--font-body); font-size: 0.9rem; outline: none; transition: border-color 0.2s;"
+                                           onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--slate-300)'">
+                                    <button type="submit" style="background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 10px; font-weight: 700; cursor: pointer; transition: background 0.2s; font-family: var(--font-body);">Áp dụng</button>
+                                </form>
+                            </c:otherwise>
+                        </c:choose>
+
+                        <c:if test="${not empty promoError}">
+                            <div class="promo-msg error" style="color: #EF4444; font-size: 0.8rem; margin-top: 0.5rem; font-weight: 500;">
+                                <i class="fa-solid fa-circle-exclamation"></i> ${promoError}
+                            </div>
+                        </c:if>
+                        <c:if test="${not empty promoSuccess}">
+                            <div class="promo-msg success" style="color: var(--primary); font-size: 0.8rem; margin-top: 0.5rem; font-weight: 500;">
+                                <i class="fa-solid fa-circle-check"></i> ${promoSuccess}
+                            </div>
+                        </c:if>
+                    </div>
+
                     <div class="summary-row total">
-                        <span>Tổng tiền</span>
+                        <span>Tổng thanh toán</span>
                         <span class="total-price price-text">
-                            <fmt:formatNumber value="${totalAmount}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
+                            <fmt:formatNumber value="${totalPayment}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
                         </span>
                     </div>
                     
