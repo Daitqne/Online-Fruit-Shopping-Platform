@@ -16,6 +16,7 @@ public class Product {
     private String category;
     private int categoryId;
     private boolean isFeatured;
+    private String shopOwnerName; // Tên shop owner cho admin
 
     public Product() {
     }
@@ -175,6 +176,14 @@ public class Product {
 
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getShopOwnerName() {
+        return shopOwnerName;
+    }
+
+    public void setShopOwnerName(String shopOwnerName) {
+        this.shopOwnerName = shopOwnerName;
     }
 
     @Override

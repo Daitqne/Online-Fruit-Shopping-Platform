@@ -823,15 +823,15 @@
                 <ul class="nav-menu">
                     <li><a href="home" class="nav-link">Trang chủ</a></li>
                     <li><a href="products" class="nav-link">Sản phẩm</a></li>
-                    <li><a href="#" class="nav-link">Giới thiệu</a></li>
-                    <li><a href="#" class="nav-link">Liên hệ</a></li>
+                    <li><a href="about.jsp" class="nav-link">Giới thiệu</a></li>
+                    <li><a href="contact.jsp" class="nav-link">Liên hệ</a></li>
                 </ul>
 
                 <div class="nav-actions">
                     <a href="#" style="color: var(--slate-600); font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass"></i></a>
                     <a href="cart" style="color: var(--slate-600); font-size: 1.25rem; position: relative; text-decoration: none;">
                         <i class="fa-solid fa-cart-shopping"></i>
-                        <span style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${sessionScope.cartCount != null ? sessionScope.cartCount : 0}</span>
+                        <span class="cart-badge" style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${sessionScope.cartCount != null ? sessionScope.cartCount : 0}</span>
                     </a>
                     <c:choose>
                         <c:when test="${not empty sessionScope.user}">
@@ -946,7 +946,7 @@
                 <c:choose>
                     <c:when test="${not empty products}">
                         <c:forEach var="p" items="${products}">
-                            <div class="product-card">
+                            <div class="product-card" onclick="location.href='product-detail?id=${p.id}'" style="cursor:pointer;">
                                 <div class="product-image-container">
                                     <span class="product-category">${p.category}</span>
                                     <c:if test="${p.discountPrice > 0}">
@@ -958,7 +958,7 @@
                                          onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
                                 </div>
                                 <div class="product-info">
-                                    <a href="#" class="product-title">${p.name}</a>
+                                    <a href="product-detail?id=${p.id}" class="product-title">${p.name}</a>
                                     <p class="product-description">${p.description}</p>
                                     <div class="product-footer">
                                         <div>
@@ -974,9 +974,9 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </div>
-                                        <a href="cart?action=add&productId=${p.id}" class="btn-add-cart" title="Thêm vào giỏ hàng" style="text-decoration: none;">
+                                        <button type="button" class="btn-add-cart" title="Thêm vào giỏ hàng" onclick="addToCart(event, ${p.id})">
                                             <i class="fa-solid fa-cart-plus"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                              </div>
@@ -1099,6 +1099,77 @@
 
             // tự động chuyển ảnh mỗi 4 giây
             setInterval(nextSlide, 4000);
+        </script>
+
+        <script>
+        function addToCart(event, productId) {
+            event.stopPropagation(); // Prevent card click
+            
+            // Get the button element
+            const button = event.currentTarget;
+            const icon = button.querySelector('i');
+            
+            // Disable button during request
+            button.disabled = true;
+            icon.className = 'fa-solid fa-spinner fa-spin';
+            
+            // Make AJAX request
+            fetch('cart?action=add&productId=' + productId + '&quantity=1', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.querySelector('.cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cartCount;
+                    }
+                    
+                    // Show success animation
+                    icon.className = 'fa-solid fa-check';
+                    button.style.backgroundColor = '#10B981';
+                    button.style.color = '#fff';
+                    
+                    // Reset button after 1.5 seconds
+                    setTimeout(() => {
+                        icon.className = 'fa-solid fa-cart-plus';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.disabled = false;
+                    }, 1500);
+                } else {
+                    // Show error
+                    icon.className = 'fa-solid fa-xmark';
+                    button.style.backgroundColor = '#EF4444';
+                    button.style.color = '#fff';
+                    
+                    setTimeout(() => {
+                        icon.className = 'fa-solid fa-cart-plus';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.disabled = false;
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Show error
+                icon.className = 'fa-solid fa-xmark';
+                button.style.backgroundColor = '#EF4444';
+                button.style.color = '#fff';
+                
+                setTimeout(() => {
+                    icon.className = 'fa-solid fa-cart-plus';
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                    button.disabled = false;
+                }, 1500);
+            });
+        }
         </script>
 
     </body>
