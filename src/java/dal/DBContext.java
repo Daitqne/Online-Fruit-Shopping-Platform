@@ -17,7 +17,7 @@ public class DBContext {
         try {
             String user = "sa";
             String pass = "123456";
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
+            String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB1;encrypt=true;trustServerCertificate=true;";
             
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
@@ -35,7 +35,7 @@ public class DBContext {
         
         for (String pass : passwords) {
             try {
-                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
+                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB1;encrypt=true;trustServerCertificate=true;";
                 Connection conn = DriverManager.getConnection(url, user, pass);
                 System.out.println("[DBContext] Database connected successfully to GreenStockDB with password: " + pass);
                 return conn;
@@ -57,7 +57,7 @@ public class DBContext {
             if (connection == null || connection.isClosed()) {
                 String user = "sa";
                 String pass = "123456";
-                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB;encrypt=true;trustServerCertificate=true;";
+                String url = "jdbc:sqlserver://localhost:1433;databaseName=GreenStockDB1;encrypt=true;trustServerCertificate=true;";
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 connection = DriverManager.getConnection(url, user, pass);
             }

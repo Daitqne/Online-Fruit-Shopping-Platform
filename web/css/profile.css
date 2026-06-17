@@ -11,6 +11,8 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 
 .profile-section{
     padding:120px 2rem 80px;
+    position: relative;
+    z-index: 1;
 }
 
 .profile-container{
