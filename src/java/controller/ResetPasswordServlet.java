@@ -16,9 +16,6 @@ public class ResetPasswordServlet extends HttpServlet {
     private final ResetPasswordTokenDAO tokenDAO = new ResetPasswordTokenDAO();
     private final AuthenDAO authenDAO = new AuthenDAO();
 
-    // =========================
-    // GET → HIỂN THỊ FORM
-    // =========================
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -42,10 +39,6 @@ public class ResetPasswordServlet extends HttpServlet {
         request.setAttribute("token", token);
         request.getRequestDispatcher("/reset-password.jsp").forward(request, response);
     }
-
-    // =========================
-    // POST → RESET PASSWORD
-    // =========================
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -76,10 +69,8 @@ public class ResetPasswordServlet extends HttpServlet {
             return;
         }
 
-        // update password (BCrypt trong DAO)
         authenDAO.updatePassword(userId, password);
 
-        // đánh dấu token đã dùng
         tokenDAO.markTokenUsed(token);
 
         request.setAttribute("success", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập.");

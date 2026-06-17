@@ -42,6 +42,7 @@
                     <file>${file.reference.sqljdbc42.jar-1}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
+
                 <library dirs="200">
                     <file>${file.reference.jbcrypt-0.4.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
