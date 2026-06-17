@@ -151,6 +151,10 @@ public class CartController extends HttpServlet {
 
     private void handleAdd(HttpServletRequest request, HttpServletResponse response, HttpSession session, Cart cart)
             throws IOException {
+        boolean success = false;
+        int totalCount = 0;
+        String message = "";
+        
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
             String qtyStr = request.getParameter("quantity");
@@ -158,16 +162,33 @@ public class CartController extends HttpServlet {
             
             if (quantity > 0) {
                 cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, quantity);
+                success = true;
+                message = "Đã thêm sản phẩm vào giỏ hàng";
             }
             
             // Update cart items count in session
-            int totalCount = cartDAO.getCartItemsCount(cart.getCartId());
+            totalCount = cartDAO.getCartItemsCount(cart.getCartId());
             session.setAttribute("cartCount", totalCount);
             
         } catch (NumberFormatException e) {
-            // Log and ignore
+            message = "Thông tin sản phẩm không hợp lệ";
         }
-        response.sendRedirect(request.getContextPath() + "/cart");
+        
+        // Check if request is AJAX
+        String requestedWith = request.getHeader("X-Requested-With");
+        if ("XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
+            // Return JSON response for AJAX
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(
+                "{\"success\":" + success + 
+                ",\"cartCount\":" + totalCount + 
+                ",\"message\":\"" + message + "\"}"
+            );
+        } else {
+            // Normal redirect for non-AJAX requests
+            response.sendRedirect(request.getContextPath() + "/cart");
+        }
     }
 
     private void handleUpdate(HttpServletRequest request, HttpServletResponse response, HttpSession session, Cart cart)
