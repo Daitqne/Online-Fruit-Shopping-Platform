@@ -191,7 +191,7 @@
             .user-dropdown {
                 display: none;
                 position: absolute;
-                top: calc(100% + 10px);
+                top: 100%;
                 right: 0;
                 background: var(--white);
                 border-radius: 14px;
@@ -199,7 +199,7 @@
                 border: 1px solid rgba(226, 232, 240, 0.8);
                 min-width: 180px;
                 overflow: hidden;
-                z-index: 999;
+                z-index: 1001;
             }
 
             .user-menu:hover .user-dropdown {
@@ -411,40 +411,10 @@
                     <i class="fa-solid fa-leaf"></i> GreenStock
                 </a>
 
-                <ul class="nav-menu">
-                    <li><a href="home" class="nav-link">Trang chủ</a></li>
-                    <li><a href="products" class="nav-link">Sản phẩm</a></li>
-                    <li><a href="#" class="nav-link">Giới thiệu</a></li>
-                    <li><a href="#" class="nav-link">Liên hệ</a></li>
-                </ul>
-
                 <div class="nav-actions">
-                    <a href="#" style="color: var(--slate-600); font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass"></i></a>
-                    <a href="#" style="color: var(--slate-600); font-size: 1.25rem; position: relative;">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        <span style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">0</span>
+                    <a href="home" class="btn-login">
+                        <i class="fa-solid fa-arrow-left"></i> Trang chủ
                     </a>
-                    <c:choose>
-                        <c:when test="${not empty sessionScope.user}">
-                            <div class="user-menu">
-                                <button class="user-menu-btn">
-                                    <i class="fa-solid fa-circle-user"></i>
-                                    Xin chào, ${sessionScope.user.fullName}
-                                    <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
-                                </button>
-                                <div class="user-dropdown">
-                                    <a href="profile"><i class="fa-solid fa-user"></i> Tài khoản</a>
-                                    <a href="#"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
-                                    <a href="logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
-                                </div>
-                            </div>
-                        </c:when>
-                        <c:otherwise>
-                            <a href="login" class="btn-login">
-                                <i class="fa-solid fa-user"></i> Đăng nhập
-                            </a>
-                        </c:otherwise>
-                    </c:choose>
                 </div>
             </div>
         </header>
@@ -537,9 +507,11 @@
 
                     <!-- Address Box -->
                     <div class="info-box">
-                        <div class="box-title">
-                            <i class="fa-solid fa-location-dot"></i>
-                            Địa chỉ giao hàng
+                        <div class="box-title" style="display:flex;justify-content:space-between;align-items:center;">
+                            <span><i class="fa-solid fa-location-dot"></i> Địa chỉ giao hàng</span>
+                            <a href="address" style="font-size:0.85rem;font-weight:600;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:0.3rem;">
+                                <i class="fa-solid fa-pen-to-square"></i> Quản lý địa chỉ
+                            </a>
                         </div>
 
                         <div class="address-box">
