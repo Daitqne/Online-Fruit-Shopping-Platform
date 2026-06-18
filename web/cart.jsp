@@ -743,7 +743,7 @@
                         </span>
                     </div>
                     
-                    <a href="#" class="btn-checkout">Tiến hành thanh toán</a>
+                    <a href="${pageContext.request.contextPath}/checkout" class="btn-checkout">Tiến hành thanh toán</a>
                     <a href="products" class="btn-continue-shopping">Tiếp tục mua sắm</a>
                 </div>
             </c:when>
