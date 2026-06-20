@@ -595,8 +595,8 @@
                                 <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
                             </button>
                             <div class="user-dropdown">
-                                <a href="#"><i class="fa-solid fa-user"></i> Tài khoản</a>
-                                <a href="#"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
+                                <a href="${pageContext.request.contextPath}/profile"><i class="fa-solid fa-user"></i> Tài khoản</a>
+                                <a href="${pageContext.request.contextPath}/orders"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
                                 <a href="logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
                             </div>
                         </div>
@@ -743,7 +743,7 @@
                         </span>
                     </div>
                     
-                    <a href="#" class="btn-checkout">Tiến hành thanh toán</a>
+                    <a href="${pageContext.request.contextPath}/checkout" class="btn-checkout">Tiến hành thanh toán</a>
                     <a href="products" class="btn-continue-shopping">Tiếp tục mua sắm</a>
                 </div>
             </c:when>

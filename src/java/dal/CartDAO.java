@@ -189,4 +189,18 @@ public class CartDAO extends DBContext {
         }
         return 0;
     }
+
+    /**
+     * Clears all items in the cart.
+     */
+    public boolean clearCart(int cartId) {
+        String sql = "DELETE FROM Cart_Item WHERE cart_id = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, cartId);
+            return st.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(CartDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
 }

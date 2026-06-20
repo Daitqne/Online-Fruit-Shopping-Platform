@@ -18,6 +18,12 @@ public class SaleOrder {
     private String shipperNote;
     
     private List<SaleOrderItem> items;
+    
+    // New fields for promotion/pricing
+    private double discountAmount;
+    private String promoCode;
+    private double shippingFee;
+    private double totalPayment;
 
     public SaleOrder() {
     }
@@ -139,6 +145,38 @@ public class SaleOrder {
 
     public void setItems(List<SaleOrderItem> items) {
         this.items = items;
+    }
+
+    public double getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(double discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public String getPromoCode() {
+        return promoCode;
+    }
+
+    public void setPromoCode(String promoCode) {
+        this.promoCode = promoCode;
+    }
+
+    public double getShippingFee() {
+        return shippingFee;
+    }
+
+    public void setShippingFee(double shippingFee) {
+        this.shippingFee = shippingFee;
+    }
+
+    public double getTotalPayment() {
+        return totalPayment;
+    }
+
+    public void setTotalPayment(double totalPayment) {
+        this.totalPayment = totalPayment;
     }
 
     @Override
