@@ -495,7 +495,7 @@
                                 </button>
                                 <div class="user-dropdown">
                                     <a href="profile"><i class="fa-solid fa-user"></i> Tài khoản</a>
-                                    <a href="#"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
+                                    <a href="${pageContext.request.contextPath}/orders"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
                                     <a href="logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
                                 </div>
                             </div>

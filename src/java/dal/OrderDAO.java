@@ -133,4 +133,209 @@ public class OrderDAO extends DBContext {
         }
         return false;
     }
+
+    /**
+     * Retrieves all orders for a specific user, ordered by date descending.
+     */
+    public java.util.List<SaleOrder> getOrdersByUserId(int userId) {
+        java.util.List<SaleOrder> list = new java.util.ArrayList<>();
+        String sql = """
+            SELECT sale_order_id, order_date, created_by, order_status, payment_method, payment_status,
+                   shipping_address, shipping_phone, shipper_id, shipped_date, delivered_date, shipper_note,
+                   discount_amount, promo_code, shipping_fee, total_payment
+            FROM Sale_Order
+            WHERE created_by = ?
+            ORDER BY order_date DESC
+        """;
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SaleOrder order = new SaleOrder();
+                    order.setSaleOrderId(rs.getInt("sale_order_id"));
+                    order.setOrderDate(rs.getTimestamp("order_date"));
+                    order.setCreatedBy(rs.getInt("created_by"));
+                    order.setOrderStatus(rs.getString("order_status"));
+                    order.setPaymentMethod(rs.getString("payment_method"));
+                    order.setPaymentStatus(rs.getString("payment_status"));
+                    order.setShippingAddress(rs.getString("shipping_address"));
+                    order.setShippingPhone(rs.getString("shipping_phone"));
+                    order.setShipperId(rs.getObject("shipper_id") != null ? rs.getInt("shipper_id") : null);
+                    order.setShippedDate(rs.getTimestamp("shipped_date"));
+                    order.setDeliveredDate(rs.getTimestamp("delivered_date"));
+                    order.setShipperNote(rs.getString("shipper_note"));
+                    order.setDiscountAmount(rs.getDouble("discount_amount"));
+                    order.setPromoCode(rs.getString("promo_code"));
+                    order.setShippingFee(rs.getDouble("shipping_fee"));
+                    order.setTotalPayment(rs.getDouble("total_payment"));
+                    list.add(order);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    /**
+     * Retrieves detailed information of an order, including its items and product info.
+     */
+    public SaleOrder getOrderById(int orderId) {
+        String orderSql = """
+            SELECT sale_order_id, order_date, created_by, order_status, payment_method, payment_status,
+                   shipping_address, shipping_phone, shipper_id, shipped_date, delivered_date, shipper_note,
+                   discount_amount, promo_code, shipping_fee, total_payment
+            FROM Sale_Order
+            WHERE sale_order_id = ?
+        """;
+        
+        String itemsSql = """
+            SELECT soi.sale_item_id, soi.sale_order_id, soi.product_id, soi.quantity, soi.unit_price,
+                   p.product_name,
+                   (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url
+            FROM Sale_Order_Item soi
+            JOIN Product p ON soi.product_id = p.product_id
+            WHERE soi.sale_order_id = ?
+        """;
+
+        try (PreparedStatement psOrder = getConnection().prepareStatement(orderSql)) {
+            psOrder.setInt(1, orderId);
+            try (ResultSet rs = psOrder.executeQuery()) {
+                if (rs.next()) {
+                    SaleOrder order = new SaleOrder();
+                    order.setSaleOrderId(rs.getInt("sale_order_id"));
+                    order.setOrderDate(rs.getTimestamp("order_date"));
+                    order.setCreatedBy(rs.getInt("created_by"));
+                    order.setOrderStatus(rs.getString("order_status"));
+                    order.setPaymentMethod(rs.getString("payment_method"));
+                    order.setPaymentStatus(rs.getString("payment_status"));
+                    order.setShippingAddress(rs.getString("shipping_address"));
+                    order.setShippingPhone(rs.getString("shipping_phone"));
+                    order.setShipperId(rs.getObject("shipper_id") != null ? rs.getInt("shipper_id") : null);
+                    order.setShippedDate(rs.getTimestamp("shipped_date"));
+                    order.setDeliveredDate(rs.getTimestamp("delivered_date"));
+                    order.setShipperNote(rs.getString("shipper_note"));
+                    order.setDiscountAmount(rs.getDouble("discount_amount"));
+                    order.setPromoCode(rs.getString("promo_code"));
+                    order.setShippingFee(rs.getDouble("shipping_fee"));
+                    order.setTotalPayment(rs.getDouble("total_payment"));
+
+                    // Load Items
+                    java.util.List<SaleOrderItem> items = new java.util.ArrayList<>();
+                    try (PreparedStatement psItems = getConnection().prepareStatement(itemsSql)) {
+                        psItems.setInt(1, orderId);
+                        try (ResultSet rsItem = psItems.executeQuery()) {
+                            while (rsItem.next()) {
+                                SaleOrderItem soi = new SaleOrderItem();
+                                soi.setSaleItemId(rsItem.getInt("sale_item_id"));
+                                soi.setSaleOrderId(rsItem.getInt("sale_order_id"));
+                                soi.setProductId(rsItem.getInt("product_id"));
+                                soi.setQuantity(rsItem.getInt("quantity"));
+                                soi.setUnitPrice(rsItem.getDouble("unit_price"));
+                                
+                                model.Product p = new model.Product();
+                                p.setId(rsItem.getInt("product_id"));
+                                p.setName(rsItem.getNString("product_name"));
+                                p.setImage(rsItem.getString("image_url"));
+                                soi.setProduct(p);
+
+                                items.add(soi);
+                            }
+                        }
+                    }
+                    order.setItems(items);
+                    return order;
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    /**
+     * Cancels an order, restoring the inventory stock quantities.
+     * Only works if the order is currently 'Pending'.
+     */
+    public boolean cancelOrder(int orderId, int userId) {
+        String checkSql = "SELECT order_status FROM Sale_Order WHERE sale_order_id = ? AND created_by = ?";
+        String updateStatusSql = "UPDATE Sale_Order SET order_status = 'Cancelled' WHERE sale_order_id = ? AND created_by = ?";
+        String getItemsSql = "SELECT product_id, quantity FROM Sale_Order_Item WHERE sale_order_id = ?";
+        String restoreInventorySql = "UPDATE Inventory SET quantity = quantity + ? WHERE product_id = ?";
+
+        try {
+            // Get connection and start transaction
+            getConnection().setAutoCommit(false);
+
+            // 1. Check current status
+            String currentStatus = null;
+            try (PreparedStatement psCheck = getConnection().prepareStatement(checkSql)) {
+                psCheck.setInt(1, orderId);
+                psCheck.setInt(2, userId);
+                try (ResultSet rs = psCheck.executeQuery()) {
+                    if (rs.next()) {
+                        currentStatus = rs.getString("order_status");
+                    }
+                }
+            }
+
+            if (currentStatus == null || !"Pending".equalsIgnoreCase(currentStatus)) {
+                // Order is not Pending or doesn't exist, cannot cancel
+                getConnection().rollback();
+                return false;
+            }
+
+            // 2. Update status to Cancelled
+            try (PreparedStatement psUpdate = getConnection().prepareStatement(updateStatusSql)) {
+                psUpdate.setInt(1, orderId);
+                psUpdate.setInt(2, userId);
+                int updated = psUpdate.executeUpdate();
+                if (updated == 0) {
+                    getConnection().rollback();
+                    return false;
+                }
+            }
+
+            // 3. Retrieve items to restore stock
+            java.util.List<SaleOrderItem> items = new java.util.ArrayList<>();
+            try (PreparedStatement psGetItems = getConnection().prepareStatement(getItemsSql)) {
+                psGetItems.setInt(1, orderId);
+                try (ResultSet rs = psGetItems.executeQuery()) {
+                    while (rs.next()) {
+                        SaleOrderItem soi = new SaleOrderItem();
+                        soi.setProductId(rs.getInt("product_id"));
+                        soi.setQuantity(rs.getInt("quantity"));
+                        items.add(soi);
+                    }
+                }
+            }
+
+            // 4. Restore Inventory quantity
+            try (PreparedStatement psRestore = getConnection().prepareStatement(restoreInventorySql)) {
+                for (SaleOrderItem item : items) {
+                    psRestore.setInt(1, item.getQuantity());
+                    psRestore.setInt(2, item.getProductId());
+                    psRestore.executeUpdate();
+                }
+            }
+
+            getConnection().commit();
+            return true;
+
+        } catch (SQLException ex) {
+            try {
+                getConnection().rollback();
+            } catch (SQLException rollbackEx) {
+                Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, "Rollback failed", rollbackEx);
+            }
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, "Failed to cancel order", ex);
+        } finally {
+            try {
+                getConnection().setAutoCommit(true);
+            } catch (SQLException e) {
+                Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, e);
+            }
+        }
+        return false;
+    }
 }
