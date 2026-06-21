@@ -233,6 +233,26 @@ public class ProductDAO extends DBContext {
         return null;
     }
 
+    /**
+     * Retrieves the available stock quantity of a product from Inventory.
+     */
+    public int getProductStock(int id) {
+        String sql = "SELECT quantity FROM Inventory WHERE product_id = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, id);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity");
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve product stock!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+
+
     public boolean updateProduct(Product p) {
         String sql = "UPDATE Product SET product_name=?, category_id=?, price=?, discount_price=?, unit=?, origin=?, status=?, description=?, low_stock_threshold=? " +
                      "WHERE product_id=?";
