@@ -168,7 +168,7 @@
 
             /* --- PRODUCTS PAGE BANNER --- */
             .products-banner {
-                padding: 8rem 2rem 4rem;
+                padding: 7rem 2rem 2.5rem;
                 background: linear-gradient(135deg, #E6F4EA 0%, #FFFFFF 100%);
                 text-align: center;
                 border-bottom: 1px solid var(--slate-200);
@@ -188,19 +188,146 @@
                 margin: 0 auto;
             }
 
-            /* --- FILTER & SEARCH TOOLBAR --- */
-            .toolbar-section {
-                padding: 2.5rem 2rem 0;
-                max-width: 1200px;
-                margin: 0 auto;
+            /* --- MAIN LAYOUT: SIDEBAR + CONTENT --- */
+            .main-layout {
+                max-width: 1400px;
+                margin: 0 auto 5rem;
+                padding: 80px 1rem 0;
+                display: grid;
+                grid-template-columns: 220px 1fr;
+                gap: 1.5rem;
+                align-items: start;
+                position: relative;
+                z-index: 1;
             }
 
-            .toolbar-container {
+            /* --- SIDEBAR FILTER --- */
+            .filter-sidebar {
+                position: sticky;
+                top: 75px;
+                max-height: calc(100vh - 90px);
+                overflow-y: auto;
                 background: var(--white);
-                border-radius: 20px;
-                padding: 1.5rem;
+                border-radius: 16px;
+                padding: 1.2rem;
                 box-shadow: var(--shadow-sm);
                 border: 1px solid var(--slate-200);
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                z-index: 1;
+            }
+
+            /* ẩn scrollbar nhưng vẫn scroll được */
+            .filter-sidebar::-webkit-scrollbar { width: 4px; }
+            .filter-sidebar::-webkit-scrollbar-track { background: transparent; }
+            .filter-sidebar::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 4px; }
+
+            .sidebar-title {
+                font-family: var(--font-display);
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: var(--dark);
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding-bottom: 0.8rem;
+                border-bottom: 1px solid var(--slate-200);
+            }
+
+            .sidebar-title i {
+                color: var(--primary);
+                font-size: 0.85rem;
+            }
+
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.4rem;
+            }
+
+            .filter-label {
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: var(--slate-400);
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+                margin-bottom: 0.2rem;
+            }
+
+            .filter-pills {
+                display: flex;
+                flex-direction: column;
+                gap: 0.2rem;
+                list-style: none;
+            }
+
+            .filter-pill {
+                text-decoration: none;
+                background-color: transparent;
+                color: var(--slate-600);
+                padding: 0.35rem 0.7rem;
+                border-radius: 8px;
+                font-size: 0.82rem;
+                font-weight: 500;
+                border: 1px solid transparent;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+
+            .filter-pill:hover {
+                background-color: var(--primary-light);
+                color: var(--primary);
+            }
+
+            .filter-pill.active {
+                background-color: var(--primary-light);
+                color: var(--primary);
+                border-color: var(--primary);
+                font-weight: 700;
+            }
+
+            .filter-pill.active::before {
+                content: '';
+                width: 6px;
+                height: 6px;
+                background: var(--primary);
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            .sidebar-divider {
+                border: none;
+                border-top: 1px solid var(--slate-200);
+                margin: 0;
+            }
+
+            .btn-reset-filter {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.4rem;
+                background: var(--light);
+                color: var(--slate-600);
+                border: 1px solid var(--slate-300);
+                padding: 0.5rem;
+                border-radius: 8px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .btn-reset-filter:hover {
+                background: #FEF2F2;
+                color: #EF4444;
+                border-color: #FECACA;
+            }
+
+            /* --- CONTENT AREA (search + grid) --- */
+            .content-area {
                 display: flex;
                 flex-direction: column;
                 gap: 1.5rem;
@@ -234,19 +361,18 @@
 
             .search-input {
                 width: 100%;
-                padding: 0.8rem 1rem 0.8rem 3rem;
-                border-radius: 12px;
+                padding: 0.6rem 1rem 0.6rem 2.5rem;
+                border-radius: 10px;
                 border: 1px solid var(--slate-300);
                 font-family: var(--font-body);
-                font-size: 0.95rem;
-                background-color: var(--light);
+                font-size: 0.82rem;
+                background-color: var(--white);
                 outline: none;
                 transition: all 0.3s ease;
             }
 
             .search-input:focus {
                 border-color: var(--primary);
-                background-color: var(--white);
                 box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
             }
 
@@ -263,76 +389,25 @@
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
+                white-space: nowrap;
             }
 
             .btn-search:hover {
                 background-color: var(--primary-hover);
             }
 
-            .filter-row {
-                display: flex;
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-
-            .filter-label {
-                font-size: 0.9rem;
-                font-weight: 700;
-                color: var(--slate-600);
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-            }
-
-            .filter-pills {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.75rem;
-                list-style: none;
-            }
-
-            .filter-pill {
-                text-decoration: none;
-                background-color: var(--light);
-                color: var(--slate-600);
-                padding: 0.5rem 1.25rem;
-                border-radius: 50px;
-                font-size: 0.9rem;
-                font-weight: 600;
-                border: 1px solid var(--slate-300);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                cursor: pointer;
-            }
-
-            .filter-pill:hover {
-                background-color: var(--primary-light);
-                color: var(--primary);
-                border-color: var(--primary);
-            }
-
-            .filter-pill.active {
-                background-color: var(--primary);
-                color: var(--white);
-                border-color: var(--primary);
-                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
-            }
-
-            /* --- PRODUCT GRID SECTION --- */
-            .products-section {
-                padding: 3rem 2rem 6rem;
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-
+            /* --- PRODUCT GRID --- */
             .product-grid {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 2rem;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                padding-top: 0.5rem;
             }
 
             .product-card {
                 background: var(--white);
                 border-radius: 20px;
-                overflow: hidden;
+                overflow: visible;
                 box-shadow: var(--shadow-sm);
                 border: 1px solid rgba(226, 232, 240, 0.8);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -353,6 +428,7 @@
                 overflow: hidden;
                 position: relative;
                 background: #F1F5F9;
+                border-radius: 20px 20px 0 0;
             }
 
             .product-image-container img {
@@ -486,7 +562,7 @@
 
             /* --- FALLBACK SECTION --- */
             .fallback-section {
-                grid-column: span 4;
+                grid-column: span 3;
                 text-align: center;
                 padding: 5rem 2rem;
                 background: var(--white);
@@ -665,8 +741,12 @@
 
             /* --- RESPONSIVE STYLES --- */
             @media (max-width: 1024px) {
+                .main-layout {
+                    grid-template-columns: 200px 1fr;
+                    padding: 80px 0.75rem 0;
+                }
                 .product-grid {
-                    grid-template-columns: repeat(3, 1fr);
+                    grid-template-columns: repeat(2, 1fr);
                 }
                 .footer-container {
                     grid-template-columns: repeat(2, 1fr);
@@ -675,14 +755,19 @@
             }
 
             @media (max-width: 768px) {
+                .main-layout {
+                    grid-template-columns: 1fr;
+                    padding: 80px 0.75rem 0;
+                }
+                .filter-sidebar {
+                    position: static;
+                    max-height: none;
+                }
                 .product-grid {
                     grid-template-columns: repeat(2, 1fr);
                 }
                 .nav-menu {
                     display: none;
-                }
-                .toolbar-container {
-                    padding: 1rem;
                 }
             }
 
@@ -716,7 +801,7 @@
             .user-dropdown {
                 display: none;
                 position: absolute;
-                top: calc(100% + 10px);
+                top: 100%;
                 right: 0;
                 background: var(--white);
                 border-radius: 14px;
@@ -724,7 +809,7 @@
                 border: 1px solid rgba(226, 232, 240, 0.8);
                 min-width: 180px;
                 overflow: hidden;
-                z-index: 999;
+                z-index: 1001;
             }
 
             .user-menu:hover .user-dropdown {
@@ -733,48 +818,22 @@
             }
 
             @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-6px);
-                }
-                to   {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
+                from { opacity: 0; transform: translateY(-6px); }
+                to   { opacity: 1; transform: translateY(0); }
             }
 
             .user-dropdown a {
-                display: flex;
-                align-items: center;
-                gap: 0.6rem;
-                padding: 0.75rem 1.2rem;
-                color: var(--dark);
-                text-decoration: none;
-                font-size: 0.9rem;
-                font-weight: 500;
+                display: flex; align-items: center; gap: 0.6rem;
+                padding: 0.75rem 1.2rem; color: var(--dark);
+                text-decoration: none; font-size: 0.9rem; font-weight: 500;
                 transition: background 0.2s ease;
             }
-
-            .user-dropdown a:hover {
-                background: var(--primary-light);
-                color: var(--primary);
-            }
-
-            .user-dropdown a.logout {
-                color: #EF4444;
-                border-top: 1px solid rgba(226, 232, 240, 0.8);
-            }
-
-            .user-dropdown a.logout:hover {
-                background: #FEF2F2;
-                color: #DC2626;
-            }
+            .user-dropdown a:hover { background: var(--primary-light); color: var(--primary); }
+            .user-dropdown a.logout { color: #EF4444; border-top: 1px solid rgba(226,232,240,0.8); }
+            .user-dropdown a.logout:hover { background: #FEF2F2; color: #DC2626; }
 
             @media (max-width: 480px) {
                 .product-grid {
-                    grid-template-columns: 1fr;
-                }
-                .footer-container {
                     grid-template-columns: 1fr;
                 }
                 .footer-bottom {
@@ -804,29 +863,30 @@
                 <ul class="nav-menu">
                     <li><a href="home" class="nav-link">Trang chủ</a></li>
                     <li><a href="products" class="nav-link">Sản phẩm</a></li>
-                    <li><a href="#" class="nav-link">Giới thiệu</a></li>
-                    <li><a href="#" class="nav-link">Liên hệ</a></li>
+                    <li><a href="about.jsp" class="nav-link">Giới thiệu</a></li>
+                    <li><a href="contact.jsp" class="nav-link">Liên hệ</a></li>
                 </ul>
 
                 <div class="nav-actions">
                     <a href="#" style="color: var(--slate-600); font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass"></i></a>
-                    <a href="#" style="color: var(--slate-600); font-size: 1.25rem; position: relative;">
+                    <a href="cart" style="color: var(--slate-600); font-size: 1.25rem; position: relative;">
                         <i class="fa-solid fa-cart-shopping"></i>
-                        <span style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">0</span>
+                        <span class="cart-badge" style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${sessionScope.cartCount != null ? sessionScope.cartCount : 0}</span>
                     </a>
                     <c:choose>
                         <c:when test="${not empty sessionScope.user}">
                             <div class="user-menu">
                                 <button class="user-menu-btn">
                                     <i class="fa-solid fa-circle-user"></i>
-                                    Xin chào, ${sessionScope.user}
+                                    Xin chào, ${sessionScope.user.fullName}
                                     <i class="fa-solid fa-chevron-down" style="font-size:0.75rem;"></i>
                                 </button>
                                 <div class="user-dropdown">
-                                    <a href="#"><i class="fa-solid fa-user"></i> Tài khoản</a>
-                                    <a href="#"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
+                                    <a href="profile"><i class="fa-solid fa-user"></i> Tài khoản</a>
+                                    <a href="${pageContext.request.contextPath}/orders"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
                                     <a href="logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
                                 </div>
+
                             </div>
                         </c:when>
                         <c:otherwise>
@@ -838,78 +898,170 @@
                 </div>
             </div>
         </header>
+        <!-- MAIN LAYOUT -->
+        <div class="main-layout">
 
-        <!-- PRODUCTS BANNER -->
-        <section class="products-banner">
-            <h1>Cửa Hàng Trái Cây Sạch</h1>
-            <p>Cung cấp trái cây nhập khẩu thượng hạng và đặc sản vùng miền tươi ngon sạch 100% đạt chuẩn hữu cơ.</p>
-        </section>
-
-        <!-- TOOLBAR (SEARCH & FILTERS) -->
-        <section class="toolbar-section">
-            <div class="toolbar-container">
-                <!-- Search bar -->
-                <div class="search-row">
-                    <form action="products" method="GET" class="search-form">
-                        <!-- Preserve category value when searching -->
-                        <input type="hidden" name="category" value="${selectedCategory}">
-                        <div class="search-input-wrapper">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" name="search" class="search-input" placeholder="Tìm kiếm trái cây tươi ngon..." value="${searchQuery}">
-                        </div>
-                        <button type="submit" class="btn-search">
-                            Tìm kiếm <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                    </form>
-
-                    <a href="add-product" class="btn-search" style="background-color: var(--secondary); text-decoration: none; white-space: nowrap;">
-                        Thêm sản phẩm <i class="fa-solid fa-plus"></i>
-                    </a>
+            <!-- SIDEBAR FILTER -->
+            <aside class="filter-sidebar">
+                <div class="sidebar-title">
+                    <i class="fa-solid fa-sliders"></i> Bộ lọc
                 </div>
 
-                <!-- Categories Filter -->
-                <div class="filter-row">
-                    <span class="filter-label">Danh mục trái cây:</span>
+                <!-- Search -->
+                <div class="filter-group">
+                    <form action="products" method="GET">
+                        <input type="hidden" name="category" value="${selectedCategory}">
+                        <input type="hidden" name="availability" value="${selectedAvailability}">
+                        <input type="hidden" name="minPrice" value="${minPrice}">
+                        <input type="hidden" name="maxPrice" value="${maxPrice}">
+                        <div class="search-input-wrapper" style="margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" name="search" class="search-input"
+                                   placeholder="Tìm kiếm..." value="${searchQuery}">
+                        </div>
+                        <button type="submit" class="btn-search" style="width:100%;justify-content:center;padding:0.7rem;">
+                            Tìm kiếm
+                        </button>
+                    </form>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <!-- Filter by Category -->
+                <div class="filter-group">
+                    <span class="filter-label">Danh mục</span>
                     <ul class="filter-pills">
-                        <!-- "All" category pill -->
                         <li>
-                            <a href="products?category=All&search=${searchQuery}" class="filter-pill ${selectedCategory == 'All' ? 'active' : ''}">
+                            <a href="products?category=All&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}"
+                               class="filter-pill ${selectedCategory == 'All' ? 'active' : ''}">
                                 Tất cả
                             </a>
                         </li>
-
-                        <!-- Dynamic categories pills -->
                         <c:forEach var="cat" items="${categories}">
                             <li>
-                                <a href="products?category=${cat}&search=${searchQuery}" class="filter-pill ${selectedCategory == cat ? 'active' : ''}">
+                                <a href="products?category=${cat}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}"
+                                   class="filter-pill ${selectedCategory == cat ? 'active' : ''}">
                                     ${cat}
                                 </a>
                             </li>
                         </c:forEach>
                     </ul>
                 </div>
-            </div>
-        </section>
 
-        <!-- PRODUCTS GRID -->
-        <section class="products-section">
-            <div class="product-grid">
+                <hr class="sidebar-divider">
+
+                <!-- Filter by Price -->
+                <div class="filter-group">
+                    <span class="filter-label">Khoảng giá</span>
+                    <ul class="filter-pills">
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}"
+                               class="filter-pill ${empty minPrice && empty maxPrice ? 'active' : ''}">
+                                Tất cả
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&maxPrice=50000"
+                               class="filter-pill ${empty minPrice && maxPrice == '50000' ? 'active' : ''}">
+                                Dưới 50.000đ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&minPrice=50000&maxPrice=100000"
+                               class="filter-pill ${minPrice == '50000' && maxPrice == '100000' ? 'active' : ''}">
+                                50.000 – 100.000đ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&minPrice=100000&maxPrice=200000"
+                               class="filter-pill ${minPrice == '100000' && maxPrice == '200000' ? 'active' : ''}">
+                                100.000 – 200.000đ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&minPrice=200000"
+                               class="filter-pill ${minPrice == '200000' && empty maxPrice ? 'active' : ''}">
+                                Trên 200.000đ
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <!-- Filter by Availability -->
+                <div class="filter-group">
+                    <span class="filter-label">Tình trạng</span>
+                    <ul class="filter-pills">
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=All"
+                               class="filter-pill ${selectedAvailability == 'All' ? 'active' : ''}">
+                                Tất cả
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=Available"
+                               class="filter-pill ${selectedAvailability == 'Available' ? 'active' : ''}">
+                                Còn hàng
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=Featured"
+                               class="filter-pill ${selectedAvailability == 'Featured' ? 'active' : ''}">
+                                Nổi bật
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=OutOfStock"
+                               class="filter-pill ${selectedAvailability == 'OutOfStock' ? 'active' : ''}">
+                                Hết hàng
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <!-- Reset -->
+                <a href="products" class="btn-reset-filter">
+                    <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+                </a>
+            </aside>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                <!-- Product Grid -->
+                <div class="product-grid">
                 <c:choose>
                     <c:when test="${not empty products}">
                         <c:forEach var="p" items="${products}">
-                            <div class="product-card">
+                            <div class="product-card" onclick="location.href='product-detail?id=${p.id}'" style="cursor:pointer;">
                                 <div class="product-image-container">
                                     <span class="product-category">${p.category}</span>
-                                    <img src="${p.image}" alt="${p.name}" loading="lazy">
+                                    <c:if test="${p.discountPrice > 0}">
+                                        <span style="position:absolute;top:1rem;right:1rem;background:#EF4444;color:#fff;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:50px;">SALE</span>
+                                    </c:if>
+                                    <img src="${p.image}" alt="${p.name}" loading="lazy"
+                                         onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
                                 </div>
                                 <div class="product-info">
-                                    <a href="#" class="product-title">${p.name}</a>
+                                    <a href="product-detail?id=${p.id}" class="product-title">${p.name}</a>
                                     <p class="product-description">${p.description}</p>
                                     <div class="product-footer">
-                                        <span class="product-price">
-                                            <fmt:formatNumber value="${p.price}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
-                                        </span>
-                                        <button class="btn-add-cart" title="Thêm vào giỏ hàng">
+                                        <div>
+                                            <c:choose>
+                                                <c:when test="${p.discountPrice > 0}">
+                                                    <span class="product-price"><fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                    <span style="font-size:0.78rem;color:#94a3b8;text-decoration:line-through;display:block;">
+                                                        <fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="product-price"><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <button class="btn-add-cart" title="Thêm vào giỏ hàng" onclick="addToCart(event, ${p.id})">
                                             <i class="fa-solid fa-cart-plus"></i>
                                         </button>
                                     </div>
@@ -929,8 +1081,9 @@
                         </div>
                     </c:otherwise>
                 </c:choose>
+                </div>
             </div>
-        </section>
+        </div>
 
         <!-- FOOTER -->
         <footer>
@@ -997,9 +1150,74 @@
         </footer>
 
         <script>
-            function confirmDelete(productName) {
-                return confirm('Bạn có chắc chắn muốn xóa sản phẩm "' + productName + '" không?\nHành động này không thể hoàn tác!');
-            }
+        function addToCart(event, productId) {
+            event.stopPropagation(); // Prevent card click
+            
+            // Get the button element
+            const button = event.currentTarget;
+            const icon = button.querySelector('i');
+            
+            // Disable button during request
+            button.disabled = true;
+            icon.className = 'fa-solid fa-spinner fa-spin';
+            
+            // Make AJAX request
+            fetch('cart?action=add&productId=' + productId + '&quantity=1', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.querySelector('.cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cartCount;
+                    }
+                    
+                    // Show success animation
+                    icon.className = 'fa-solid fa-check';
+                    button.style.backgroundColor = '#10B981';
+                    button.style.color = '#fff';
+                    
+                    // Reset button after 1.5 seconds
+                    setTimeout(() => {
+                        icon.className = 'fa-solid fa-cart-plus';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.disabled = false;
+                    }, 1500);
+                } else {
+                    // Show error
+                    icon.className = 'fa-solid fa-xmark';
+                    button.style.backgroundColor = '#EF4444';
+                    button.style.color = '#fff';
+                    
+                    setTimeout(() => {
+                        icon.className = 'fa-solid fa-cart-plus';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.disabled = false;
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Show error
+                icon.className = 'fa-solid fa-xmark';
+                button.style.backgroundColor = '#EF4444';
+                button.style.color = '#fff';
+                
+                setTimeout(() => {
+                    icon.className = 'fa-solid fa-cart-plus';
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                    button.disabled = false;
+                }, 1500);
+            });
+        }
         </script>
 
     </body>

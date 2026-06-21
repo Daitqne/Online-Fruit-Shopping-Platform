@@ -1,13 +1,15 @@
 package controller;
 
 import dal.ProductDAO;
+import model.Product;
+import model.Authen;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import model.Product;
 
 /**
  * Controller servlet for Editing an Existing Product.
@@ -24,9 +26,21 @@ public class EditProductController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
+        Authen user = (Authen) session.getAttribute("user");
+        if (!"Shop Owner".equals(user.getRole())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này!");
+            return;
+        }
+
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.trim().isEmpty()) {
-            response.sendRedirect("products");
+            response.sendRedirect("products-shop-owner");
             return;
         }
 
@@ -37,15 +51,21 @@ public class EditProductController extends HttpServlet {
 
             if (p == null) {
                 request.setAttribute("error", "Không tìm thấy sản phẩm với ID = " + id);
-                request.getRequestDispatcher("products.jsp").forward(request, response);
+                request.getRequestDispatcher("products_shop_owner.jsp").forward(request, response);
+                return;
+            }
+
+            if (p.getShopOwnerId() > 0 && p.getShopOwnerId() != user.getId()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền chỉnh sửa sản phẩm này!");
                 return;
             }
 
             request.setAttribute("product", p);
+            request.setAttribute("categories", dao.getAllCategories());
             request.getRequestDispatcher("edit_product.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            response.sendRedirect("products");
+            response.sendRedirect("products-shop-owner");
         }
     }
 
@@ -53,29 +73,37 @@ public class EditProductController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
+        Authen user = (Authen) session.getAttribute("user");
+        if (!"Shop Owner".equals(user.getRole())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này!");
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
 
         String idStr    = request.getParameter("id");
         String name     = request.getParameter("name");
         String priceStr = request.getParameter("price");
+        String discountPriceStr = request.getParameter("discountPrice");
+        String unit     = request.getParameter("unit");
+        String origin   = request.getParameter("origin");
+        String status   = request.getParameter("status");
         String image    = request.getParameter("image");
         String desc     = request.getParameter("description");
         String category = request.getParameter("category");
-        String featStr  = request.getParameter("isFeatured");
+        String lowStockThresholdStr = request.getParameter("lowStockThreshold");
 
         int id;
         try {
             id = Integer.parseInt(idStr);
         } catch (NumberFormatException e) {
-            response.sendRedirect("products");
-            return;
-        }
-
-        if (name == null || name.trim().isEmpty()) {
-            request.setAttribute("error", "Tên sản phẩm bắt buộc phải nhập!");
-            ProductDAO dao = new ProductDAO();
-            request.setAttribute("product", dao.getProductById(id));
-            request.getRequestDispatcher("edit_product.jsp").forward(request, response);
+            response.sendRedirect("products-shop-owner");
             return;
         }
 
@@ -89,6 +117,16 @@ public class EditProductController extends HttpServlet {
             }
         }
 
+        double discountPrice = 0.0;
+        if (discountPriceStr != null && !discountPriceStr.trim().isEmpty()) {
+            try {
+                discountPrice = Double.parseDouble(discountPriceStr);
+                if (discountPrice < 0) discountPrice = 0.0;
+            } catch (NumberFormatException e) {
+                discountPrice = 0.0;
+            }
+        }
+
         if (image == null || image.trim().isEmpty()) {
             image = DEFAULT_FRUIT_IMAGE;
         }
@@ -97,25 +135,61 @@ public class EditProductController extends HttpServlet {
             category = "Trái cây khác";
         }
 
-        boolean isFeatured = "on".equals(featStr) || "true".equals(featStr);
+        if (status == null || status.trim().isEmpty()) {
+            status = "Available";
+        }
+
+        ProductDAO dao = new ProductDAO();
+        Product existingProduct = dao.getProductById(id);
+        if (existingProduct == null) {
+            response.sendRedirect("products-shop-owner");
+            return;
+        }
+        if (existingProduct.getShopOwnerId() > 0 && existingProduct.getShopOwnerId() != user.getId()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền chỉnh sửa sản phẩm này!");
+            return;
+        }
+
+        int lowStockThreshold = 10;
+        if (lowStockThresholdStr != null && !lowStockThresholdStr.trim().isEmpty()) {
+            try {
+                lowStockThreshold = Integer.parseInt(lowStockThresholdStr);
+                if (lowStockThreshold < 0) lowStockThreshold = 10;
+            } catch (NumberFormatException e) {
+                lowStockThreshold = 10;
+            }
+        }
 
         Product p = new Product();
         p.setId(id);
-        p.setName(name.trim());
+        p.setName(name != null ? name.trim() : "");
         p.setPrice(price);
+        p.setDiscountPrice(discountPrice);
+        p.setUnit(unit != null ? unit.trim() : "");
+        p.setOrigin(origin != null ? origin.trim() : "");
+        p.setStatus("Pending");
         p.setImage(image.trim());
         p.setDescription(desc != null ? desc.trim() : "");
         p.setCategory(category.trim());
-        p.setFeatured(isFeatured);
+        p.setShopOwnerId(user.getId());
+        p.setLowStockThreshold(lowStockThreshold);
 
-        ProductDAO dao = new ProductDAO();
+        if (name == null || name.trim().isEmpty()) {
+            request.setAttribute("error", "Tên sản phẩm bắt buộc phải nhập!");
+            request.setAttribute("product", p);
+            request.setAttribute("categories", dao.getAllCategories());
+            request.getRequestDispatcher("edit_product.jsp").forward(request, response);
+            return;
+        }
+
         boolean success = dao.updateProduct(p);
 
         if (success) {
-            response.sendRedirect("products");
+            response.sendRedirect("products-shop-owner?success=true");
         } else {
             request.setAttribute("error", "Cập nhật sản phẩm thất bại! Vui lòng thử lại.");
             request.setAttribute("product", p);
+            request.setAttribute("categories", dao.getAllCategories());
             request.getRequestDispatcher("edit_product.jsp").forward(request, response);
         }
     }

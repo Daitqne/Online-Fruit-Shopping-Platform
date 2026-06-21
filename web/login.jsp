@@ -288,7 +288,7 @@
                 <label class="remember-me">
                     <input type="checkbox" name="remember"> Ghi nhớ đăng nhập
                 </label>
-                <a href="#" class="forgot-pass">Quên mật khẩu?</a>
+                <a href="forgot-password" class="forgot-pass">Quên mật khẩu?</a>
             </div>
 
             <button type="submit" class="btn-submit">

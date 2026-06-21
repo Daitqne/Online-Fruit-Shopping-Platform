@@ -1,0 +1,290 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 9, 2026, 1:38:14 PM
+    Author     : nguye
+*/
+
+/* ===== PROFILE ===== */
+
+.profile-section{
+    padding:120px 2rem 80px;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-container{
+    max-width:1200px;
+    margin:auto;
+
+    display:grid;
+    grid-template-columns:320px 1fr;
+
+    gap:2rem;
+}
+
+.profile-card{
+    background:var(--white);
+
+    border-radius:28px;
+
+    padding:2rem;
+
+    box-shadow:var(--shadow-lg);
+
+    height:fit-content;
+
+    position:sticky;
+
+    top:110px;
+
+    border:1px solid rgba(226,232,240,.8);
+}
+
+.profile-header{
+    text-align:center;
+}
+
+.avatar-wrapper{
+    position:relative;
+
+    width:150px;
+
+    margin:auto;
+}
+
+.profile-avatar{
+    width:150px;
+
+    height:150px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:6px solid var(--primary-light);
+
+    box-shadow:var(--shadow-md);
+}
+
+.edit-avatar{
+    position:absolute;
+
+    bottom:8px;
+
+    right:8px;
+
+    width:40px;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:var(--primary);
+
+    color:white;
+
+    cursor:pointer;
+}
+
+.profile-header h2{
+    margin-top:1.2rem;
+
+    font-family:var(--font-display);
+
+    font-size:1.8rem;
+}
+
+.profile-role{
+    display:inline-block;
+
+    margin-top:8px;
+
+    background:var(--primary-light);
+
+    color:var(--primary);
+
+    padding:.4rem 1rem;
+
+    border-radius:30px;
+
+    font-size:.9rem;
+
+    font-weight:700;
+}
+
+.member-date{
+    color:var(--slate-600);
+
+    margin:1rem 0;
+}
+
+.btn-edit{
+    display:flex;
+
+    justify-content:center;
+
+    gap:10px;
+
+    background:var(--primary);
+
+    color:white;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    text-decoration:none;
+
+    font-weight:600;
+
+    transition:.3s;
+}
+
+.btn-edit:hover{
+    transform:translateY(-2px);
+
+    background:var(--primary-hover);
+}
+
+.profile-content{
+    display:flex;
+
+    flex-direction:column;
+
+    gap:1.5rem;
+}
+
+.info-box{
+
+    background:white;
+
+    padding:2rem;
+
+    border-radius:24px;
+
+    box-shadow:var(--shadow-md);
+
+    border:1px solid rgba(226,232,240,.8);
+}
+
+.box-title{
+
+    font-family:var(--font-display);
+
+    font-size:1.2rem;
+
+    font-weight:700;
+
+    color:var(--dark);
+
+    margin-bottom:1.5rem;
+
+    display:flex;
+
+    gap:10px;
+
+    align-items:center;
+}
+
+.box-title i{
+    color:var(--primary);
+}
+
+.profile-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:1.2rem;
+}
+
+.info-item{
+
+    background:#F8FAFC;
+
+    padding:1rem;
+
+    border-radius:16px;
+}
+
+.info-item label{
+
+    display:block;
+
+    color:var(--slate-600);
+
+    font-size:.85rem;
+
+    margin-bottom:.4rem;
+}
+
+.info-item span{
+
+    font-weight:700;
+
+    color:var(--dark);
+}
+
+.address-box{
+
+    background:var(--primary-light);
+
+    padding:1rem;
+
+    border-radius:16px;
+}
+
+.security-actions{
+
+    display:flex;
+
+    gap:1rem;
+}
+
+.btn-secondary,
+.btn-danger{
+
+    padding:12px 20px;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    font-weight:600;
+}
+
+.btn-secondary{
+
+    background:#EEF2FF;
+
+    color:#4F46E5;
+}
+
+.btn-danger{
+
+    background:#FEF2F2;
+
+    color:#DC2626;
+}
+
+@media(max-width:768px){
+
+.profile-container{
+grid-template-columns:1fr;
+}
+
+.profile-grid{
+grid-template-columns:1fr;
+}
+
+.profile-card{
+position:static;
+}
+
+}
