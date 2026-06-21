@@ -20,29 +20,42 @@ public class ProductDAO extends DBContext {
     private static final String DEFAULT_STATUS = "Available";
     private static final String FEATURED_STATUS = "Featured";
 
+    /**
+     * Lấy Top 8 sản phẩm bán chạy nhất dựa trên tổng số lượng đã bán
+     * trong bảng Sale_Order_Item. Nếu chưa có dữ liệu bán hàng,
+     * fallback về sản phẩm mới nhất.
+     */
     public List<Product> getTop8FeaturedProducts() {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT TOP 8 p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
-                     "FROM Product p " +
-                     "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
-                     "LEFT JOIN (" +
-                     "    SELECT product_id, image_url FROM (" +
-                     "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
-                     "        FROM Product_Image" +
-                     "    ) t WHERE rn = 1" +
-                     ") pi ON pi.product_id = p.product_id " +
-                     "WHERE p.status = ? " +
-                     "ORDER BY p.product_id DESC";
+        String sql =
+            "SELECT TOP 8 " +
+            "    p.product_id, p.product_name, p.price, p.discount_price, " +
+            "    p.unit, p.origin, p.status, p.description, " +
+            "    c.category_name, pi.image_url, " +
+            "    COALESCE(SUM(soi.quantity), 0) AS total_sold " +
+            "FROM Product p " +
+            "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+            "LEFT JOIN Sale_Order_Item soi ON p.product_id = soi.product_id " +
+            "LEFT JOIN ( " +
+            "    SELECT product_id, image_url FROM ( " +
+            "        SELECT product_id, image_url, " +
+            "               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
+            "        FROM Product_Image " +
+            "    ) t WHERE rn = 1 " +
+            ") pi ON pi.product_id = p.product_id " +
+            "GROUP BY " +
+            "    p.product_id, p.product_name, p.price, p.discount_price, " +
+            "    p.unit, p.origin, p.status, p.description, " +
+            "    c.category_name, pi.image_url " +
+            "ORDER BY total_sold DESC, p.product_id DESC";
 
-        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
-            st.setNString(1, FEATURED_STATUS);
-            try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    products.add(mapRowToProduct(rs));
-                }
+        try (PreparedStatement st = getConnection().prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                products.add(mapRowToProduct(rs));
             }
         } catch (SQLException ex) {
-            System.err.println("[ProductDAO Error] Failed to retrieve featured products!");
+            System.err.println("[ProductDAO Error] Failed to retrieve best-selling products!");
             Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return products;
@@ -351,6 +364,37 @@ public class ProductDAO extends DBContext {
             st.setString(2, imageUrl);
             st.executeUpdate();
         }
+    }
+
+    public List<Product> getSearchSuggestions(String query) {
+        List<Product> products = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return products;
+        }
+        String sql = "SELECT TOP 5 p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
+                     "FROM Product p " +
+                     "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+                     "LEFT JOIN (" +
+                     "    SELECT product_id, image_url FROM (" +
+                     "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
+                     "        FROM Product_Image" +
+                     "    ) t WHERE rn = 1" +
+                     ") pi ON pi.product_id = p.product_id " +
+                     "WHERE p.product_name LIKE ? " +
+                     "ORDER BY p.product_id DESC";
+
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setNString(1, "%" + query.trim() + "%");
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapRowToProduct(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve search suggestions!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return products;
     }
 
     private Product mapRowToProduct(ResultSet rs) throws SQLException {

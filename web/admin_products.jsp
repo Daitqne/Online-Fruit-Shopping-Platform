@@ -191,19 +191,9 @@
                                 class="avatar img-fluid rounded me-1" alt="Avatar" />
                         </div>
                         <div class="flex-grow-1 ps-2">
-                            <a class="sidebar-user-title dropdown-toggle" href="#"
-                                data-bs-toggle="dropdown">
-                                ${sessionScope.user.fullName}
+                            <a>
+                                <div class="sidebar-user-subtitle">${sessionScope.user.fullName}</div>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-start">
-                                <a class="dropdown-item" href="profile">
-                                    <i class="align-middle me-1" data-feather="user"></i> Hồ sơ
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="logout">
-                                    <i class="align-middle me-1" data-feather="log-out"></i> Đăng xuất
-                                </a>
-                            </div>
                             <div class="sidebar-user-subtitle">${sessionScope.user.role}</div>
                         </div>
                     </div>
@@ -258,10 +248,6 @@
                                 <span class="text-dark">${sessionScope.user.fullName}</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" href="profile">
-                                    <i class="align-middle me-1" data-feather="user"></i> Hồ sơ
-                                </a>
-                                <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="logout">
                                     <i class="align-middle me-1" data-feather="log-out"></i> Đăng xuất
                                 </a>
