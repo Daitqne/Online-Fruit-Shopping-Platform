@@ -48,17 +48,56 @@
             color: #10B981;
         }
 
+        .status-badge.approved {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .status-badge.pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
         .status-badge.featured {
             background: #FEF3C7;
             color: #D97706;
         }
 
-        .status-badge.unavailable {
-            background: #FEF2F2;
-            color: #EF4444;
+        .status-badge.unavailable,
+        .status-badge.rejected {
+            background: #FEE2E2;
+            color: #991B1B;
         }
 
         /* ---- Action Buttons ---- */
+        .btn-approve-product {
+            background-color: #DBEAFE;
+            border-color: #93C5FD;
+            color: #1D4ED8;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.4rem 1rem;
+        }
+        .btn-approve-product:hover {
+            background-color: #1D4ED8;
+            border-color: #1E40AF;
+            color: #fff;
+        }
+
+        .btn-reject-product {
+            background-color: #FEE2E2;
+            border-color: #FCA5A5;
+            color: #991B1B;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.4rem 1rem;
+        }
+        .btn-reject-product:hover {
+            background-color: #DC2626;
+            border-color: #B91C1C;
+            color: #fff;
+        }
+
         .btn-block-product {
             background-color: #FEF2F2;
             border-color: #FCA5A5;
@@ -67,13 +106,11 @@
             font-size: 0.85rem;
             padding: 0.4rem 1rem;
         }
-
         .btn-block-product:hover {
             background-color: #EF4444;
             border-color: #DC2626;
             color: #fff;
         }
-
         .btn-unblock-product {
             background-color: #ECFDF5;
             border-color: #6EE7B7;
@@ -82,7 +119,6 @@
             font-size: 0.85rem;
             padding: 0.4rem 1rem;
         }
-
         .btn-unblock-product:hover {
             background-color: #10B981;
             border-color: #059669;
@@ -290,40 +326,40 @@
                                     <div class="stat-tile-label">Tổng sản phẩm</div>
                                 </div>
                                 <div class="stat-tile">
-                                    <div class="stat-tile-value" style="color: #10B981;">
-                                        <c:set var="availableCount" value="0"/>
+                                    <div class="stat-tile-value" style="color: #F59E0B;">
+                                        <c:set var="pendingCount" value="0"/>
                                         <c:forEach items="${productList}" var="p">
-                                            <c:if test="${p.status == 'Available'}">
-                                                <c:set var="availableCount" value="${availableCount + 1}"/>
+                                            <c:if test="${p.status == 'Pending'}">
+                                                <c:set var="pendingCount" value="${pendingCount + 1}"/>
                                             </c:if>
                                         </c:forEach>
-                                        ${availableCount}
+                                        ${pendingCount}
                                     </div>
-                                    <div class="stat-tile-label">Đang bán</div>
+                                    <div class="stat-tile-label">Chờ duyệt</div>
                                 </div>
                                 <div class="stat-tile">
-                                    <div class="stat-tile-value" style="color: #D97706;">
-                                        <c:set var="featuredCount" value="0"/>
+                                    <div class="stat-tile-value" style="color: #10B981;">
+                                        <c:set var="approvedCount" value="0"/>
                                         <c:forEach items="${productList}" var="p">
-                                            <c:if test="${p.status == 'Featured'}">
-                                                <c:set var="featuredCount" value="${featuredCount + 1}"/>
+                                            <c:if test="${p.status == 'Approved' or p.status == 'Available' or p.status == 'Featured'}">
+                                                <c:set var="approvedCount" value="${approvedCount + 1}"/>
                                             </c:if>
                                         </c:forEach>
-                                        ${featuredCount}
+                                        ${approvedCount}
                                     </div>
-                                    <div class="stat-tile-label">Nổi bật</div>
+                                    <div class="stat-tile-label">Đã duyệt</div>
                                 </div>
                                 <div class="stat-tile">
                                     <div class="stat-tile-value" style="color: #EF4444;">
-                                        <c:set var="unavailableCount" value="0"/>
+                                        <c:set var="rejectedCount" value="0"/>
                                         <c:forEach items="${productList}" var="p">
-                                            <c:if test="${p.status == 'Unavailable'}">
-                                                <c:set var="unavailableCount" value="${unavailableCount + 1}"/>
+                                            <c:if test="${p.status == 'Rejected' or p.status == 'Unavailable'}">
+                                                <c:set var="rejectedCount" value="${rejectedCount + 1}"/>
                                             </c:if>
                                         </c:forEach>
-                                        ${unavailableCount}
+                                        ${rejectedCount}
                                     </div>
-                                    <div class="stat-tile-label">Bị khóa</div>
+                                    <div class="stat-tile-label">Bị từ chối/Ẩn</div>
                                 </div>
                             </div>
                         </div>
@@ -389,6 +425,21 @@
                                                                 </td>
                                                                 <td>
                                                                     <c:choose>
+                                                                        <c:when test="${p.status == 'Pending'}">
+                                                                            <span class="status-badge pending">
+                                                                                <i data-feather="clock" style="width: 14px; height: 14px;"></i> Chờ duyệt
+                                                                            </span>
+                                                                        </c:when>
+                                                                        <c:when test="${p.status == 'Approved'}">
+                                                                            <span class="status-badge approved">
+                                                                                <i data-feather="check-circle" style="width: 14px; height: 14px;"></i> Đã duyệt
+                                                                            </span>
+                                                                        </c:when>
+                                                                        <c:when test="${p.status == 'Rejected'}">
+                                                                            <span class="status-badge rejected">
+                                                                                <i data-feather="x-circle" style="width: 14px; height: 14px;"></i> Bị từ chối
+                                                                            </span>
+                                                                        </c:when>
                                                                         <c:when test="${p.status == 'Available'}">
                                                                             <span class="status-badge available">
                                                                                 <i data-feather="check-circle" style="width: 14px; height: 14px;"></i> Available
@@ -401,24 +452,35 @@
                                                                         </c:when>
                                                                         <c:otherwise>
                                                                             <span class="status-badge unavailable">
-                                                                                <i data-feather="x-circle" style="width: 14px; height: 14px;"></i> Unavailable
+                                                                                <i data-feather="x-circle" style="width: 14px; height: 14px;"></i> ${p.status}
                                                                             </span>
                                                                         </c:otherwise>
                                                                     </c:choose>
                                                                 </td>
                                                                 <td style="text-align: center;">
                                                                     <c:choose>
+                                                                        <c:when test="${p.status == 'Pending'}">
+                                                                            <a href="admin-products?action=approve&amp;id=${p.id}"
+                                                                               class="btn btn-sm btn-approve-product"
+                                                                               onclick="return confirm('PHÊ DUYỆT sản phẩm [${p.name}]?')">
+                                                                                <i data-feather="check" style="width: 14px; height: 14px;"></i> Duyệt
+                                                                            </a>
+                                                                            <button class="btn btn-sm btn-reject-product"
+                                                                                    onclick="openRejectModal(${p.id}, '${p.name}')">
+                                                                                <i data-feather="x" style="width: 14px; height: 14px;"></i> Từ chối
+                                                                            </button>
+                                                                        </c:when>
                                                                         <c:when test="${p.status == 'Unavailable'}">
-                                                                            <a href="admin-products?action=toggleStatus&id=${p.id}&status=${p.status}" 
-                                                                               class="btn btn-sm btn-unblock-product" 
-                                                                               onclick="return confirm('Bạn có chắc chắn muốn MỞ KHÓA sản phẩm [${p.name}] không?')">
+                                                                            <a href="admin-products?action=toggleStatus&amp;id=${p.id}&amp;status=${p.status}"
+                                                                               class="btn btn-sm btn-unblock-product"
+                                                                               onclick="return confirm('Mở khóa sản phẩm [${p.name}]?')">
                                                                                 <i data-feather="unlock" style="width: 14px; height: 14px;"></i> Unblock
                                                                             </a>
                                                                         </c:when>
                                                                         <c:otherwise>
-                                                                            <a href="admin-products?action=toggleStatus&id=${p.id}&status=${p.status}" 
-                                                                               class="btn btn-sm btn-block-product" 
-                                                                               onclick="return confirm('Bạn có chắc chắn muốn KHÓA sản phẩm [${p.name}] không?')">
+                                                                            <a href="admin-products?action=toggleStatus&amp;id=${p.id}&amp;status=${p.status}"
+                                                                               class="btn btn-sm btn-block-product"
+                                                                               onclick="return confirm('KHÓA sản phẩm [${p.name}]?')">
                                                                                 <i data-feather="lock" style="width: 14px; height: 14px;"></i> Block
                                                                             </a>
                                                                         </c:otherwise>
@@ -471,13 +533,46 @@
     </div>
 
     <script src="${pageContext.request.contextPath}/js/app.js"></script>
+
+    <!-- Reject Reason Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="get" action="admin-products" id="rejectForm">
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="id" id="rejectProductId">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectModalLabel">Từ chối sản phẩm</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Sản phẩm: <strong id="rejectProductName"></strong></p>
+                        <div class="mb-3">
+                            <label for="rejectReason" class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                            <textarea name="reason" id="rejectReason" class="form-control" rows="3"
+                                      placeholder="Nhập lý do từ chối..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Initialize Feather icons
-            if (typeof feather !== 'undefined') {
-                feather.replace();
-            }
+            if (typeof feather !== 'undefined') feather.replace();
         });
+        function openRejectModal(productId, productName) {
+            document.getElementById('rejectProductId').value = productId;
+            document.getElementById('rejectProductName').textContent = productName;
+            document.getElementById('rejectReason').value = '';
+            var modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            modal.show();
+        }
     </script>
 </body>
 </html>

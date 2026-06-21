@@ -55,6 +55,11 @@ public class EditProductController extends HttpServlet {
                 return;
             }
 
+            if (p.getShopOwnerId() > 0 && p.getShopOwnerId() != user.getId()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền chỉnh sửa sản phẩm này!");
+                return;
+            }
+
             request.setAttribute("product", p);
             request.setAttribute("categories", dao.getAllCategories());
             request.getRequestDispatcher("edit_product.jsp").forward(request, response);
@@ -92,6 +97,7 @@ public class EditProductController extends HttpServlet {
         String image    = request.getParameter("image");
         String desc     = request.getParameter("description");
         String category = request.getParameter("category");
+        String lowStockThresholdStr = request.getParameter("lowStockThreshold");
 
         int id;
         try {
@@ -133,6 +139,27 @@ public class EditProductController extends HttpServlet {
             status = "Available";
         }
 
+        ProductDAO dao = new ProductDAO();
+        Product existingProduct = dao.getProductById(id);
+        if (existingProduct == null) {
+            response.sendRedirect("products-shop-owner");
+            return;
+        }
+        if (existingProduct.getShopOwnerId() > 0 && existingProduct.getShopOwnerId() != user.getId()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền chỉnh sửa sản phẩm này!");
+            return;
+        }
+
+        int lowStockThreshold = 10;
+        if (lowStockThresholdStr != null && !lowStockThresholdStr.trim().isEmpty()) {
+            try {
+                lowStockThreshold = Integer.parseInt(lowStockThresholdStr);
+                if (lowStockThreshold < 0) lowStockThreshold = 10;
+            } catch (NumberFormatException e) {
+                lowStockThreshold = 10;
+            }
+        }
+
         Product p = new Product();
         p.setId(id);
         p.setName(name != null ? name.trim() : "");
@@ -140,12 +167,12 @@ public class EditProductController extends HttpServlet {
         p.setDiscountPrice(discountPrice);
         p.setUnit(unit != null ? unit.trim() : "");
         p.setOrigin(origin != null ? origin.trim() : "");
-        p.setStatus(status.trim());
+        p.setStatus("Pending");
         p.setImage(image.trim());
         p.setDescription(desc != null ? desc.trim() : "");
         p.setCategory(category.trim());
-
-        ProductDAO dao = new ProductDAO();
+        p.setShopOwnerId(user.getId());
+        p.setLowStockThreshold(lowStockThreshold);
 
         if (name == null || name.trim().isEmpty()) {
             request.setAttribute("error", "Tên sản phẩm bắt buộc phải nhập!");

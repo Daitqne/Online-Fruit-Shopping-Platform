@@ -67,7 +67,7 @@ public class AdminDAO extends DBContext {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, " +
                      "p.origin, p.status, p.description, pc.category_name, pi.image_url, " +
-                     "ui.full_name as shop_owner_name " +
+                     "ui.full_name as shop_owner_name, p.shop_owner_id " +
                      "FROM Product p " +
                      "LEFT JOIN Product_Category pc ON p.category_id = pc.category_id " +
                      "LEFT JOIN Product_Image pi ON p.product_id = pi.product_id " +
@@ -90,6 +90,7 @@ public class AdminDAO extends DBContext {
                 p.setDescription(rs.getString("description"));
                 p.setImage(rs.getString("image_url"));
                 p.setShopOwnerName(rs.getString("shop_owner_name"));
+                p.setShopOwnerId(rs.getInt("shop_owner_id"));
                 list.add(p);
             }
         } catch (Exception e) {

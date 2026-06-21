@@ -67,6 +67,8 @@ public class AddProductController extends HttpServlet {
         String image = request.getParameter("image");
         String description = request.getParameter("description");
         String category = request.getParameter("category");
+        String lowStockThresholdStr = request.getParameter("lowStockThreshold");
+        String initialStockStr = request.getParameter("initialStock");
 
         if (name == null || name.trim().isEmpty()) {
             request.setAttribute("error", "Tên sản phẩm bắt buộc phải nhập!");
@@ -111,16 +113,39 @@ public class AddProductController extends HttpServlet {
             status = "Available";
         }
 
+        int lowStockThreshold = 10;
+        if (lowStockThresholdStr != null && !lowStockThresholdStr.trim().isEmpty()) {
+            try {
+                lowStockThreshold = Integer.parseInt(lowStockThresholdStr);
+                if (lowStockThreshold < 0) lowStockThreshold = 10;
+            } catch (NumberFormatException e) {
+                lowStockThreshold = 10;
+            }
+        }
+
+        int initialStock = 100;
+        if (initialStockStr != null && !initialStockStr.trim().isEmpty()) {
+            try {
+                initialStock = Integer.parseInt(initialStockStr);
+                if (initialStock < 0) initialStock = 100;
+            } catch (NumberFormatException e) {
+                initialStock = 100;
+            }
+        }
+
         Product p = new Product();
         p.setName(name.trim());
         p.setPrice(price);
         p.setDiscountPrice(discountPrice);
         p.setUnit(unit != null ? unit.trim() : "");
         p.setOrigin(origin != null ? origin.trim() : "");
-        p.setStatus(status.trim());
+        p.setStatus("Pending");
         p.setImage(image.trim());
         p.setDescription(description != null ? description.trim() : "");
         p.setCategory(category.trim());
+        p.setShopOwnerId(user.getId());
+        p.setLowStockThreshold(lowStockThreshold);
+        p.setStockQuantity(initialStock);
 
         ProductDAO dao = new ProductDAO();
         boolean success = dao.addProduct(p);
