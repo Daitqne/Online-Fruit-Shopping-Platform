@@ -1,5 +1,8 @@
 package model;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * Product Entity Class representing fruit products, updated for GreenStockDB.
  */
@@ -17,6 +20,11 @@ public class Product {
     private int categoryId;
     private boolean isFeatured;
     private String shopOwnerName; // Tên shop owner cho admin
+    private int shopOwnerId;
+    private int stockQuantity;
+    private int lowStockThreshold;
+    private List<WeightVariant> weightVariants = new ArrayList<>();
+    private List<PackagingOption> packagingOptions = new ArrayList<>();
 
     public Product() {
     }
@@ -186,6 +194,46 @@ public class Product {
         this.shopOwnerName = shopOwnerName;
     }
 
+    public int getShopOwnerId() {
+        return shopOwnerId;
+    }
+
+    public void setShopOwnerId(int shopOwnerId) {
+        this.shopOwnerId = shopOwnerId;
+    }
+
+    public int getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public void setStockQuantity(int stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+
+    public int getLowStockThreshold() {
+        return lowStockThreshold;
+    }
+
+    public void setLowStockThreshold(int lowStockThreshold) {
+        this.lowStockThreshold = lowStockThreshold;
+    }
+
+    public List<WeightVariant> getWeightVariants() {
+        return weightVariants;
+    }
+
+    public void setWeightVariants(List<WeightVariant> weightVariants) {
+        this.weightVariants = weightVariants;
+    }
+
+    public List<PackagingOption> getPackagingOptions() {
+        return packagingOptions;
+    }
+
+    public void setPackagingOptions(List<PackagingOption> packagingOptions) {
+        this.packagingOptions = packagingOptions;
+    }
+
     @Override
     public String toString() {
         return "Product{" +
@@ -200,6 +248,7 @@ public class Product {
                 ", category='" + category + '\'' +
                 ", isFeatured=" + isFeatured() +
                 ", categoryId=" + categoryId +
+                ", shopOwnerId=" + shopOwnerId +
                 '}';
     }
 }

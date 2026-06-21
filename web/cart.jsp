@@ -615,6 +615,22 @@
     <div class="cart-wrapper">
         <h1 class="cart-title"><i class="fa-solid fa-cart-shopping"></i> Giỏ Hàng Của Bạn</h1>
         
+        <c:if test="${not empty sessionScope.cartError}">
+            <div class="alert alert-danger" style="background: #FEE2E2; color: #EF4444; border: 1px solid #FCA5A5; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-body); font-size: 0.95rem;">
+                <i class="fa-solid fa-circle-exclamation" style="font-size: 1.1rem;"></i>
+                <span>${sessionScope.cartError}</span>
+            </div>
+            <c:remove var="cartError" scope="session"/>
+        </c:if>
+        <c:if test="${not empty sessionScope.cartSuccess}">
+            <div class="alert alert-success" style="background: var(--primary-light); color: var(--primary-hover); border: 1px solid var(--primary); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-body); font-size: 0.95rem;">
+                <i class="fa-solid fa-circle-check" style="font-size: 1.1rem;"></i>
+                <span>${sessionScope.cartSuccess}</span>
+            </div>
+            <c:remove var="cartSuccess" scope="session"/>
+        </c:if>
+
+        
         <c:choose>
             <c:when test="${not empty cartItems}">
                 <!-- Cart Items List -->

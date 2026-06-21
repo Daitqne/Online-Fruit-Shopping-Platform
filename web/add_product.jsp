@@ -94,6 +94,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="inventory-shop-owner">
+                            <i class="align-middle" data-feather="package"></i>
+                            <span class="align-middle">Tồn kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-profile">
                             <i class="align-middle" data-feather="user"></i>
                             <span class="align-middle">Hồ sơ cá nhân</span>
@@ -220,6 +227,20 @@
                                                     <option value="Featured">Nổi bật (Featured)</option>
                                                     <option value="Out of stock">Hết hàng (Out of stock)</option>
                                                 </select>
+                                            </div>
+
+                                            <!-- Initial Stock -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold" for="initialStock">Số lượng tồn kho ban đầu <span class="text-danger">*</span></label>
+                                                <input type="number" id="initialStock" name="initialStock" class="form-control" 
+                                                       value="100" min="0" placeholder="Ví dụ: 100" required>
+                                            </div>
+
+                                            <!-- Low Stock Threshold -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold" for="lowStockThreshold">Ngưỡng cảnh báo hết hàng <span class="text-danger">*</span></label>
+                                                <input type="number" id="lowStockThreshold" name="lowStockThreshold" class="form-control" 
+                                                       value="10" min="0" placeholder="Ví dụ: 10" required>
                                             </div>
 
                                             <!-- Image URL -->

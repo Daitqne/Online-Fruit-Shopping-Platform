@@ -63,6 +63,17 @@ public class CheckoutController extends HttpServlet {
             return;
         }
 
+        // Validate stock before checkout
+        dal.ProductDAO productDAO = new dal.ProductDAO();
+        for (CartItem item : cartItems) {
+            int availableStock = productDAO.getProductStock(item.getProductId());
+            if (item.getQuantity() > availableStock) {
+                session.setAttribute("cartError", "Sản phẩm \"" + item.getProduct().getName() + "\" vượt quá số lượng tồn kho (Còn lại: " + availableStock + "). Vui lòng cập nhật lại giỏ hàng.");
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+        }
+
         // Calculate totals
         double totalAmount = 0;
         for (CartItem item : cartItems) {
@@ -241,6 +252,18 @@ public class CheckoutController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
+
+        // Validate stock before placing order
+        dal.ProductDAO productDAO = new dal.ProductDAO();
+        for (CartItem item : cartItems) {
+            int availableStock = productDAO.getProductStock(item.getProductId());
+            if (item.getQuantity() > availableStock) {
+                session.setAttribute("cartError", "Sản phẩm \"" + item.getProduct().getName() + "\" vượt quá số lượng tồn kho (Còn lại: " + availableStock + "). Vui lòng cập nhật lại giỏ hàng trước khi đặt hàng.");
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+        }
+
 
         // Calculate pricing
         double totalAmount = 0;

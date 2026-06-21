@@ -1,6 +1,7 @@
 package controller;
 
 import dal.AdminDAO;
+import dal.NotificationDAO;
 import java.io.IOException;
 import java.util.List;
 import jakarta.servlet.ServletException;
@@ -22,13 +23,8 @@ public class AdminProductController extends HttpServlet {
         HttpSession session = request.getSession();
         Authen user = (Authen) session.getAttribute("user");
         
-        // Debug logging
-        System.out.println("[AdminProductController] User: " + (user != null ? user.getUsername() : "null"));
-        System.out.println("[AdminProductController] Role: " + (user != null ? user.getRole() : "null"));
-        
         // Kiểm tra quyền Admin
         if (user == null || user.getRole() == null || !user.getRole().equalsIgnoreCase("Admin")) {
-            System.out.println("[AdminProductController] Access denied - redirecting to login");
             response.sendRedirect("login");
             return;
         }
@@ -36,23 +32,71 @@ public class AdminProductController extends HttpServlet {
         AdminDAO adminDAO = new AdminDAO();
         String action = request.getParameter("action");
         
-        // Xử lý toggle product status
+        // Xử lý toggle product status (Available <-> Unavailable)
         if (action != null && action.equals("toggleStatus")) {
             int productId = Integer.parseInt(request.getParameter("id"));
             String currentStatus = request.getParameter("status");
-            
-            String newStatus = currentStatus.equalsIgnoreCase("Available") ? "Unavailable" : "Available";
-            System.out.println("[AdminProductController] Toggle status for product " + productId + " from " + currentStatus + " to " + newStatus);
+            String newStatus = currentStatus.equalsIgnoreCase("Available") || currentStatus.equalsIgnoreCase("Approved") 
+                               ? "Unavailable" : "Available";
             adminDAO.changeProductStatus(productId, newStatus);
-            
             response.sendRedirect("admin-products");
+            return;
+        }
+        
+        // Xử lý duyệt sản phẩm (Pending -> Approved)
+        if (action != null && action.equals("approve")) {
+            int productId = Integer.parseInt(request.getParameter("id"));
+            // Lấy thông tin sản phẩm để biết shopOwnerId
+            List<Product> allProducts = adminDAO.getAllProducts();
+            int shopOwnerId = allProducts.stream()
+                .filter(p -> p.getId() == productId)
+                .mapToInt(p -> p.getShopOwnerId())
+                .findFirst().orElse(0);
+            
+            adminDAO.changeProductStatus(productId, "Approved");
+            
+            // Gửi thông báo đến Shop Owner
+            if (shopOwnerId > 0) {
+                NotificationDAO notiDAO = new NotificationDAO();
+                notiDAO.addNotification(shopOwnerId,
+                    "Sản phẩm được duyệt",
+                    "Sản phẩm #" + productId + " của bạn đã được Admin PHÊ DUYỆT và hiện có thể hiển thị cho khách hàng."
+                );
+            }
+            response.sendRedirect("admin-products?approved=true");
+            return;
+        }
+        
+        // Xử lý từ chối sản phẩm (Pending -> Rejected)
+        if (action != null && action.equals("reject")) {
+            int productId = Integer.parseInt(request.getParameter("id"));
+            String reason = request.getParameter("reason");
+            if (reason == null || reason.trim().isEmpty()) {
+                reason = "Sản phẩm không đáp ứng tiêu chuẩn.";
+            }
+            // Lấy shopOwnerId
+            List<Product> allProducts = adminDAO.getAllProducts();
+            int shopOwnerId = allProducts.stream()
+                .filter(p -> p.getId() == productId)
+                .mapToInt(p -> p.getShopOwnerId())
+                .findFirst().orElse(0);
+            
+            adminDAO.changeProductStatus(productId, "Rejected");
+            
+            // Gửi thông báo đến Shop Owner
+            if (shopOwnerId > 0) {
+                NotificationDAO notiDAO = new NotificationDAO();
+                notiDAO.addNotification(shopOwnerId,
+                    "Sản phẩm bị từ chối",
+                    "Sản phẩm #" + productId + " của bạn đã bị Admin TỪ CHỐI. Lý do: " + reason.trim() + ". Vui lòng chỉnh sửa và gửi lại."
+                );
+            }
+            response.sendRedirect("admin-products?rejected=true");
             return;
         }
 
         // Lấy danh sách tất cả sản phẩm
-        System.out.println("[AdminProductController] Loading all products");
         List<Product> productList = adminDAO.getAllProducts();
-        System.out.println("[AdminProductController] Found " + (productList != null ? productList.size() : 0) + " products");
         
         request.setAttribute("productList", productList);
         request.setAttribute("pageTitle", "Quản lý Sản phẩm");

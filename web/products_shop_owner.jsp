@@ -53,7 +53,7 @@
         /* ---- Stat tiles ---- */
         .stat-tiles {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -193,6 +193,20 @@
                             <span class="align-middle">Sản phẩm</span>
                         </a>
                     </li>
+                    
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="inventory-shop-owner">
+                            <i class="align-middle" data-feather="package"></i>
+                            <span class="align-middle">Tồn kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" href="shop-owner-orders">
+                            <i class="align-middle" data-feather="shopping-bag"></i>
+                            <span class="align-middle">Đơn hàng</span>
+                        </a>
+                    </li>
 
                     <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-profile">
@@ -220,11 +234,38 @@
                                 data-bs-toggle="dropdown">
                                 <div class="position-relative">
                                     <i class="align-middle" data-feather="bell"></i>
+                                    <c:if test="${unreadCount > 0}">
+                                        <span class="indicator">${unreadCount}</span>
+                                    </c:if>
                                 </div>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
-                                aria-labelledby="alertsDropdown">
-                                <div class="dropdown-menu-header">Thông báo</div>
+                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="alertsDropdown">
+                                <div class="dropdown-menu-header">Thông báo (${unreadCount} chưa đọc)</div>
+                                <div class="list-group">
+                                    <c:choose>
+                                        <c:when test="${not empty notifications}">
+                                            <c:forEach var="n" items="${notifications}" begin="0" end="4">
+                                                <a href="#" class="list-group-item">
+                                                    <div class="row g-0 align-items-center">
+                                                        <div class="col-2 text-center">
+                                                            <c:choose>
+                                                                <c:when test="${fn:contains(n.title, 'duyệt')}"><i class="text-success align-middle me-1" data-feather="check-circle"></i></c:when>
+                                                                <c:otherwise><i class="text-danger align-middle me-1" data-feather="x-circle"></i></c:otherwise>
+                                                            </c:choose>
+                                                        </div>
+                                                        <div class="col-10 ps-2">
+                                                            <div class="text-dark" style="font-size:0.82rem;font-weight:${n.read ? '400' : '700'}">${n.title}</div>
+                                                            <div class="text-muted" style="font-size:0.75rem;">${fn:substring(n.content, 0, 70)}...</div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </c:forEach>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="text-center text-muted py-3" style="font-size:0.85rem;">Không có thông báo mới</div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                                 <div class="dropdown-menu-footer">
                                     <a href="#" class="text-muted">Xem tất cả thông báo</a>
                                 </div>
@@ -289,12 +330,16 @@
                             <div class="stat-tile-label">Tổng sản phẩm</div>
                         </div>
                         <div class="stat-tile">
-                            <div class="stat-tile-value" style="color:#F59E0B;">${featuredProducts}</div>
-                            <div class="stat-tile-label">Sản phẩm nổi bật</div>
+                            <div class="stat-tile-value" style="color:#F59E0B;">${pendingProducts}</div>
+                            <div class="stat-tile-label">Chờ duyệt</div>
                         </div>
                         <div class="stat-tile">
-                            <div class="stat-tile-value" style="color:#6366F1;">${totalCategories}</div>
-                            <div class="stat-tile-label">Danh mục</div>
+                            <div class="stat-tile-value" style="color:#10B981;">${approvedProducts}</div>
+                            <div class="stat-tile-label">Đã duyệt</div>
+                        </div>
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color:#EF4444;">${lowStockProducts}</div>
+                            <div class="stat-tile-label">Sắp hết hàng</div>
                         </div>
                     </div>
 
@@ -347,6 +392,7 @@
                                             <th>Danh mục</th>
                                             <th>Giá bán</th>
                                             <th>Đơn vị</th>
+                                            <th>Tồn kho</th>
                                             <th>Xuất xứ</th>
                                             <th>Trạng thái</th>
                                             <th class="text-center">Hành động</th>
@@ -389,24 +435,48 @@
                                                             </c:choose>
                                                         </td>
                                                         <td>${p.unit}</td>
+                                                        <td>
+                                                            <span class="fw-bold">${p.stockQuantity}</span>
+                                                            <c:if test="${p.stockQuantity <= p.lowStockThreshold}">
+                                                                <span class="badge bg-danger ms-1" title="Cảnh báo: Tồn kho dưới ngưỡng ${p.lowStockThreshold}!" style="font-size: 0.68rem;">
+                                                                    <i class="fas fa-bell me-1"></i>Sắp hết hàng
+                                                                </span>
+                                                            </c:if>
+                                                        </td>
                                                         <td>${p.origin}</td>
                                                         <td>
                                                             <c:choose>
-                                                                <c:when test="${p.status eq 'Featured'}">
-                                                                    <span class="badge bg-warning text-dark">Nổi bật</span>
-                                                                </c:when>
-                                                                <c:when test="${p.status eq 'Available'}">
-                                                                    <span class="badge bg-success">Còn hàng</span>
+                                                                <c:when test="${p.status eq 'Approved' or p.status eq 'Available' or p.status eq 'Featured'}">
+                                                                    <span class="badge" style="background:#DBEAFE;color:#1D4ED8;font-size:0.78rem;">
+                                                                        <i data-feather="check-circle" style="width:12px;height:12px;"></i> Đã duyệt
+                                                                    </span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span class="badge bg-danger">${p.status}</span>
+                                                                    <span class="badge" style="background:#FEF3C7;color:#92400E;font-size:0.78rem;">
+                                                                        <i data-feather="clock" style="width:12px;height:12px;"></i> Chờ duyệt
+                                                                    </span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </td>
                                                         <td class="text-center">
                                                             <div class="btn-group">
-                                                                <a href="edit-product?id=${p.id}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
-                                                                    <i data-feather="edit-2" style="width:14px;height:14px;"></i>
+                                                                <c:choose>
+                                                                    <c:when test="${p.status eq 'Rejected'}">
+                                                                        <a href="edit-product?id=${p.id}" class="btn btn-sm btn-outline-warning" title="Chỉnh sửa và gửi lại">
+                                                                            <i data-feather="edit-2" style="width:14px;height:14px;"></i> Sửa &amp; Gửi lại
+                                                                        </a>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <a href="edit-product?id=${p.id}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                                                            <i data-feather="edit-2" style="width:14px;height:14px;"></i>
+                                                                        </a>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                                <a href="product-variants?productId=${p.id}" class="btn btn-sm btn-outline-info" title="Cấu hình biến thể trọng lượng">
+                                                                    <i data-feather="sliders" style="width:14px;height:14px;"></i>
+                                                                </a>
+                                                                <a href="product-packaging?productId=${p.id}" class="btn btn-sm btn-outline-warning" title="Cấu hình đóng gói">
+                                                                    <i data-feather="package" style="width:14px;height:14px;"></i>
                                                                 </a>
                                                                 <a href="delete-product?id=${p.id}" class="btn btn-sm btn-outline-danger" title="Xóa"
                                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm \'${p.name}\' (ID: ${p.id}) không?');">
