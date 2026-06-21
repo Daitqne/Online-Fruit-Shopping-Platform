@@ -114,6 +114,25 @@
                 border-radius: 50px;
                 font-weight: 600;
                 transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .btn-login:hover {
+                background-color: var(--primary-hover);
+                transform: translateY(-2px);
+            }
+
+            /* Style cho user đã login (màu xanh nhạt giống home/products) */
+            .btn-login.user-logged-in {
+                background: var(--primary-light);
+                color: var(--primary);
+            }
+
+            .btn-login.user-logged-in:hover {
+                background: var(--primary);
+                color: var(--white);
             }
 
             /* --- PAGE BANNER --- */
@@ -394,15 +413,11 @@
                 </ul>
 
                 <div class="nav-actions">
-                    <a href="#" style="color: var(--slate-600); font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass"></i></a>
-                    <a href="cart" style="color: var(--slate-600); font-size: 1.25rem; position: relative;">
-                        <i class="fa-solid fa-cart-shopping"></i>
-                        <span style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${sessionScope.cartCount != null ? sessionScope.cartCount : 0}</span>
-                    </a>
                     <c:choose>
                         <c:when test="${not empty sessionScope.user}">
-                            <a href="profile" class="btn-login">
-                                <i class="fa-solid fa-user"></i> ${sessionScope.user.fullName}
+                            <a href="profile" class="btn-login user-logged-in">
+                                <i class="fa-solid fa-circle-user"></i>
+                                Xin chào, ${sessionScope.user.fullName}
                             </a>
                         </c:when>
                         <c:otherwise>

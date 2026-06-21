@@ -16,6 +16,9 @@
         <!-- FontAwesome Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+        <!-- Search Autocomplete CSS -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search-autocomplete.css">
+
         <style>
             :root {
                 --primary: #10B981;
@@ -826,9 +829,13 @@
                     <li><a href="about.jsp" class="nav-link">Giới thiệu</a></li>
                     <li><a href="contact.jsp" class="nav-link">Liên hệ</a></li>
                 </ul>
-
                 <div class="nav-actions">
-                    <a href="#" style="color: var(--slate-600); font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass"></i></a>
+                    <!-- Search Toggle Button (chỉ hiển thị icon) -->
+                    <div class="header-search-wrapper">
+                        <button class="header-search-toggle" id="search-toggle-btn" title="Tìm kiếm">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
                     <a href="cart" style="color: var(--slate-600); font-size: 1.25rem; position: relative; text-decoration: none;">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span class="cart-badge" style="position: absolute; top: -8px; right: -10px; background: var(--secondary); color: var(--white); border-radius: 50%; font-size: 0.7rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: 700;">${sessionScope.cartCount != null ? sessionScope.cartCount : 0}</span>
@@ -1171,6 +1178,26 @@
             });
         }
         </script>
+
+        <!-- Search Autocomplete JS -->
+        <script>window.contextPath = "${pageContext.request.contextPath}";</script>
+        <script src="${pageContext.request.contextPath}/js/search-autocomplete.js"></script>
+
+        <!-- Search Overlay Backdrop -->
+        <div class="header-search-overlay" id="search-overlay"></div>
+
+        <!-- Search Bar (mở ra khi click icon) -->
+        <div class="header-search-bar" id="header-search-bar">
+            <form action="${pageContext.request.contextPath}/products" method="GET" style="position:relative;flex-grow:1;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" class="header-search-input" id="header-search-input"
+                       placeholder="Tìm kiếm trái cây... (nhấn Enter để tìm)" autocomplete="off">
+                <div class="search-suggestions-dropdown" id="header-search-suggestions"></div>
+            </form>
+            <button class="header-search-close" id="search-close-btn" title="Đóng">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
     </body>
 </html>
