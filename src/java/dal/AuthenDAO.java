@@ -144,7 +144,7 @@ public class AuthenDAO extends DBContext{
             // 3. INSERT ROLE (default: CUSTOMER = 1)
             PreparedStatement psRole = connection.prepareStatement(insertRole);
             psRole.setInt(1, userId);
-            psRole.setInt(2, a.getRoleId()); // 1-Customer | 2-Staff | 3-Admin
+            psRole.setInt(2, a.getRoleId()); // 1-Customer | 4-Shop Owner | 3-Admin | 5-Delivery
             psRole.executeUpdate();
 
             connection.commit();

@@ -621,6 +621,7 @@
                                 id="username"
                                 name="username"
                                 placeholder="Tên đăng nhập"
+                                value="${param.username}"
                                 required
                                 minlength="5">
                         </div>
@@ -635,6 +636,7 @@
                                 id="email"
                                 name="email"
                                 placeholder="email@gmail.com"
+                                value="${param.email}"
                                 required>
                         </div>
                     </div>
@@ -648,6 +650,7 @@
                                 id="phone"
                                 name="phone"
                                 placeholder="0123456789"
+                                value="${param.phone}"
                                 pattern="[0-9]{10,11}">
                         </div>
                     </div>
@@ -678,6 +681,17 @@
                                 name="confirmPassword"
                                 placeholder="Nhập lại mật khẩu"
                                 required>
+                        </div>
+                    </div>
+
+                    <!-- Vai trò -->
+                    <div class="form-group">
+                        <label for="roleId">Đăng ký với vai trò</label>
+                        <div class="input-wrapper">
+                            <select id="roleId" name="roleId" required>
+                                <option value="1" <c:if test="${param.roleId == '1' || empty param.roleId}">selected</c:if>>Khách hàng (Customer)</option>
+                                <option value="4" <c:if test="${param.roleId == '4'}">selected</c:if>>Chủ cửa hàng (Shop Owner)</option>
+                            </select>
                         </div>
                     </div>
 
