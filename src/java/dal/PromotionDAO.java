@@ -70,4 +70,50 @@ public class PromotionDAO extends DBContext {
         }
         return list;
     }
+    /**
+     * Retrieves all promotions in the database for Admin management.
+     * @return List of all Promotion objects.
+     */
+    public List<Promotion> getAllPromotions() {
+        List<Promotion> list = new ArrayList<>();
+        String sql = "SELECT promo_id, promo_code, discount_value, discount_type, start_date, end_date, min_order_value FROM Promotions ORDER BY start_date DESC";
+        try (PreparedStatement st = getConnection().prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                Promotion promo = new Promotion();
+                promo.setPromoId(rs.getInt("promo_id"));
+                promo.setPromoCode(rs.getString("promo_code"));
+                promo.setDiscountValue(rs.getDouble("discount_value"));
+                promo.setDiscountType(rs.getString("discount_type"));
+                promo.setStartDate(rs.getTimestamp("start_date"));
+                promo.setEndDate(rs.getTimestamp("end_date"));
+                promo.setMinOrderValue(rs.getDouble("min_order_value"));
+                list.add(promo);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PromotionDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    /**
+     * Inserts a new promotion into the database.
+     * @return true if insert successful, false otherwise.
+     */
+    public boolean insertPromotion(String code, double value, String type, String start, String end, double minOrder) {
+        String sql = "INSERT INTO Promotions (promo_code, discount_value, discount_type, start_date, end_date, min_order_value) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setString(1, code);
+            st.setDouble(2, value);
+            st.setString(3, type);
+            st.setString(4, start + " 00:00:00");
+            st.setString(5, end + " 23:59:59");
+            st.setDouble(6, minOrder);
+            
+            return st.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(PromotionDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
 }
