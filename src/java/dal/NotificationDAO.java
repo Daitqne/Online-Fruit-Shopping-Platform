@@ -61,4 +61,32 @@ public class NotificationDAO extends DBContext {
         }
         return false;
     }
+    
+    private List<Integer> getDeliveryStaffIds() {
+        List<Integer> list = new ArrayList<>();
+        String sql = "select u.user_id from Users u "
+                   + "join User_Role ur on u.user_id = ur.user_id "
+                   + "where ur.role_id = 5 and u.status = 'Active'";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("user_id"));
+            }
+        } 
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    //notify all staff when a new delivery is pending
+    public void notifyDeliveryStaff(int orderId) {
+        List<Integer> staffIds = getDeliveryStaffIds();
+        for (int staffId : staffIds) {
+            addNotification(staffId,
+                "Đơn hàng mới cần giao",
+                "Có đơn hàng mới #" + orderId + " cần giao. Hãy nhận ngay!");
+        }
+    }
 }
