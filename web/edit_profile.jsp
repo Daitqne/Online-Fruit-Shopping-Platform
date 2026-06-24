@@ -565,7 +565,7 @@
                     <c:if test="${not empty error}">
                         <div class="alert-danger">
                             <i class="fa-solid fa-circle-exclamation" style="font-size: 1.25rem;"></i>
-                            <span>${error}</span>
+                            <div>${error}</div>
                         </div>
                     </c:if>
 
@@ -580,47 +580,78 @@
                             
                             <div class="form-group">
                                 <label for="fullName">Họ và tên <span style="color:red;">*</span></label>
-                                <input type="text" id="fullName" name="fullName" class="form-control" value="${sessionScope.user.fullName}" required>
+                                <input type="text" id="fullName" name="fullName" class="form-control" 
+                                       value="${not empty inputFullName ? inputFullName : sessionScope.user.fullName}" 
+                                       required minlength="2" maxlength="100">
+                                <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                    <i class="fa-solid fa-circle-info"></i> Từ 2 đến 100 ký tự
+                                </small>
                             </div>
 
                             <div class="form-group">
                                 <label for="phone">Số điện thoại <span style="color:red;">*</span></label>
-                                <input type="text" id="phone" name="phone" class="form-control" value="${sessionScope.user.phone}" required>
+                                <input type="tel" id="phone" name="phone" class="form-control" 
+                                       value="${not empty inputPhone ? inputPhone : sessionScope.user.phone}" 
+                                       required pattern="0[0-9]{9,10}" maxlength="11">
+                                <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                    <i class="fa-solid fa-circle-info"></i> Số điện thoại 10-11 số, bắt đầu bằng 0
+                                </small>
                             </div>
 
                             <div class="form-group">
                                 <label for="email">Email <span style="color:red;">*</span></label>
-                                <input type="email" id="email" name="email" class="form-control" value="${sessionScope.user.email}" required>
+                                <input type="email" id="email" name="email" class="form-control" 
+                                       value="${not empty inputEmail ? inputEmail : sessionScope.user.email}" 
+                                       required maxlength="150">
+                                <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                    <i class="fa-solid fa-circle-info"></i> Ví dụ: example@email.com
+                                </small>
                             </div>
 
                             <div class="form-group">
                                 <label>Giới tính</label>
                                 <div class="gender-group">
                                     <label class="gender-option">
-                                        <input type="radio" name="gender" value="Nam" ${sessionScope.user.gender eq 'Nam' ? 'checked' : ''}> Nam
+                                        <input type="radio" name="gender" value="Nam" 
+                                               ${(not empty inputGender ? inputGender : sessionScope.user.gender) eq 'Nam' ? 'checked' : ''}> Nam
                                     </label>
                                     <label class="gender-option">
-                                        <input type="radio" name="gender" value="Nữ" ${sessionScope.user.gender eq 'Nữ' ? 'checked' : ''}> Nữ
+                                        <input type="radio" name="gender" value="Nữ" 
+                                               ${(not empty inputGender ? inputGender : sessionScope.user.gender) eq 'Nữ' ? 'checked' : ''}> Nữ
                                     </label>
                                     <label class="gender-option">
-                                        <input type="radio" name="gender" value="Khác" ${sessionScope.user.gender eq 'Khác' ? 'checked' : ''}> Khác
+                                        <input type="radio" name="gender" value="Khác" 
+                                               ${(not empty inputGender ? inputGender : sessionScope.user.gender) eq 'Khác' ? 'checked' : ''}> Khác
                                     </label>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="dob">Ngày sinh</label>
-                                <input type="date" id="dob" name="dob" class="form-control" value="${sessionScope.user.dob}">
+                                <input type="date" id="dob" name="dob" class="form-control" 
+                                       value="${not empty inputDob ? inputDob : sessionScope.user.dob}" 
+                                       max="<%= java.time.LocalDate.now().minusYears(18) %>">
+                                <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                    <i class="fa-solid fa-circle-info"></i> Phải đủ 18 tuổi trở lên
+                                </small>
                             </div>
 
                             <div class="form-group">
                                 <label for="avatar">Đường dẫn ảnh đại diện (URL)</label>
-                                <input type="text" id="avatar" name="avatar" class="form-control" value="${sessionScope.user.avatar}" oninput="updateAvatarPreview(this.value)" placeholder="https://example.com/avatar.jpg">
+                                <input type="text" id="avatar" name="avatar" class="form-control" 
+                                       value="${not empty inputAvatar ? inputAvatar : sessionScope.user.avatar}" 
+                                       oninput="updateAvatarPreview(this.value)" 
+                                       placeholder="https://example.com/avatar.jpg">
                             </div>
 
                             <div class="form-group">
                                 <label for="address">Địa chỉ giao hàng</label>
-                                <textarea id="address" name="address" class="form-control" rows="3" placeholder="Nhập địa chỉ giao hàng của bạn...">${sessionScope.user.address}</textarea>
+                                <textarea id="address" name="address" class="form-control" rows="3" 
+                                          maxlength="500" 
+                                          placeholder="Nhập địa chỉ giao hàng của bạn...">${not empty inputAddress ? inputAddress : sessionScope.user.address}</textarea>
+                                <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                    <i class="fa-solid fa-circle-info"></i> Tối đa 500 ký tự
+                                </small>
                             </div>
 
                             <div style="display: flex; gap: 1rem; margin-top: 2rem;">

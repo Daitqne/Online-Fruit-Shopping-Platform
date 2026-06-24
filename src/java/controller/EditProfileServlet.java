@@ -51,12 +51,87 @@ public class EditProfileServlet extends HttpServlet {
         String address = request.getParameter("address");
         String avatar = request.getParameter("avatar");
         
-        // Validate dữ liệu
-        if (fullName == null || fullName.trim().isEmpty() ||
-            phone == null || phone.trim().isEmpty() ||
-            email == null || email.trim().isEmpty()) {
+        // ====== VALIDATION ======
+        StringBuilder errorMsg = new StringBuilder();
+        
+        // 1. Check trường bắt buộc
+        if (fullName == null || fullName.trim().isEmpty()) {
+            errorMsg.append("Họ và tên không được bỏ trống!<br>");
+        }
+        if (phone == null || phone.trim().isEmpty()) {
+            errorMsg.append("Số điện thoại không được bỏ trống!<br>");
+        }
+        if (email == null || email.trim().isEmpty()) {
+            errorMsg.append("Email không được bỏ trống!<br>");
+        }
+        
+        // 2. Validate format email
+        if (email != null && !email.trim().isEmpty()) {
+            String emailPattern = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+            if (!email.trim().matches(emailPattern)) {
+                errorMsg.append("Email không đúng định dạng!<br>");
+            }
+        }
+        
+        // 3. Validate format số điện thoại (10-11 số, bắt đầu bằng 0)
+        if (phone != null && !phone.trim().isEmpty()) {
+            String phonePattern = "^0[0-9]{9,10}$";
+            if (!phone.trim().matches(phonePattern)) {
+                errorMsg.append("Số điện thoại không hợp lệ! (Phải là 10-11 số, bắt đầu bằng 0)<br>");
+            }
+        }
+        
+        // 4. Validate độ dài họ tên
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            if (fullName.trim().length() < 2) {
+                errorMsg.append("Họ và tên phải có ít nhất 2 ký tự!<br>");
+            }
+            if (fullName.trim().length() > 100) {
+                errorMsg.append("Họ và tên không được quá 100 ký tự!<br>");
+            }
+            // Validate ký tự hợp lệ (chỉ chữ cái và khoảng trắng, bao gồm tiếng Việt có dấu)
+            String namePattern = "^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\\s]+$";
+            if (!fullName.trim().matches(namePattern)) {
+                errorMsg.append("Họ và tên chỉ được chứa chữ cái và khoảng trắng!<br>");
+            }
+        }
+        
+        // 5. Validate ngày sinh (phải >= 18 tuổi)
+        if (dob != null && !dob.trim().isEmpty()) {
+            try {
+                java.time.LocalDate birthDate = java.time.LocalDate.parse(dob);
+                java.time.LocalDate today = java.time.LocalDate.now();
+                int age = java.time.Period.between(birthDate, today).getYears();
+                
+                if (age < 18) {
+                    errorMsg.append("Bạn phải đủ 18 tuổi trở lên!<br>");
+                }
+                if (age > 120) {
+                    errorMsg.append("Ngày sinh không hợp lệ!<br>");
+                }
+            } catch (Exception e) {
+                errorMsg.append("Ngày sinh không đúng định dạng!<br>");
+            }
+        }
+        
+        // 6. Validate độ dài địa chỉ
+        if (address != null && !address.trim().isEmpty() && address.trim().length() > 500) {
+            errorMsg.append("Địa chỉ không được quá 500 ký tự!<br>");
+        }
+        
+        // 7. Nếu có lỗi → trả về form với thông báo lỗi và giữ lại dữ liệu
+        if (errorMsg.length() > 0) {
+            request.setAttribute("error", errorMsg.toString());
             
-            request.setAttribute("error", "Họ tên, số điện thoại và email không được bỏ trống!");
+            // Giữ lại dữ liệu đã nhập
+            request.setAttribute("inputFullName", fullName);
+            request.setAttribute("inputPhone", phone);
+            request.setAttribute("inputEmail", email);
+            request.setAttribute("inputGender", gender);
+            request.setAttribute("inputDob", dob);
+            request.setAttribute("inputAddress", address);
+            request.setAttribute("inputAvatar", avatar);
+            
             request.getRequestDispatcher("/edit_profile.jsp").forward(request, response);
             return;
         }

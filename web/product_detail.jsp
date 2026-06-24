@@ -301,14 +301,16 @@
                     <div class="meta-item">
                         <label>Tình trạng</label>
                         <c:choose>
-                            <c:when test="${product.status == 'Available'}">
-                                <span class="status-available"><i class="fa-solid fa-circle-check"></i> Còn hàng</span>
-                            </c:when>
-                            <c:when test="${product.status == 'Featured'}">
-                                <span class="status-featured"><i class="fa-solid fa-star"></i> Nổi bật</span>
+                            <c:when test="${stockQuantity > 0}">
+                                <span class="status-available">
+                                    <i class="fa-solid fa-circle-check"></i> 
+                                    Còn hàng (${stockQuantity} sản phẩm)
+                                </span>
                             </c:when>
                             <c:otherwise>
-                                <span class="status-out"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>
+                                <span class="status-out">
+                                    <i class="fa-solid fa-circle-xmark"></i> Hết hàng
+                                </span>
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -322,19 +324,29 @@
                 <hr class="divider">
 
                 <!-- SỐ LƯỢNG & THÊM GIỎ HÀNG -->
-                <div class="qty-cart-row">
-                    <div class="qty-selector">
-                        <button class="qty-btn" onclick="changeQty(-1)">−</button>
-                        <input type="number" id="qty" class="qty-input" value="1" min="1" max="99">
-                        <button class="qty-btn" onclick="changeQty(1)">+</button>
-                    </div>
-                    <button class="btn-add-cart" onclick="addToCart(${product.id})">
-                        <i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ
-                    </button>
-                    <a href="cart" class="btn-buy-now">
-                        <i class="fa-solid fa-bolt"></i> Mua ngay
-                    </a>
-                </div>
+                <c:choose>
+                    <c:when test="${stockQuantity > 0}">
+                        <div class="qty-cart-row">
+                            <div class="qty-selector">
+                                <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                                <input type="number" id="qty" class="qty-input" value="1" min="1" max="${stockQuantity}">
+                                <button class="qty-btn" onclick="changeQty(1)">+</button>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart(${product.id})">
+                                <i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                            <a href="cart" class="btn-buy-now">
+                                <i class="fa-solid fa-bolt"></i> Mua ngay
+                            </a>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div style="padding: 1rem; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 12px; color: #DC2626; text-align: center;">
+                            <i class="fa-solid fa-circle-exclamation"></i> 
+                            <strong>Sản phẩm hiện tại hết hàng</strong>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
 
             </div>
         </div>
@@ -374,14 +386,23 @@
     <script>
         function changeQty(delta) {
             const input = document.getElementById('qty');
+            const max = parseInt(input.max);
             let val = parseInt(input.value) + delta;
             if (val < 1) val = 1;
-            if (val > 99) val = 99;
+            if (val > max) val = max;
             input.value = val;
         }
 
         function addToCart(productId) {
-            const qty = document.getElementById('qty').value;
+            const qtyInput = document.getElementById('qty');
+            const qty = parseInt(qtyInput.value);
+            const max = parseInt(qtyInput.max);
+            
+            if (qty > max) {
+                alert('Số lượng không được vượt quá ' + max + ' sản phẩm!');
+                return;
+            }
+            
             window.location.href = 'cart?action=add&productId=' + productId + '&quantity=' + qty;
         }
     </script>
