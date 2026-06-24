@@ -254,7 +254,10 @@
                 <div class="alert alert-error"><i class="fa-solid fa-circle-xmark"></i> Có lỗi xảy ra, vui lòng thử lại!</div>
             </c:if>
             <c:if test="${not empty error}">
-                <div class="alert alert-error"><i class="fa-solid fa-circle-xmark"></i> ${error}</div>
+                <div class="alert alert-error">
+                    <i class="fa-solid fa-circle-xmark"></i> 
+                    <div>${error}</div>
+                </div>
             </c:if>
 
             <!-- DANH SÁCH ĐỊA CHỈ -->
@@ -319,25 +322,35 @@
                         <div class="form-group">
                             <label>Nhãn địa chỉ <span style="color:#EF4444;">*</span></label>
                             <input type="text" name="label" placeholder="VD: Nhà riêng, Văn phòng..."
-                                   value="${not empty editAddress ? editAddress.label : ''}" required maxlength="50">
+                                   value="${not empty editAddress ? editAddress.label : (not empty inputLabel ? inputLabel : '')}" 
+                                   required maxlength="50">
                         </div>
                         <div class="form-group">
                             <label>Người nhận <span style="color:#EF4444;">*</span></label>
                             <input type="text" name="receiverName" placeholder="Họ và tên người nhận"
-                                   value="${not empty editAddress ? editAddress.receiverName : ''}" required maxlength="150">
+                                   value="${not empty editAddress ? editAddress.receiverName : (not empty inputReceiverName ? inputReceiverName : '')}" 
+                                   required maxlength="150">
                         </div>
                         <div class="form-group">
                             <label>Số điện thoại <span style="color:#EF4444;">*</span></label>
-                            <input type="tel" name="receiverPhone" placeholder="VD: 0912345678"
-                                   value="${not empty editAddress ? editAddress.receiverPhone : ''}" required maxlength="20">
+                            <input type="tel" name="receiverPhone" placeholder="VD: 0912345678" pattern="0[0-9]{9,10}"
+                                   value="${not empty editAddress ? editAddress.receiverPhone : (not empty inputReceiverPhone ? inputReceiverPhone : '')}" 
+                                   required maxlength="20">
+                            <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                <i class="fa-solid fa-circle-info"></i> Số điện thoại 10-11 số, bắt đầu bằng 0
+                            </small>
                         </div>
                         <div class="form-group full-width">
                             <label>Địa chỉ chi tiết <span style="color:#EF4444;">*</span></label>
                             <input type="text" name="addressDetails" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                                   value="${not empty editAddress ? editAddress.addressDetails : ''}" required maxlength="255">
+                                   value="${not empty editAddress ? editAddress.addressDetails : (not empty inputAddressDetails ? inputAddressDetails : '')}" 
+                                   required minlength="10" maxlength="500">
+                            <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                                <i class="fa-solid fa-circle-info"></i> Tối thiểu 10 ký tự, tối đa 500 ký tự
+                            </small>
                         </div>
                         <label class="checkbox-row">
-                        <input type="checkbox" name="isDefault" ${not empty editAddress && editAddress['default'] ? 'checked' : ''}>
+                        <input type="checkbox" name="isDefault" ${(not empty editAddress && editAddress['default']) || (not empty inputIsDefault && inputIsDefault) ? 'checked' : ''}>
                             Đặt làm địa chỉ mặc định
                         </label>
                     </div>

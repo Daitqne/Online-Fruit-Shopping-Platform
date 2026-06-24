@@ -102,15 +102,65 @@ public class AddressServlet extends HttpServlet {
         String addressDetails = request.getParameter("addressDetails");
         boolean isDefault    = "on".equals(request.getParameter("isDefault"));
 
-        // Validate
-        if (label == null || label.trim().isEmpty()
-                || receiverName == null || receiverName.trim().isEmpty()
-                || receiverPhone == null || receiverPhone.trim().isEmpty()
-                || addressDetails == null || addressDetails.trim().isEmpty()) {
-
+        // ====== VALIDATION ======
+        StringBuilder errorMsg = new StringBuilder();
+        
+        // 1. Check trường rỗng
+        if (label == null || label.trim().isEmpty()) {
+            errorMsg.append("Nhãn địa chỉ không được bỏ trống!<br>");
+        }
+        if (receiverName == null || receiverName.trim().isEmpty()) {
+            errorMsg.append("Tên người nhận không được bỏ trống!<br>");
+        }
+        if (receiverPhone == null || receiverPhone.trim().isEmpty()) {
+            errorMsg.append("Số điện thoại không được bỏ trống!<br>");
+        }
+        if (addressDetails == null || addressDetails.trim().isEmpty()) {
+            errorMsg.append("Địa chỉ chi tiết không được bỏ trống!<br>");
+        }
+        
+        // 2. Validate định dạng số điện thoại (10-11 số, bắt đầu bằng 0)
+        if (receiverPhone != null && !receiverPhone.trim().isEmpty()) {
+            String phonePattern = "^0[0-9]{9,10}$";
+            if (!receiverPhone.trim().matches(phonePattern)) {
+                errorMsg.append("Số điện thoại không hợp lệ! (Phải là 10-11 số, bắt đầu bằng 0)<br>");
+            }
+        }
+        
+        // 3. Validate độ dài
+        if (receiverName != null && receiverName.trim().length() < 2) {
+            errorMsg.append("Tên người nhận phải có ít nhất 2 ký tự!<br>");
+        }
+        if (receiverName != null && receiverName.trim().length() > 100) {
+            errorMsg.append("Tên người nhận không được quá 100 ký tự!<br>");
+        }
+        // Validate ký tự hợp lệ cho tên người nhận (chỉ chữ cái và khoảng trắng)
+        if (receiverName != null && !receiverName.trim().isEmpty()) {
+            String namePattern = "^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\\s]+$";
+            if (!receiverName.trim().matches(namePattern)) {
+                errorMsg.append("Tên người nhận chỉ được chứa chữ cái và khoảng trắng!<br>");
+            }
+        }
+        if (addressDetails != null && addressDetails.trim().length() < 10) {
+            errorMsg.append("Địa chỉ chi tiết phải có ít nhất 10 ký tự!<br>");
+        }
+        if (addressDetails != null && addressDetails.trim().length() > 500) {
+            errorMsg.append("Địa chỉ chi tiết không được quá 500 ký tự!<br>");
+        }
+        
+        // 4. Nếu có lỗi → trả về form với thông báo lỗi
+        if (errorMsg.length() > 0) {
             List<CustomerAddress> addresses = addressDAO.getByUserId(user.getId());
             request.setAttribute("addresses", addresses);
-            request.setAttribute("error", "Vui lòng điền đầy đủ thông tin địa chỉ!");
+            request.setAttribute("error", errorMsg.toString());
+            
+            // Giữ lại dữ liệu đã nhập
+            request.setAttribute("inputLabel", label);
+            request.setAttribute("inputReceiverName", receiverName);
+            request.setAttribute("inputReceiverPhone", receiverPhone);
+            request.setAttribute("inputAddressDetails", addressDetails);
+            request.setAttribute("inputIsDefault", isDefault);
+            
             request.getRequestDispatcher("/addresses.jsp").forward(request, response);
             return;
         }

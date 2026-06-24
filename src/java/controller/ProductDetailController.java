@@ -70,7 +70,11 @@ public class ProductDetailController extends HttpServlet {
             relatedProducts = relatedProducts.subList(0, 4);
         }
 
+        // Lấy số lượng tồn kho
+        int stockQuantity = productDAO.getProductStock(productId);
+
         request.setAttribute("product", product);
+        request.setAttribute("stockQuantity", stockQuantity);
         request.setAttribute("relatedProducts", relatedProducts);
         request.getRequestDispatcher("/product_detail.jsp").forward(request, response);
     }
