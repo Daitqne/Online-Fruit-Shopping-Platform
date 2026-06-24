@@ -254,6 +254,102 @@ public class OrderDAO extends DBContext {
     }
 
     /**
+     * Retrieves all orders that contain at least one product owned by the given shop owner.
+     * Also loads each order's items (filtered to the shop owner's products) and basic customer info.
+     */
+    public java.util.List<SaleOrder> getOrdersByShopOwner(int shopOwnerId) {
+        java.util.List<SaleOrder> list = new java.util.ArrayList<>();
+        // Get distinct orders that include at least one product from this shop owner
+        String orderSql = """
+            SELECT DISTINCT so.sale_order_id, so.order_date, so.created_by, so.order_status,
+                   so.payment_method, so.payment_status, so.shipping_address, so.shipping_phone,
+                   so.discount_amount, so.promo_code, so.shipping_fee, so.total_payment,
+                   ui.full_name AS customer_name
+            FROM Sale_Order so
+            JOIN Sale_Order_Item soi ON so.sale_order_id = soi.sale_order_id
+            JOIN Product p ON soi.product_id = p.product_id
+            LEFT JOIN UserInfo ui ON so.created_by = ui.user_id
+            WHERE p.shop_owner_id = ?
+            ORDER BY so.order_date DESC
+        """;
+
+        String itemsSql = """
+            SELECT soi.sale_item_id, soi.sale_order_id, soi.product_id, soi.quantity, soi.unit_price,
+                   p.product_name,
+                   (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url
+            FROM Sale_Order_Item soi
+            JOIN Product p ON soi.product_id = p.product_id
+            WHERE soi.sale_order_id = ? AND p.shop_owner_id = ?
+        """;
+
+        try (PreparedStatement psOrder = getConnection().prepareStatement(orderSql)) {
+            psOrder.setInt(1, shopOwnerId);
+            try (ResultSet rs = psOrder.executeQuery()) {
+                while (rs.next()) {
+                    SaleOrder order = new SaleOrder();
+                    order.setSaleOrderId(rs.getInt("sale_order_id"));
+                    order.setOrderDate(rs.getTimestamp("order_date"));
+                    order.setCreatedBy(rs.getInt("created_by"));
+                    order.setOrderStatus(rs.getString("order_status"));
+                    order.setPaymentMethod(rs.getString("payment_method"));
+                    order.setPaymentStatus(rs.getString("payment_status"));
+                    order.setShippingAddress(rs.getString("shipping_address"));
+                    order.setShippingPhone(rs.getString("shipping_phone"));
+                    order.setDiscountAmount(rs.getDouble("discount_amount"));
+                    order.setPromoCode(rs.getString("promo_code"));
+                    order.setShippingFee(rs.getDouble("shipping_fee"));
+                    order.setTotalPayment(rs.getDouble("total_payment"));
+                    order.setCustomerName(rs.getString("customer_name"));
+
+                    // Load items (only products from this shop owner)
+                    java.util.List<SaleOrderItem> items = new java.util.ArrayList<>();
+                    try (PreparedStatement psItems = getConnection().prepareStatement(itemsSql)) {
+                        psItems.setInt(1, order.getSaleOrderId());
+                        psItems.setInt(2, shopOwnerId);
+                        try (ResultSet rsItem = psItems.executeQuery()) {
+                            while (rsItem.next()) {
+                                SaleOrderItem soi = new SaleOrderItem();
+                                soi.setSaleItemId(rsItem.getInt("sale_item_id"));
+                                soi.setSaleOrderId(rsItem.getInt("sale_order_id"));
+                                soi.setProductId(rsItem.getInt("product_id"));
+                                soi.setQuantity(rsItem.getInt("quantity"));
+                                soi.setUnitPrice(rsItem.getDouble("unit_price"));
+                                model.Product prod = new model.Product();
+                                prod.setId(rsItem.getInt("product_id"));
+                                prod.setName(rsItem.getNString("product_name"));
+                                prod.setImage(rsItem.getString("image_url"));
+                                soi.setProduct(prod);
+                                items.add(soi);
+                            }
+                        }
+                    }
+                    order.setItems(items);
+                    list.add(order);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    /**
+     * Updates the status of an order. Used by Shop Owner to confirm/reject/ship orders.
+     * Allowed target statuses: Processing, Shipping, Delivered, Cancelled.
+     */
+    public boolean updateOrderStatus(int orderId, String newStatus) {
+        String sql = "UPDATE Sale_Order SET order_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setNString(1, newStatus);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    /**
      * Cancels an order, restoring the inventory stock quantities.
      * Only works if the order is currently 'Pending'.
      */

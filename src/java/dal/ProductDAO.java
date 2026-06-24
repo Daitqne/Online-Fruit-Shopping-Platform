@@ -20,29 +20,42 @@ public class ProductDAO extends DBContext {
     private static final String DEFAULT_STATUS = "Available";
     private static final String FEATURED_STATUS = "Featured";
 
+    /**
+     * Lấy Top 8 sản phẩm bán chạy nhất dựa trên tổng số lượng đã bán
+     * trong bảng Sale_Order_Item. Nếu chưa có dữ liệu bán hàng,
+     * fallback về sản phẩm mới nhất.
+     */
     public List<Product> getTop8FeaturedProducts() {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT TOP 8 p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
-                     "FROM Product p " +
-                     "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
-                     "LEFT JOIN (" +
-                     "    SELECT product_id, image_url FROM (" +
-                     "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
-                     "        FROM Product_Image" +
-                     "    ) t WHERE rn = 1" +
-                     ") pi ON pi.product_id = p.product_id " +
-                     "WHERE p.status = ? " +
-                     "ORDER BY p.product_id DESC";
+        String sql =
+            "SELECT TOP 8 " +
+            "    p.product_id, p.product_name, p.price, p.discount_price, " +
+            "    p.unit, p.origin, p.status, p.description, " +
+            "    c.category_name, pi.image_url, " +
+            "    COALESCE(SUM(soi.quantity), 0) AS total_sold " +
+            "FROM Product p " +
+            "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+            "LEFT JOIN Sale_Order_Item soi ON p.product_id = soi.product_id " +
+            "LEFT JOIN ( " +
+            "    SELECT product_id, image_url FROM ( " +
+            "        SELECT product_id, image_url, " +
+            "               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
+            "        FROM Product_Image " +
+            "    ) t WHERE rn = 1 " +
+            ") pi ON pi.product_id = p.product_id " +
+            "GROUP BY " +
+            "    p.product_id, p.product_name, p.price, p.discount_price, " +
+            "    p.unit, p.origin, p.status, p.description, " +
+            "    c.category_name, pi.image_url " +
+            "ORDER BY total_sold DESC, p.product_id DESC";
 
-        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
-            st.setNString(1, FEATURED_STATUS);
-            try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    products.add(mapRowToProduct(rs));
-                }
+        try (PreparedStatement st = getConnection().prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            while (rs.next()) {
+                products.add(mapRowToProduct(rs));
             }
         } catch (SQLException ex) {
-            System.err.println("[ProductDAO Error] Failed to retrieve featured products!");
+            System.err.println("[ProductDAO Error] Failed to retrieve best-selling products!");
             Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return products;
@@ -51,10 +64,17 @@ public class ProductDAO extends DBContext {
     public List<Product> getFilteredProducts(String search, String category,
                                               Double minPrice, Double maxPrice,
                                               String availability) {
+        return getFilteredProducts(search, category, minPrice, maxPrice, availability, null);
+    }
+
+    public List<Product> getFilteredProducts(String search, String category,
+                                              Double minPrice, Double maxPrice,
+                                              String availability, Integer shopOwnerId) {
         List<Product> products = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
+        StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
                                               "FROM Product p " +
                                               "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+                                              "LEFT JOIN Inventory i ON p.product_id = i.product_id " +
                                               "LEFT JOIN (" +
                                               "    SELECT product_id, image_url FROM (" +
                                               "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
@@ -74,6 +94,14 @@ public class ProductDAO extends DBContext {
         if (hasMinPrice)     sql.append("AND p.price >= ? ");
         if (hasMaxPrice)     sql.append("AND p.price <= ? ");
         if (hasAvailability) sql.append("AND p.status = ? ");
+        
+        if (shopOwnerId != null) {
+            sql.append("AND p.shop_owner_id = ? ");
+        } else {
+            // Khách hàng: Chỉ xem sản phẩm đã duyệt
+            sql.append("AND p.status IN ('Approved', 'Available', 'Featured') ");
+        }
+        
         sql.append("ORDER BY p.product_id DESC");
 
         try (PreparedStatement st = getConnection().prepareStatement(sql.toString())) {
@@ -83,6 +111,9 @@ public class ProductDAO extends DBContext {
             if (hasMinPrice)     st.setDouble(paramIndex++, minPrice);
             if (hasMaxPrice)     st.setDouble(paramIndex++, maxPrice);
             if (hasAvailability) st.setNString(paramIndex++, availability.trim());
+            if (shopOwnerId != null) {
+                st.setInt(paramIndex++, shopOwnerId);
+            }
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -113,8 +144,8 @@ public class ProductDAO extends DBContext {
     }
 
     public boolean addProduct(Product p) {
-        String sqlProduct = "INSERT INTO Product (product_name, category_id, price, discount_price, unit, origin, status, description) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlProduct = "INSERT INTO Product (product_name, category_id, price, discount_price, unit, origin, status, description, shop_owner_id, low_stock_threshold) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             int categoryId = getCategoryIdOrCreate(p.getCategory());
@@ -139,6 +170,12 @@ public class ProductDAO extends DBContext {
                 stProduct.setNString(6, p.getOrigin() != null ? p.getOrigin() : "Vietnam");
                 stProduct.setNString(7, status);
                 stProduct.setNString(8, p.getDescription());
+                if (p.getShopOwnerId() > 0) {
+                    stProduct.setInt(9, p.getShopOwnerId());
+                } else {
+                    stProduct.setNull(9, java.sql.Types.INTEGER);
+                }
+                stProduct.setInt(10, p.getLowStockThreshold() > 0 ? p.getLowStockThreshold() : 10);
 
                 int rowsAffected = stProduct.executeUpdate();
                 if (rowsAffected > 0) {
@@ -153,11 +190,11 @@ public class ProductDAO extends DBContext {
                         // 2. Save image url
                         saveProductImage(productId, p.getImage());
                         
-                        // 3. Initialize inventory (default stock 100)
+                        // 3. Initialize inventory (use initial stock or default 100)
                         String sqlInv = "INSERT INTO Inventory (product_id, quantity, last_updated) VALUES (?, ?, GETDATE())";
                         try (PreparedStatement stInv = getConnection().prepareStatement(sqlInv)) {
                             stInv.setInt(1, productId);
-                            stInv.setInt(2, 100);
+                            stInv.setInt(2, p.getStockQuantity() >= 0 ? p.getStockQuantity() : 100);
                             stInv.executeUpdate();
                         }
                         
@@ -183,9 +220,10 @@ public class ProductDAO extends DBContext {
     }
 
     public Product getProductById(int id) {
-        String sql = "SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
+        String sql = "SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
                      "FROM Product p " +
                      "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+                     "LEFT JOIN Inventory i ON p.product_id = i.product_id " +
                      "LEFT JOIN (" +
                      "    SELECT product_id, image_url FROM (" +
                      "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
@@ -208,7 +246,7 @@ public class ProductDAO extends DBContext {
     }
 
     public boolean updateProduct(Product p) {
-        String sql = "UPDATE Product SET product_name=?, category_id=?, price=?, discount_price=?, unit=?, origin=?, status=?, description=? " +
+        String sql = "UPDATE Product SET product_name=?, category_id=?, price=?, discount_price=?, unit=?, origin=?, status=?, description=?, low_stock_threshold=? " +
                      "WHERE product_id=?";
 
         try {
@@ -228,7 +266,8 @@ public class ProductDAO extends DBContext {
                 st.setNString(6, p.getOrigin());
                 st.setNString(7, status);
                 st.setNString(8, p.getDescription());
-                st.setInt(9, p.getId());
+                st.setInt(9, p.getLowStockThreshold() > 0 ? p.getLowStockThreshold() : 10);
+                st.setInt(10, p.getId());
 
                 int rowsAffected = st.executeUpdate();
                 if (rowsAffected > 0) {
@@ -353,6 +392,37 @@ public class ProductDAO extends DBContext {
         }
     }
 
+    public List<Product> getSearchSuggestions(String query) {
+        List<Product> products = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return products;
+        }
+        String sql = "SELECT TOP 5 p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
+                     "FROM Product p " +
+                     "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+                     "LEFT JOIN (" +
+                     "    SELECT product_id, image_url FROM (" +
+                     "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
+                     "        FROM Product_Image" +
+                     "    ) t WHERE rn = 1" +
+                     ") pi ON pi.product_id = p.product_id " +
+                     "WHERE p.product_name LIKE ? " +
+                     "ORDER BY p.product_id DESC";
+
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setNString(1, "%" + query.trim() + "%");
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapRowToProduct(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve search suggestions!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return products;
+    }
+
     private Product mapRowToProduct(ResultSet rs) throws SQLException {
         Product p = new Product();
         p.setId(rs.getInt("product_id"));
@@ -365,7 +435,79 @@ public class ProductDAO extends DBContext {
         p.setImage(rs.getString("image_url") != null ? rs.getString("image_url") : DEFAULT_IMAGE);
         p.setDescription(rs.getNString("description"));
         p.setCategory(rs.getNString("category_name") != null ? rs.getNString("category_name") : DEFAULT_CATEGORY);
+        
+        try {
+            p.setShopOwnerId(rs.getInt("shop_owner_id"));
+        } catch (SQLException e) {
+            // column not selected, default to 0
+        }
+        try {
+            p.setStockQuantity(rs.getInt("stock_quantity"));
+        } catch (SQLException e) {
+            // column not joined, default to 0
+        }
+        try {
+            p.setLowStockThreshold(rs.getInt("low_stock_threshold"));
+        } catch (SQLException e) {
+            // column not selected, default to 10
+            p.setLowStockThreshold(10);
+        }
         return p;
+    }
+
+    public int getProductStock(int id) {
+        String sql = "SELECT quantity FROM Inventory WHERE product_id = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, id);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity");
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve product stock!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+
+    public boolean updateStock(int productId, int quantity) {
+        String sqlUpdate = "UPDATE Inventory SET quantity = ?, last_updated = GETDATE() WHERE product_id = ?";
+        String sqlInsert = "INSERT INTO Inventory (product_id, quantity, last_updated) VALUES (?, ?, GETDATE())";
+        try {
+            try (PreparedStatement stUpdate = getConnection().prepareStatement(sqlUpdate)) {
+                stUpdate.setInt(1, quantity);
+                stUpdate.setInt(2, productId);
+                int rowsUpdated = stUpdate.executeUpdate();
+                if (rowsUpdated > 0) {
+                    return true;
+                }
+            }
+            
+            // If the row doesn't exist in Inventory, insert it
+            try (PreparedStatement stInsert = getConnection().prepareStatement(sqlInsert)) {
+                stInsert.setInt(1, productId);
+                stInsert.setInt(2, quantity);
+                return stInsert.executeUpdate() > 0;
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to update stock!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    public boolean updateLowStockThreshold(int productId, int threshold) {
+        String sql = "UPDATE Product SET low_stock_threshold = ? WHERE product_id = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, threshold);
+            st.setInt(2, productId);
+            return st.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to update low stock threshold!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 
     public static void main(String[] args) {

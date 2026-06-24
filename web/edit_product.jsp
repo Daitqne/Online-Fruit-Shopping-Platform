@@ -94,6 +94,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="inventory-shop-owner">
+                            <i class="align-middle" data-feather="package"></i>
+                            <span class="align-middle">Tồn kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-profile">
                             <i class="align-middle" data-feather="user"></i>
                             <span class="align-middle">Hồ sơ cá nhân</span>
@@ -215,15 +222,19 @@
                                                 <input type="text" id="origin" name="origin" class="form-control" 
                                                        value="${product.origin}" placeholder="Ví dụ: Việt Nam, Mỹ">
                                             </div>
-
-                                            <!-- Status -->
+                                            <!-- Low Stock Threshold -->
                                             <div class="col-md-6">
-                                                <label class="form-label fw-bold" for="status">Trạng thái</label>
-                                                <select id="status" name="status" class="form-select">
-                                                    <option value="Available" ${product.status eq 'Available' ? 'selected' : ''}>Còn hàng (Available)</option>
-                                                    <option value="Featured" ${product.status eq 'Featured' ? 'selected' : ''}>Nổi bật (Featured)</option>
-                                                    <option value="Out of stock" ${product.status eq 'Out of stock' ? 'selected' : ''}>Hết hàng (Out of stock)</option>
-                                                </select>
+                                                <label class="form-label fw-bold" for="lowStockThreshold">Ngưỡng cảnh báo hết hàng <span class="text-danger">*</span></label>
+                                                <input type="number" id="lowStockThreshold" name="lowStockThreshold" class="form-control" 
+                                                       value="${product.lowStockThreshold}" min="0" placeholder="Ví dụ: 10" required>
+                                            </div>
+                                            <!-- Status (read-only info) -->
+                                            <div class="col-md-12">
+                                                <label class="form-label fw-bold">Trạng thái sau khi lưu</label>
+                                                <div class="alert alert-info py-2 mb-0" style="font-size:0.85rem;">
+                                                    <i data-feather="info" style="width:14px;height:14px;"></i>
+                                                    Sau khi lưu, sản phẩm sẽ tự động chuyển về trạng thái <strong>Chờ duyệt</strong> để Admin xét duyệt lại.
+                                                </div>
                                             </div>
 
                                             <!-- Image URL -->

@@ -25,6 +25,9 @@ public class SaleOrder {
     private double shippingFee;
     private double totalPayment;
 
+    // Join / display field (not stored in DB)
+    private String customerName;
+
     public SaleOrder() {
     }
 
@@ -177,6 +180,14 @@ public class SaleOrder {
 
     public void setTotalPayment(double totalPayment) {
         this.totalPayment = totalPayment;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     @Override

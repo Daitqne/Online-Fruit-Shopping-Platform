@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpSession;
 import model.Authen;
 
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/login")
 public class LoginController extends HttpServlet {
@@ -55,11 +56,50 @@ public class LoginController extends HttpServlet {
         // 3.5. Initialize cart and load cart count
         if ("Customer".equals(user.getRole())) {
             dal.CartDAO cartDAO = new dal.CartDAO();
+            dal.ProductDAO productDAO = new dal.ProductDAO();
             model.Cart cart = cartDAO.getCartByUserId(user.getId());
             if (cart != null) {
+                List<model.CartItem> guestCart = (List<model.CartItem>) session.getAttribute("guestCart");
+                if (guestCart != null && !guestCart.isEmpty()) {
+                    List<model.CartItem> dbItems = cartDAO.getCartItems(cart.getCartId());
+                    boolean wasCapped = false;
+                    
+                    for (model.CartItem guestItem : guestCart) {
+                        int productId = guestItem.getProductId();
+                        int guestQty = guestItem.getQuantity();
+                        int dbQty = 0;
+                        for (model.CartItem dbItem : dbItems) {
+                            if (dbItem.getProductId() == productId) {
+                                dbQty = dbItem.getQuantity();
+                                break;
+                            }
+                        }
+                        
+                        int availableStock = productDAO.getProductStock(productId);
+                        int finalQty = dbQty + guestQty;
+                        if (finalQty > availableStock) {
+                            finalQty = availableStock;
+                            wasCapped = true;
+                        }
+                        
+                        int qtyToAdd = finalQty - dbQty;
+                        if (qtyToAdd > 0) {
+                            cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, qtyToAdd);
+                        }
+                    }
+                    
+                    session.removeAttribute("guestCart");
+                    
+                    if (wasCapped) {
+                        session.setAttribute("cartSuccess", "Đã gộp giỏ hàng tạm thời của bạn thành công. Một số sản phẩm được điều chỉnh theo số lượng tồn kho thực tế.");
+                    } else {
+                        session.setAttribute("cartSuccess", "Đã gộp giỏ hàng tạm thời của bạn thành công!");
+                    }
+                }
                 session.setAttribute("cartCount", cartDAO.getCartItemsCount(cart.getCartId()));
             }
         }
+
 
         // 4. Phân quyền
         switch (user.getRole()) {

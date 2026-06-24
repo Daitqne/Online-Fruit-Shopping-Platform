@@ -18,10 +18,11 @@ import model.Promotion;
 
 @WebServlet(name = "CartController", urlPatterns = {"/cart"})
 public class CartController extends HttpServlet {
-
+ 
     private final CartDAO cartDAO = new CartDAO();
     private final PromotionDAO promotionDAO = new PromotionDAO();
-
+    private final dal.ProductDAO productDAO = new dal.ProductDAO();
+ 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -29,24 +30,20 @@ public class CartController extends HttpServlet {
         HttpSession session = request.getSession();
         Authen user = (Authen) session.getAttribute("user");
         
-        // 1. Check login
-        if (user == null) {
-            session.setAttribute("redirectUrl", request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
         String action = request.getParameter("action");
         if (action == null) {
             action = "view";
         }
-
-        Cart cart = cartDAO.getCartByUserId(user.getId());
-        if (cart == null) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể khởi tạo giỏ hàng.");
-            return;
+ 
+        Cart cart = null;
+        if (user != null) {
+            cart = cartDAO.getCartByUserId(user.getId());
+            if (cart == null) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể khởi tạo giỏ hàng.");
+                return;
+            }
         }
-
+ 
         switch (action) {
             case "add":
                 handleAdd(request, response, session, cart);
@@ -69,11 +66,21 @@ public class CartController extends HttpServlet {
                 break;
         }
     }
-
+ 
     private void handleView(HttpServletRequest request, HttpServletResponse response, Cart cart)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        List<CartItem> cartItems = cartDAO.getCartItems(cart.getCartId());
+        List<CartItem> cartItems = null;
+        if (cart != null) {
+            cartItems = cartDAO.getCartItems(cart.getCartId());
+        } else {
+            cartItems = (List<CartItem>) session.getAttribute("guestCart");
+            if (cartItems == null) {
+                cartItems = new java.util.ArrayList<>();
+                session.setAttribute("guestCart", cartItems);
+            }
+        }
+        
         double totalAmount = 0;
         for (CartItem item : cartItems) {
             totalAmount += item.getQuantity() * item.getProduct().getPrice();
@@ -148,7 +155,7 @@ public class CartController extends HttpServlet {
         
         request.getRequestDispatcher("/cart.jsp").forward(request, response);
     }
-
+ 
     private void handleAdd(HttpServletRequest request, HttpServletResponse response, HttpSession session, Cart cart)
             throws IOException {
         boolean success = false;
@@ -161,23 +168,84 @@ public class CartController extends HttpServlet {
             int quantity = (qtyStr == null || qtyStr.trim().isEmpty()) ? 1 : Integer.parseInt(qtyStr);
             
             if (quantity > 0) {
-                cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, quantity);
-                success = true;
-                message = "Đã thêm sản phẩm vào giỏ hàng";
+                model.Product prod = productDAO.getProductById(productId);
+                if (prod == null) {
+                    message = "Sản phẩm không tồn tại";
+                } else {
+                    int availableStock = productDAO.getProductStock(productId);
+                    int currentCartQty = 0;
+                    
+                    if (cart != null) {
+                        List<CartItem> dbItems = cartDAO.getCartItems(cart.getCartId());
+                        for (CartItem item : dbItems) {
+                            if (item.getProductId() == productId) {
+                                currentCartQty = item.getQuantity();
+                                break;
+                            }
+                        }
+                    } else {
+                        List<CartItem> guestCart = (List<CartItem>) session.getAttribute("guestCart");
+                        if (guestCart != null) {
+                            for (CartItem item : guestCart) {
+                                if (item.getProductId() == productId) {
+                                    currentCartQty = item.getQuantity();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (currentCartQty + quantity > availableStock) {
+                        message = "Không thể thêm sản phẩm. Số lượng vượt quá tồn kho (Còn lại: " + availableStock + ")";
+                    } else {
+                        if (cart != null) {
+                            cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, quantity);
+                            totalCount = cartDAO.getCartItemsCount(cart.getCartId());
+                        } else {
+                            List<CartItem> guestCart = (List<CartItem>) session.getAttribute("guestCart");
+                            if (guestCart == null) {
+                                guestCart = new java.util.ArrayList<>();
+                                session.setAttribute("guestCart", guestCart);
+                            }
+                            
+                            boolean found = false;
+                            for (CartItem item : guestCart) {
+                                if (item.getProductId() == productId) {
+                                    item.setQuantity(item.getQuantity() + quantity);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!found) {
+                                CartItem newItem = new CartItem();
+                                newItem.setProductId(productId);
+                                newItem.setQuantity(quantity);
+                                newItem.setProduct(prod);
+                                newItem.setCartItemId(productId);
+                                guestCart.add(newItem);
+                            }
+                            
+                            for (CartItem item : guestCart) {
+                                totalCount += item.getQuantity();
+                            }
+                        }
+                        success = true;
+                        message = "Đã thêm sản phẩm vào giỏ hàng";
+                    }
+                }
+            } else {
+                message = "Số lượng phải lớn hơn 0";
             }
             
-            // Update cart items count in session
-            totalCount = cartDAO.getCartItemsCount(cart.getCartId());
             session.setAttribute("cartCount", totalCount);
             
         } catch (NumberFormatException e) {
             message = "Thông tin sản phẩm không hợp lệ";
         }
         
-        // Check if request is AJAX
         String requestedWith = request.getHeader("X-Requested-With");
         if ("XMLHttpRequest".equalsIgnoreCase(requestedWith)) {
-            // Return JSON response for AJAX
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(
@@ -186,46 +254,102 @@ public class CartController extends HttpServlet {
                 ",\"message\":\"" + message + "\"}"
             );
         } else {
-            // Normal redirect for non-AJAX requests
+            if (!success) {
+                session.setAttribute("cartError", message);
+            } else {
+                session.setAttribute("cartSuccess", message);
+            }
             response.sendRedirect(request.getContextPath() + "/cart");
         }
     }
-
+ 
     private void handleUpdate(HttpServletRequest request, HttpServletResponse response, HttpSession session, Cart cart)
             throws IOException {
         try {
             int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
             int quantity = Integer.parseInt(request.getParameter("quantity"));
             
-            cartDAO.updateCartItemQuantity(cartItemId, quantity);
+            int productId = 0;
+            int availableStock = 0;
             
-            // Update cart items count in session
-            int totalCount = cartDAO.getCartItemsCount(cart.getCartId());
-            session.setAttribute("cartCount", totalCount);
+            if (cart != null) {
+                List<CartItem> dbItems = cartDAO.getCartItems(cart.getCartId());
+                for (CartItem item : dbItems) {
+                    if (item.getCartItemId() == cartItemId) {
+                        productId = item.getProductId();
+                        break;
+                    }
+                }
+            } else {
+                productId = cartItemId;
+            }
+            
+            if (productId > 0) {
+                availableStock = productDAO.getProductStock(productId);
+                if (quantity > availableStock) {
+                    session.setAttribute("cartError", "Không thể cập nhật. Số lượng vượt quá tồn kho (Còn lại: " + availableStock + ").");
+                } else {
+                    if (cart != null) {
+                        cartDAO.updateCartItemQuantity(cartItemId, quantity);
+                        int totalCount = cartDAO.getCartItemsCount(cart.getCartId());
+                        session.setAttribute("cartCount", totalCount);
+                    } else {
+                        List<CartItem> guestCart = (List<CartItem>) session.getAttribute("guestCart");
+                        if (guestCart != null) {
+                            if (quantity <= 0) {
+                                guestCart.removeIf(item -> item.getCartItemId() == cartItemId);
+                            } else {
+                                for (CartItem item : guestCart) {
+                                    if (item.getCartItemId() == cartItemId) {
+                                        item.setQuantity(quantity);
+                                        break;
+                                    }
+                                }
+                            }
+                            int totalCount = 0;
+                            for (CartItem item : guestCart) {
+                                totalCount += item.getQuantity();
+                            }
+                            session.setAttribute("cartCount", totalCount);
+                        }
+                    }
+                }
+            }
             
         } catch (NumberFormatException e) {
             // Log and ignore
         }
         response.sendRedirect(request.getContextPath() + "/cart");
     }
-
+ 
     private void handleDelete(HttpServletRequest request, HttpServletResponse response, HttpSession session, Cart cart)
             throws IOException {
         try {
             int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
             
-            cartDAO.deleteCartItem(cartItemId);
-            
-            // Update cart items count in session
-            int totalCount = cartDAO.getCartItemsCount(cart.getCartId());
-            session.setAttribute("cartCount", totalCount);
+            if (cart != null) {
+                cartDAO.deleteCartItem(cartItemId);
+                int totalCount = cartDAO.getCartItemsCount(cart.getCartId());
+                session.setAttribute("cartCount", totalCount);
+            } else {
+                List<CartItem> guestCart = (List<CartItem>) session.getAttribute("guestCart");
+                if (guestCart != null) {
+                    guestCart.removeIf(item -> item.getCartItemId() == cartItemId);
+                    
+                    int totalCount = 0;
+                    for (CartItem item : guestCart) {
+                        totalCount += item.getQuantity();
+                    }
+                    session.setAttribute("cartCount", totalCount);
+                }
+            }
             
         } catch (NumberFormatException e) {
             // Log and ignore
         }
         response.sendRedirect(request.getContextPath() + "/cart");
     }
-
+ 
     private void handleApplyPromo(HttpServletRequest request, HttpServletResponse response, HttpSession session, Cart cart)
             throws IOException {
         String promoCode = request.getParameter("promoCode");
@@ -242,8 +366,16 @@ public class CartController extends HttpServlet {
             return;
         }
         
-        // Calculate subtotal
-        List<CartItem> cartItems = cartDAO.getCartItems(cart.getCartId());
+        List<CartItem> cartItems = null;
+        if (cart != null) {
+            cartItems = cartDAO.getCartItems(cart.getCartId());
+        } else {
+            cartItems = (List<CartItem>) session.getAttribute("guestCart");
+            if (cartItems == null) {
+                cartItems = new java.util.ArrayList<>();
+            }
+        }
+        
         double totalAmount = 0;
         for (CartItem item : cartItems) {
             totalAmount += item.getQuantity() * item.getProduct().getPrice();
@@ -262,14 +394,14 @@ public class CartController extends HttpServlet {
         
         response.sendRedirect(request.getContextPath() + "/cart");
     }
-
+ 
     private void handleRemovePromo(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws IOException {
         session.removeAttribute("appliedPromo");
         session.setAttribute("promoSuccess", "Đã gỡ mã giảm giá.");
         response.sendRedirect(request.getContextPath() + "/cart");
     }
-
+ 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

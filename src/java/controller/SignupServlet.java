@@ -38,10 +38,12 @@ public class SignupServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
+        String roleIdParam = request.getParameter("roleId");
 
        
         if (fullName == null || username == null || email == null
                 || password == null || confirmPassword == null
+                || roleIdParam == null
                 || fullName.isBlank() || username.isBlank()
                 || email.isBlank() || password.isBlank()) {
 
@@ -77,8 +79,12 @@ public class SignupServlet extends HttpServlet {
         a.setEmail(email);
         a.setPhone(phone);
 
-        
-        a.setRoleId(1);
+        int roleId = 1;
+        try {
+            roleId = Integer.parseInt(roleIdParam);
+        } catch (NumberFormatException ignored) {
+        }
+        a.setRoleId(roleId == 4 ? 4 : 1);
 
        
         boolean success = authenDAO.register(a);
