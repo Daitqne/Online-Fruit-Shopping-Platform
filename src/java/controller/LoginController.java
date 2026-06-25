@@ -127,7 +127,7 @@ public class LoginController extends HttpServlet {
                 break;
                 
             case "Delivery":
-                response.sendRedirect(request.getContextPath() + "/home");
+                response.sendRedirect(request.getContextPath() + "/delivery");
                 break;
 
             default:

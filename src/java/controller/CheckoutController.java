@@ -328,6 +328,12 @@ public class CheckoutController extends HttpServlet {
             cartDAO.clearCart(cart.getCartId());
             session.setAttribute("cartCount", 0);
             session.removeAttribute("appliedPromo");
+            //notify customer
+            dal.NotificationDAO notifDAO = new dal.NotificationDAO();
+            notifDAO.addNotification(user.getId(),
+                "Đặt hàng thành công",
+                "Đơn hàng #" + order.getSaleOrderId() + " đã được đặt thành công! Tổng thanh toán: " 
+                + String.format("%,.0fđ", order.getTotalPayment()) + ". Cảm ơn bạn đã mua hàng tại GreenStock!");
             response.sendRedirect(request.getContextPath() + "/checkout?action=success&orderId=" + order.getSaleOrderId());
         } else {
             session.setAttribute("checkoutError", "Đã xảy ra lỗi hệ thống trong quá trình đặt hàng. Vui lòng thử lại sau.");

@@ -1,5 +1,6 @@
 package controller;
 
+import dal.DeliveryDAO;
 import dal.OrderDAO;
 import dal.NotificationDAO;
 import jakarta.servlet.ServletException;
@@ -18,6 +19,7 @@ import model.SaleOrder;
 public class ShopOwnerOrderController extends HttpServlet {
 
     private final OrderDAO orderDAO = new OrderDAO();
+    private final DeliveryDAO deliveryDAO = new DeliveryDAO();
     private final NotificationDAO notifDAO = new NotificationDAO();
 
     @Override
@@ -115,6 +117,13 @@ public class ShopOwnerOrderController extends HttpServlet {
                 if (newStatus != null) {
                     boolean ok = orderDAO.updateOrderStatus(orderId, newStatus);
                     if (ok) {
+                        if (newStatus.equals("Shipping")) {
+                            SaleOrder order = orderDAO.getOrderById(orderId);
+                            if (order != null) {
+                                deliveryDAO.createDelivery(orderId, order.getShippingAddress());
+                                notifDAO.notifyDeliveryStaff(orderId);
+                            }
+                        }
                         session.setAttribute("orderSuccess",
                             "Cap nhat trang thai don hang #" + orderId + " thanh '" + newStatus + "' thanh cong!");
                     } else {
