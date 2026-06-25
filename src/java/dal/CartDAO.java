@@ -60,7 +60,7 @@ public class CartDAO extends DBContext {
         List<CartItem> items = new ArrayList<>();
         String sql = """
             SELECT ci.cart_item_id, ci.cart_id, ci.product_id, ci.quantity,
-                   p.product_name AS name, p.price, p.description,
+                   p.product_name AS name, p.price, p.discount_price, p.description,
                    c.category_name AS category,
                    (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image
             FROM Cart_Item ci
@@ -84,6 +84,7 @@ public class CartDAO extends DBContext {
                     p.setId(rs.getInt("product_id"));
                     p.setName(rs.getNString("name"));
                     p.setPrice(rs.getDouble("price"));
+                    p.setDiscountPrice(rs.getDouble("discount_price"));
                     p.setDescription(rs.getNString("description"));
                     p.setCategory(rs.getNString("category"));
                     p.setImage(rs.getString("image"));
