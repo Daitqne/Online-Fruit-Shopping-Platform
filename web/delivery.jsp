@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -114,6 +115,41 @@
                     <div class="navbar-collapse collapse">
                         <ul class="navbar-nav navbar-align">
                             <li class="nav-item dropdown">
+                                <a class="nav-icon dropdown-toggle" href="#" id="alertsDropdown" data-bs-toggle="dropdown">
+                                    <div class="position-relative">
+                                        <i class="align-middle" data-feather="bell"></i>
+                                        <c:if test="${unreadCount > 0}">
+                                            <span class="indicator">${unreadCount}</span>
+                                        </c:if>
+                                    </div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="alertsDropdown">
+                                    <div class="dropdown-menu-header">Thông báo (${unreadCount} chưa đọc)</div>
+                                    <div class="list-group">
+                                        <c:choose>
+                                            <c:when test="${not empty notifications}">
+                                                <c:forEach var="n" items="${notifications}" begin="0" end="4">
+                                                    <a href="#" class="list-group-item">
+                                                        <div class="row g-0 align-items-center">
+                                                            <div class="col-2 text-center">
+                                                                <i class="text-primary align-middle" data-feather="truck"></i>
+                                                            </div>
+                                                            <div class="col-10 ps-2">
+                                                                <div class="text-dark" style="font-size:.82rem;font-weight:${n.read ? '400' : '700'}">${n.title}</div>
+                                                                <div class="text-muted" style="font-size:.75rem;">${fn:substring(n.content, 0, 70)}</div>
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="text-center text-muted py-3" style="font-size:.85rem;">Không có thông báo mới</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
                                 <a class="nav-icon pe-md-0 dropdown-toggle" href="#" data-bs-toggle="dropdown">
                                     <img src="${not empty sessionScope.user.avatar ? sessionScope.user.avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}"
                                          class="avatar img-fluid rounded" alt="Avatar" />
@@ -125,6 +161,7 @@
                                 </div>
                             </li>
                         </ul>
+                        
                     </div>
                 </nav>
 
