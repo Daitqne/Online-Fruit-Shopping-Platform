@@ -244,6 +244,12 @@
                             <span class="align-middle">Quản lý sản phẩm</span>
                         </a>
                     </li>
+                    <li class="sidebar-item active">
+                            <a class="sidebar-link" href="admin-promotions">
+                                <i class="align-middle" data-feather="gift"></i> 
+                                <span class="align-middle">Quản lý Voucher</span>
+                            </a>
+                        </li>
                 </ul>
             </div>
         </nav>
