@@ -32,10 +32,10 @@ public class ProductDAO extends DBContext {
             "    p.product_id, p.product_name, p.price, p.discount_price, " +
             "    p.unit, p.origin, p.status, p.description, " +
             "    c.category_name, pi.image_url, " +
-            "    COALESCE(SUM(soi.quantity), 0) AS total_sold " +
+            "    COALESCE(SUM(soi.quantity), 0) AS total_sold " + // Tổng số lượng đã bán từ bảng Sale_Order_Item
             "FROM Product p " +
-            "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
-            "LEFT JOIN Sale_Order_Item soi ON p.product_id = soi.product_id " +
+            "LEFT JOIN Product_Category c ON p.category_id = c.category_id " + // sản phẩm không có category, vẫn hiển thị sản phẩm
+            "LEFT JOIN Sale_Order_Item soi ON p.product_id = soi.product_id " + // sản phẩm chưa bán được cũng hiển thị
             "LEFT JOIN ( " +
             "    SELECT product_id, image_url FROM ( " +
             "        SELECT product_id, image_url, " +
@@ -52,6 +52,7 @@ public class ProductDAO extends DBContext {
         try (PreparedStatement st = getConnection().prepareStatement(sql);
              ResultSet rs = st.executeQuery()) {
             while (rs.next()) {
+                //chuyển 1 dòng ResultSet thành 1 object Product
                 products.add(mapRowToProduct(rs));
             }
         } catch (SQLException ex) {
@@ -423,6 +424,7 @@ public class ProductDAO extends DBContext {
         return products;
     }
 
+    // sử dụng để lấy dữ liệu vào 1 object Product
     private Product mapRowToProduct(ResultSet rs) throws SQLException {
         Product p = new Product();
         p.setId(rs.getInt("product_id"));

@@ -245,7 +245,7 @@
             <div class="product-image-wrap">
                 <img src="${product.image}" alt="${product.name}"
                      onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
-                <c:if test="${product.discountPrice > 0}">
+                <c:if test="${product.discountPrice > 0 && product.discountPrice < product.price}">
                     <span class="badge-sale">SALE</span>
                 </c:if>
                 <c:if test="${product.featured}">
@@ -265,7 +265,7 @@
                 <!-- GIÁ -->
                 <div class="price-block">
                     <c:choose>
-                        <c:when test="${product.discountPrice > 0}">
+                        <c:when test="${product.discountPrice > 0 && product.discountPrice < product.price}">
                             <span class="price-main">
                                 <fmt:formatNumber value="${product.discountPrice}" type="number" maxFractionDigits="0"/>đ
                             </span>
@@ -367,7 +367,7 @@
                             <a href="product-detail?id=${p.id}" class="product-card-name">${p.name}</a>
                             <span class="product-card-price">
                                 <c:choose>
-                                    <c:when test="${p.discountPrice > 0}">
+                                    <c:when test="${p.discountPrice > 0 && p.discountPrice < p.price}">
                                         <fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}
                                     </c:when>
                                     <c:otherwise>

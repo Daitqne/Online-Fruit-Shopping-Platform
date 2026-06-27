@@ -1042,7 +1042,7 @@
                                     <div class="product-footer">
                                         <div>
                                             <c:choose>
-                                                <c:when test="${p.discountPrice > 0}">
+                                                <c:when test="${p.discountPrice > 0 && p.discountPrice < p.price}">
                                                     <span class="product-price"><fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
                                                     <span style="font-size:0.78rem;color:#94a3b8;text-decoration:line-through;display:block;">
                                                         <fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ

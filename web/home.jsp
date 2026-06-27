@@ -956,7 +956,7 @@
                             <div class="product-card" onclick="location.href='product-detail?id=${p.id}'" style="cursor:pointer;">
                                 <div class="product-image-container">
                                     <span class="product-category">${p.category}</span>
-                                    <c:if test="${p.discountPrice > 0}">
+                                    <c:if test="${p.discountPrice > 0 && p.discountPrice < p.price}">
                                         <span style="position:absolute;top:1rem;right:1rem;background:#EF4444;color:#fff;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:50px;">
                                             SALE
                                         </span>
@@ -970,7 +970,7 @@
                                     <div class="product-footer">
                                         <div>
                                             <c:choose>
-                                                <c:when test="${p.discountPrice > 0}">
+                                                <c:when test="${p.discountPrice > 0 && p.discountPrice < p.price}">
                                                     <span class="product-price"><fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
                                                     <span style="font-size:0.78rem;color:#94a3b8;text-decoration:line-through;display:block;">
                                                         <fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ
