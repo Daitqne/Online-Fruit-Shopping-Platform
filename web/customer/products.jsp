@@ -1,0 +1,1103 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sản phẩm - GreenStock</title>
+
+        <%@include file="../common/head.jsp" %>
+
+        <!-- Search Autocomplete CSS -->
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/search-autocomplete.css">
+
+        <style>
+            :root {
+                --primary: #10B981;
+                --primary-hover: #059669;
+                --primary-light: #E6F4EA;
+                --secondary: #F59E0B;
+                --dark: #0F172A;
+                --light: #F8FAFC;
+                --slate-200: #E2E8F0;
+                --slate-300: #CBD5E1;
+                --slate-400: #94A3B8;
+                --slate-600: #475569;
+                --white: #FFFFFF;
+                --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+                --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+                --font-display: 'Outfit', sans-serif;
+                --font-body: 'Plus Jakarta Sans', sans-serif;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: var(--font-body);
+                background-color: var(--light);
+                color: var(--dark);
+                line-height: 1.6;
+                overflow-x: hidden;
+            }
+
+            /* --- HEADER & NAVIGATION --- */
+            header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+                transition: all 0.3s ease;
+            }
+
+            .nav-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 1rem 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                font-family: var(--font-display);
+                font-size: 1.6rem;
+                font-weight: 800;
+                color: var(--primary);
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .logo i {
+                color: var(--secondary);
+                animation: bounce 2s infinite;
+            }
+
+            @keyframes bounce {
+                0%, 100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-4px);
+                }
+            }
+
+            .nav-menu {
+                display: flex;
+                list-style: none;
+                gap: 2rem;
+                align-items: center;
+            }
+
+            .nav-link {
+                text-decoration: none;
+                color: var(--slate-600);
+                font-weight: 600;
+                transition: color 0.2s ease;
+                position: relative;
+            }
+
+            .nav-link:hover {
+                color: var(--primary);
+            }
+
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 2px;
+                bottom: -4px;
+                left: 0;
+                background-color: var(--primary);
+                transition: width 0.25s ease;
+            }
+
+            .nav-link:hover::after {
+                width: 100%;
+            }
+
+            .nav-link.active-menu::after {
+                width: 100%;
+            }
+
+            .nav-link.active-menu {
+                color: var(--primary);
+            }
+
+            .nav-actions {
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+            }
+
+            .btn-login {
+                background-color: var(--primary);
+                color: var(--white);
+                text-decoration: none;
+                padding: 0.6rem 1.4rem;
+                border-radius: 50px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .btn-login:hover {
+                background-color: var(--primary-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 15px rgba(16, 185, 129, 0.35);
+            }
+
+            /* --- PRODUCTS PAGE BANNER --- */
+            .products-banner {
+                padding: 7rem 2rem 2.5rem;
+                background: linear-gradient(135deg, #E6F4EA 0%, #FFFFFF 100%);
+                text-align: center;
+                border-bottom: 1px solid var(--slate-200);
+            }
+
+            .products-banner h1 {
+                font-family: var(--font-display);
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: var(--dark);
+                margin-bottom: 0.5rem;
+            }
+
+            .products-banner p {
+                color: var(--slate-600);
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            /* --- MAIN LAYOUT: SIDEBAR + CONTENT --- */
+            .main-layout {
+                max-width: 1400px;
+                margin: 0 auto 5rem;
+                padding: 80px 1rem 0;
+                display: grid;
+                grid-template-columns: 220px 1fr;
+                gap: 1.5rem;
+                align-items: start;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* --- SIDEBAR FILTER --- */
+            .filter-sidebar {
+                position: sticky;
+                top: 75px;
+                max-height: calc(100vh - 90px);
+                overflow-y: auto;
+                background: var(--white);
+                border-radius: 16px;
+                padding: 1.2rem;
+                box-shadow: var(--shadow-sm);
+                border: 1px solid var(--slate-200);
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                z-index: 1;
+            }
+
+            /* ẩn scrollbar nhưng vẫn scroll được */
+            .filter-sidebar::-webkit-scrollbar { width: 4px; }
+            .filter-sidebar::-webkit-scrollbar-track { background: transparent; }
+            .filter-sidebar::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 4px; }
+
+            .sidebar-title {
+                font-family: var(--font-display);
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: var(--dark);
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding-bottom: 0.8rem;
+                border-bottom: 1px solid var(--slate-200);
+            }
+
+            .sidebar-title i {
+                color: var(--primary);
+                font-size: 0.85rem;
+            }
+
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.4rem;
+            }
+
+            .filter-label {
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: var(--slate-400);
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+                margin-bottom: 0.2rem;
+            }
+
+            .filter-pills {
+                display: flex;
+                flex-direction: column;
+                gap: 0.2rem;
+                list-style: none;
+            }
+
+            .filter-pill {
+                text-decoration: none;
+                background-color: transparent;
+                color: var(--slate-600);
+                padding: 0.35rem 0.7rem;
+                border-radius: 8px;
+                font-size: 0.82rem;
+                font-weight: 500;
+                border: 1px solid transparent;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+
+            .filter-pill:hover {
+                background-color: var(--primary-light);
+                color: var(--primary);
+            }
+
+            .filter-pill.active {
+                background-color: var(--primary-light);
+                color: var(--primary);
+                border-color: var(--primary);
+                font-weight: 700;
+            }
+
+            .filter-pill.active::before {
+                content: '';
+                width: 6px;
+                height: 6px;
+                background: var(--primary);
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            .sidebar-divider {
+                border: none;
+                border-top: 1px solid var(--slate-200);
+                margin: 0;
+            }
+
+            .btn-reset-filter {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.4rem;
+                background: var(--light);
+                color: var(--slate-600);
+                border: 1px solid var(--slate-300);
+                padding: 0.5rem;
+                border-radius: 8px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .btn-reset-filter:hover {
+                background: #FEF2F2;
+                color: #EF4444;
+                border-color: #FECACA;
+            }
+
+            /* --- CONTENT AREA (search + grid) --- */
+            .content-area {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .search-row {
+                display: flex;
+                gap: 1rem;
+                width: 100%;
+            }
+
+            .search-form {
+                display: flex;
+                width: 100%;
+                gap: 0.75rem;
+            }
+
+            .search-input-wrapper {
+                position: relative;
+                flex-grow: 1;
+                display: flex;
+                align-items: center;
+            }
+
+            .search-input-wrapper i {
+                position: absolute;
+                left: 1.25rem;
+                color: var(--slate-400);
+                font-size: 1.1rem;
+            }
+
+            .search-input {
+                width: 100%;
+                padding: 0.6rem 1rem 0.6rem 2.5rem;
+                border-radius: 10px;
+                border: 1px solid var(--slate-300);
+                font-family: var(--font-body);
+                font-size: 0.82rem;
+                background-color: var(--white);
+                outline: none;
+                transition: all 0.3s ease;
+            }
+
+            .search-input:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+            }
+
+            .btn-search {
+                background-color: var(--primary);
+                color: var(--white);
+                border: none;
+                padding: 0 1.75rem;
+                border-radius: 12px;
+                font-family: var(--font-body);
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                white-space: nowrap;
+            }
+
+            .btn-search:hover {
+                background-color: var(--primary-hover);
+            }
+
+            /* --- PRODUCT GRID --- */
+            .product-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                padding-top: 0.5rem;
+            }
+
+            .product-card {
+                background: var(--white);
+                border-radius: 20px;
+                overflow: visible;
+                box-shadow: var(--shadow-sm);
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            .product-card:hover {
+                transform: translateY(-8px);
+                box-shadow: var(--shadow-lg);
+                border-color: var(--primary-light);
+            }
+
+            .product-image-container {
+                width: 100%;
+                height: 220px;
+                overflow: hidden;
+                position: relative;
+                background: #F1F5F9;
+                border-radius: 20px 20px 0 0;
+            }
+
+            .product-image-container img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.5s ease;
+            }
+
+            .product-card:hover .product-image-container img {
+                transform: scale(1.08);
+            }
+
+            .product-category {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(4px);
+                color: var(--primary-hover);
+                padding: 0.25rem 0.75rem;
+                border-radius: 50px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                box-shadow: var(--shadow-sm);
+            }
+
+            .product-info {
+                padding: 1.25rem;
+                display: flex;
+                flex-direction: column;
+                flex-grow: 1;
+            }
+
+            .product-title {
+                font-family: var(--font-display);
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: var(--dark);
+                margin-bottom: 0.5rem;
+                text-decoration: none;
+                transition: color 0.2s ease;
+                min-height: 48px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .product-title:hover {
+                color: var(--primary);
+            }
+
+            .product-description {
+                font-size: 0.85rem;
+                color: var(--slate-600);
+                margin-bottom: 1rem;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                min-height: 38px;
+            }
+
+            .product-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: auto;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(241, 245, 249, 0.8);
+            }
+
+            .product-price {
+                font-family: var(--font-display);
+                font-size: 1.2rem;
+                font-weight: 800;
+                color: var(--primary);
+            }
+
+            .btn-add-cart {
+                background-color: var(--primary-light);
+                color: var(--primary);
+                border: none;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            .btn-add-cart:hover {
+                background-color: var(--primary);
+                color: var(--white);
+                transform: scale(1.1);
+            }
+
+            .btn-action {
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                font-size: 0.85rem;
+            }
+            .btn-edit {
+                background-color: #EFF6FF;
+                color: #3B82F6;
+                border: 1px solid #BFDBFE;
+            }
+            .btn-edit:hover {
+                background-color: #3B82F6;
+                color: var(--white);
+                transform: scale(1.1);
+            }
+            .btn-delete {
+                background-color: #FEF2F2;
+                color: #EF4444;
+                border: 1px solid #FECACA;
+            }
+            .btn-delete:hover {
+                background-color: #EF4444;
+                color: var(--white);
+                transform: scale(1.1);
+            }
+
+            /* --- FALLBACK SECTION --- */
+            .fallback-section {
+                grid-column: span 3;
+                text-align: center;
+                padding: 5rem 2rem;
+                background: var(--white);
+                border-radius: 24px;
+                border: 1px dashed var(--slate-300);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .fallback-section i {
+                font-size: 4rem;
+                color: var(--slate-400);
+                margin-bottom: 1.5rem;
+            }
+
+            .fallback-section h2 {
+                font-family: var(--font-display);
+                font-size: 1.8rem;
+                color: var(--dark);
+                margin-bottom: 0.5rem;
+            }
+
+            .fallback-section p {
+                color: var(--slate-600);
+                margin-bottom: 2rem;
+            }
+
+            .btn-reset {
+                background-color: var(--primary);
+                color: var(--white);
+                text-decoration: none;
+                padding: 0.75rem 1.75rem;
+                border-radius: 12px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+            }
+
+            .btn-reset:hover {
+                background-color: var(--primary-hover);
+                transform: translateY(-2px);
+            }
+
+            /* --- FOOTER --- */
+            footer {
+                background-color: var(--dark);
+                color: var(--white);
+                padding: 5rem 2rem 2rem;
+                font-size: 0.95rem;
+            }
+
+            .footer-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                display: grid;
+                grid-template-columns: 2fr 1fr 1fr 1.5fr;
+                gap: 4rem;
+                margin-bottom: 4rem;
+            }
+
+            .footer-logo {
+                font-family: var(--font-display);
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: var(--primary);
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .footer-logo i {
+                color: var(--secondary);
+            }
+
+            .footer-desc {
+                color: var(--slate-300);
+                margin-bottom: 1.5rem;
+            }
+
+            .social-links {
+                display: flex;
+                gap: 1rem;
+            }
+
+            .social-link {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.08);
+                color: var(--white);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                transition: all 0.3s ease;
+            }
+
+            .social-link:hover {
+                background-color: var(--primary);
+                transform: translateY(-3px);
+            }
+
+            .footer-column h3 {
+                font-family: var(--font-display);
+                font-size: 1.2rem;
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+                position: relative;
+            }
+
+            .footer-column h3::after {
+                content: '';
+                position: absolute;
+                width: 35px;
+                height: 2px;
+                bottom: -6px;
+                left: 0;
+                background-color: var(--primary);
+            }
+
+            .footer-links {
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .footer-links a {
+                color: var(--slate-300);
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+
+            .footer-links a:hover {
+                color: var(--primary);
+                padding-left: 4px;
+            }
+
+            .contact-info {
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                color: var(--slate-300);
+            }
+
+            .contact-info li {
+                display: flex;
+                gap: 0.8rem;
+                align-items: flex-start;
+            }
+
+            .contact-info i {
+                color: var(--primary);
+                margin-top: 0.25rem;
+            }
+
+            .footer-bottom {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding-top: 2rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: var(--slate-600);
+                font-size: 0.85rem;
+            }
+
+            .footer-bottom p {
+                color: var(--slate-300);
+            }
+
+            /* --- RESPONSIVE STYLES --- */
+            @media (max-width: 1024px) {
+                .main-layout {
+                    grid-template-columns: 200px 1fr;
+                    padding: 80px 0.75rem 0;
+                }
+                .product-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .footer-container {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 2rem;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .main-layout {
+                    grid-template-columns: 1fr;
+                    padding: 80px 0.75rem 0;
+                }
+                .filter-sidebar {
+                    position: static;
+                    max-height: none;
+                }
+                .product-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .nav-menu {
+                    display: none;
+                }
+            }
+
+            .user-menu {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .user-menu-btn {
+                background: var(--primary-light);
+                color: var(--primary);
+                border: none;
+                padding: 0.6rem 1.2rem;
+                border-radius: 50px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: all 0.3s ease;
+                font-family: var(--font-body);
+            }
+
+            .user-menu-btn:hover {
+                background: var(--primary);
+                color: var(--white);
+            }
+
+            .user-dropdown {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: var(--white);
+                border-radius: 14px;
+                box-shadow: var(--shadow-lg);
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                min-width: 180px;
+                overflow: hidden;
+                z-index: 1001;
+            }
+
+            .user-menu:hover .user-dropdown {
+                display: block;
+                animation: fadeIn 0.2s ease;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-6px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+
+            .user-dropdown a {
+                display: flex; align-items: center; gap: 0.6rem;
+                padding: 0.75rem 1.2rem; color: var(--dark);
+                text-decoration: none; font-size: 0.9rem; font-weight: 500;
+                transition: background 0.2s ease;
+            }
+            .user-dropdown a:hover { background: var(--primary-light); color: var(--primary); }
+            .user-dropdown a.logout { color: #EF4444; border-top: 1px solid rgba(226,232,240,0.8); }
+            .user-dropdown a.logout:hover { background: #FEF2F2; color: #DC2626; }
+
+            @media (max-width: 480px) {
+                .product-grid {
+                    grid-template-columns: 1fr;
+                }
+                .footer-bottom {
+                    flex-direction: column;
+                    gap: 1rem;
+                    text-align: center;
+                }
+                .search-row {
+                    flex-direction: column;
+                }
+                .btn-search {
+                    padding: 0.8rem;
+                    justify-content: center;
+                }
+            }
+
+
+        </style>
+    </head>
+    <body>
+
+        <!-- HEADER -->
+        <%@include file="../common/header.jsp" %>
+        <!-- MAIN LAYOUT -->
+        <div class="main-layout">
+
+            <!-- SIDEBAR FILTER -->
+            <aside class="filter-sidebar">
+                <div class="sidebar-title">
+                    <i class="fa-solid fa-sliders"></i> Bộ lọc
+                </div>
+
+
+
+                <!-- Filter by Category -->
+                <div class="filter-group">
+                    <span class="filter-label">Danh mục</span>
+                    <ul class="filter-pills">
+                        <li>
+                            <a href="products?category=All&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}"
+                               class="filter-pill ${selectedCategory == 'All' ? 'active' : ''}">
+                                Tất cả
+                            </a>
+                        </li>
+                        <c:forEach var="cat" items="${categories}">
+                            <li>
+                                <a href="products?category=${cat}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}"
+                                   class="filter-pill ${selectedCategory == cat ? 'active' : ''}">
+                                    ${cat}
+                                </a>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <!-- Filter by Price -->
+                <div class="filter-group">
+                    <span class="filter-label">Khoảng giá</span>
+                    <ul class="filter-pills">
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}"
+                               class="filter-pill ${empty minPrice && empty maxPrice ? 'active' : ''}">
+                                Tất cả
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&maxPrice=50000"
+                               class="filter-pill ${empty minPrice && maxPrice == '50000' ? 'active' : ''}">
+                                Dưới 50.000đ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&minPrice=50000&maxPrice=100000"
+                               class="filter-pill ${minPrice == '50000' && maxPrice == '100000' ? 'active' : ''}">
+                                50.000 – 100.000đ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&minPrice=100000&maxPrice=200000"
+                               class="filter-pill ${minPrice == '100000' && maxPrice == '200000' ? 'active' : ''}">
+                                100.000 – 200.000đ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&availability=${selectedAvailability}&minPrice=200000"
+                               class="filter-pill ${minPrice == '200000' && empty maxPrice ? 'active' : ''}">
+                                Trên 200.000đ
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <!-- Filter by Availability -->
+                <div class="filter-group">
+                    <span class="filter-label">Tình trạng</span>
+                    <ul class="filter-pills">
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=All"
+                               class="filter-pill ${selectedAvailability == 'All' ? 'active' : ''}">
+                                Tất cả
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=Available"
+                               class="filter-pill ${selectedAvailability == 'Available' ? 'active' : ''}">
+                                Còn hàng
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=Featured"
+                               class="filter-pill ${selectedAvailability == 'Featured' ? 'active' : ''}">
+                                Nổi bật
+                            </a>
+                        </li>
+                        <li>
+                            <a href="products?category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=OutOfStock"
+                               class="filter-pill ${selectedAvailability == 'OutOfStock' ? 'active' : ''}">
+                                Hết hàng
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <!-- Reset -->
+                <a href="products" class="btn-reset-filter">
+                    <i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+                </a>
+            </aside>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                <!-- Product Grid -->
+                <div class="product-grid">
+                <c:choose>
+                    <c:when test="${not empty products}">
+                        <c:forEach var="p" items="${products}">
+                            <div class="product-card" onclick="location.href='product-detail?id=${p.id}'" style="cursor:pointer;">
+                                <div class="product-image-container">
+                                    <span class="product-category">${p.category}</span>
+                                    <c:if test="${p.discountPrice > 0}">
+                                        <span style="position:absolute;top:1rem;right:1rem;background:#EF4444;color:#fff;font-size:0.7rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:50px;">SALE</span>
+                                    </c:if>
+                                    <img src="${p.image}" alt="${p.name}" loading="lazy"
+                                         onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
+                                </div>
+                                <div class="product-info">
+                                    <a href="product-detail?id=${p.id}" class="product-title">${p.name}</a>
+                                    <p class="product-description">${p.description}</p>
+                                    <div class="product-footer">
+                                        <div>
+                                            <c:choose>
+                                                <c:when test="${p.discountPrice > 0 && p.discountPrice < p.price}">
+                                                    <span class="product-price"><fmt:formatNumber value="${p.discountPrice}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                    <span style="font-size:0.78rem;color:#94a3b8;text-decoration:line-through;display:block;">
+                                                        <fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="product-price"><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/>đ/${p.unit}</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <button class="btn-add-cart" title="Thêm vào giỏ hàng" onclick="addToCart(event, ${p.id})">
+                                            <i class="fa-solid fa-cart-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </c:when>
+                    <c:otherwise>
+                        <!-- Fallback UI if search or category returns empty -->
+                        <div class="fallback-section">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                            <h2>Không tìm thấy sản phẩm</h2>
+                            <p>Xin lỗi! Không có sản phẩm nào phù hợp với bộ lọc tìm kiếm hiện tại của bạn.</p>
+                            <a href="products" class="btn-reset">
+                                <i class="fa-solid fa-rotate-left"></i> Xóa tất cả bộ lọc
+                            </a>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <%@include file="../common/footer.jsp" %>
+
+        <script>
+        function addToCart(event, productId) {
+            event.stopPropagation(); // Prevent card click
+            
+            // Get the button element
+            const button = event.currentTarget;
+            const icon = button.querySelector('i');
+            
+            // Disable button during request
+            button.disabled = true;
+            icon.className = 'fa-solid fa-spinner fa-spin';
+            
+            // Make AJAX request
+            fetch('cart?action=add&productId=' + productId + '&quantity=1', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.querySelector('.cart-badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cartCount;
+                    }
+                    
+                    // Show success animation
+                    icon.className = 'fa-solid fa-check';
+                    button.style.backgroundColor = '#10B981';
+                    button.style.color = '#fff';
+                    
+                    // Reset button after 1.5 seconds
+                    setTimeout(() => {
+                        icon.className = 'fa-solid fa-cart-plus';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.disabled = false;
+                    }, 1500);
+                } else {
+                    // Show error
+                    icon.className = 'fa-solid fa-xmark';
+                    button.style.backgroundColor = '#EF4444';
+                    button.style.color = '#fff';
+                    
+                    setTimeout(() => {
+                        icon.className = 'fa-solid fa-cart-plus';
+                        button.style.backgroundColor = '';
+                        button.style.color = '';
+                        button.disabled = false;
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Show error
+                icon.className = 'fa-solid fa-xmark';
+                button.style.backgroundColor = '#EF4444';
+                button.style.color = '#fff';
+                
+                setTimeout(() => {
+                    icon.className = 'fa-solid fa-cart-plus';
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                    button.disabled = false;
+                }, 1500);
+            });
+        }
+        </script>
+
+        <%@include file="../common/search.jsp" %>
+
+    </body>
+</html>

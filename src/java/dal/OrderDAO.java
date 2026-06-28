@@ -336,9 +336,20 @@ public class OrderDAO extends DBContext {
     /**
      * Updates the status of an order. Used by Shop Owner to confirm/reject/ship orders.
      * Allowed target statuses: Processing, Shipping, Delivered, Cancelled.
+     * Automatically sets delivered_date when status is set to 'Delivered'.
      */
     public boolean updateOrderStatus(int orderId, String newStatus) {
-        String sql = "UPDATE Sale_Order SET order_status = ? WHERE sale_order_id = ?";
+        String sql;
+        
+        // If status is Delivered, also set delivered_date
+        if ("Delivered".equalsIgnoreCase(newStatus)) {
+            sql = "UPDATE Sale_Order SET order_status = ?, delivered_date = GETDATE() WHERE sale_order_id = ?";
+        } else if ("Shipping".equalsIgnoreCase(newStatus)) {
+            sql = "UPDATE Sale_Order SET order_status = ?, shipped_date = GETDATE() WHERE sale_order_id = ?";
+        } else {
+            sql = "UPDATE Sale_Order SET order_status = ? WHERE sale_order_id = ?";
+        }
+        
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setNString(1, newStatus);
             ps.setInt(2, orderId);

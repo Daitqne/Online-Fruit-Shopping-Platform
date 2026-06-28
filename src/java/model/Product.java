@@ -116,6 +116,13 @@ public class Product {
         this.discountPrice = discountPrice;
     }
 
+    public double getEffectivePrice() {
+        if (discountPrice > 0 && discountPrice < price) {
+            return discountPrice;
+        }
+        return price;
+    }
+
     public String getUnit() {
         return unit;
     }
