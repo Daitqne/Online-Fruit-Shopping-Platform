@@ -13,40 +13,24 @@ import model.Product;
 /**
  * Controller servlet for the Platform Homepage.
  */
+// khi truy cập /home thì homeController nhận rq
 @WebServlet(name = "HomeController", urlPatterns = {"/home"})
 public class HomeController extends HttpServlet {
-
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @param req
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         ProductDAO productDAO = new ProductDAO();
         
+        // gọi method select top 8 sản phẩm bán chạy
         List<Product> featuredProducts = productDAO.getTop8FeaturedProducts();
     
-        
+        // set 
         request.setAttribute("products", featuredProducts);
         
         request.getRequestDispatcher("/customer/home.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

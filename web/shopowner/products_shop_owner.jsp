@@ -209,6 +209,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="shop-owner-revenue">
+                            <i class="align-middle" data-feather="trending-up"></i>
+                            <span class="align-middle">Báo cáo doanh thu</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-profile">
                             <i class="align-middle" data-feather="user"></i>
                             <span class="align-middle">Hồ sơ cá nhân</span>
