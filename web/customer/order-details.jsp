@@ -112,7 +112,14 @@
                     <div class="info-grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
                         <div class="info-block">
                             <h4>Phương thức thanh toán</h4>
-                            <p>${order.paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'Chuyển khoản ngân hàng'}</p>
+                            <p>
+                                <c:choose>
+                                    <c:when test="${order.paymentMethod == 'COD'}">Thanh toán khi nhận hàng (COD)</c:when>
+                                    <c:when test="${order.paymentMethod == 'Bank Transfer'}">Chuyển khoản ngân hàng</c:when>
+                                    <c:when test="${order.paymentMethod == 'VNPAY'}">Cổng thanh toán VNPAY</c:when>
+                                    <c:otherwise>${order.paymentMethod}</c:otherwise>
+                                </c:choose>
+                            </p>
                         </div>
                         <div class="info-block">
                             <h4>Trạng thái thanh toán</h4>
@@ -120,6 +127,9 @@
                                 <c:choose>
                                     <c:when test="${order.paymentStatus == 'Paid'}">
                                         <span class="status-badge pay-paid" style="padding: 0.2rem 0.5rem;"><i class="fa-solid fa-circle-check"></i> Đã thanh toán</span>
+                                    </c:when>
+                                    <c:when test="${order.paymentStatus == 'Failed'}">
+                                        <span class="status-badge pay-failed" style="padding: 0.2rem 0.5rem; background-color: #FEF2F2; color: #EF4444; border: 1px solid #FCA5A5; border-radius: 6px; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Thanh toán thất bại</span>
                                     </c:when>
                                     <c:otherwise>
                                         <span class="status-badge pay-pending" style="padding: 0.2rem 0.5rem;"><i class="fa-solid fa-clock"></i> Chưa thanh toán</span>
@@ -129,6 +139,28 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Hiển thị VietQR thanh toán nếu chọn Chuyển khoản ngân hàng và chưa thanh toán -->
+                <fmt:formatNumber value="${order.totalPayment}" pattern="#" var="formattedAmount"/>
+                <c:if test="${order.paymentMethod == 'Bank Transfer' && order.paymentStatus != 'Paid'}">
+                    <div style="margin-top: 1.5rem; padding: 1.25rem; border: 1px dashed var(--primary); border-radius: 16px; background-color: var(--primary-light); display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <h4 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--primary-hover); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-qrcode"></i> Quét VietQR thanh toán nhanh
+                        </h4>
+                        <p style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 0.75rem; max-width: 450px; line-height: 1.4;">
+                            Quét mã này bằng ứng dụng ngân hàng để chuyển khoản thanh toán tự động điền sẵn thông tin.
+                        </p>
+                        <img src="https://img.vietqr.io/image/vietcombank-1234567890-compact.png?amount=${formattedAmount}&addInfo=GS${order.saleOrderId}&accountName=CONG%20TY%20CO%20PHAN%20GREENSTOCK%20VIET%20NAM" 
+                             alt="VietQR Code" 
+                             style="max-width: 180px; border-radius: 10px; box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); background-color: white; padding: 4px; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--dark);">
+                            Số tiền: <span style="color:#DC2626;"><fmt:formatNumber value="${order.totalPayment}" maxFractionDigits="0"/>đ</span>
+                        </div>
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--dark);">
+                            Nội dung: <span style="color:var(--primary-hover);">GS${order.saleOrderId}</span>
+                        </div>
+                    </div>
+                </c:if>
                 
                 <c:if test="${not empty order.shipperNote}">
                     <div class="info-block" style="margin-top: 1.5rem; border-top: 1px solid var(--slate-100); padding-top: 1rem;">

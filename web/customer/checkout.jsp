@@ -172,6 +172,13 @@
                                 <div class="payment-desc">Thực hiện thanh toán qua tài khoản ngân hàng GreenStock.</div>
                             </div>
                         </div>
+                        <div class="payment-card" onclick="selectPayment(this, 'VNPAY')">
+                            <input type="radio" name="paymentMethod" value="VNPAY" onclick="event.stopPropagation();">
+                            <div>
+                                <div class="payment-text">Cổng thanh toán VNPAY</div>
+                                <div class="payment-desc">Thanh toán quét mã QR VNPAY hoặc thẻ ATM nội địa / Quốc tế.</div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Hướng dẫn chuyển khoản -->

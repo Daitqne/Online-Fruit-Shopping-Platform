@@ -434,4 +434,36 @@ public class OrderDAO extends DBContext {
         }
         return false;
     }
+
+    /**
+     * Updates the payment status of an order (e.g. Pending, Paid, Failed).
+     */
+    public boolean updatePaymentStatus(int orderId, String newStatus) {
+        String sql = "UPDATE Sale_Order SET payment_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setNString(1, newStatus);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    /**
+     * Updates both the order status and payment status (e.g. Processing and Paid).
+     */
+    public boolean updateOrderStatusAndPaymentStatus(int orderId, String newOrderStatus, String newPaymentStatus) {
+        String sql = "UPDATE Sale_Order SET order_status = ?, payment_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setNString(1, newOrderStatus);
+            ps.setNString(2, newPaymentStatus);
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
 }
+

@@ -12,6 +12,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Collections;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import model.Authen;
@@ -21,6 +29,7 @@ import model.CustomerAddress;
 import model.Promotion;
 import model.SaleOrder;
 import model.SaleOrderItem;
+import utils.VNPayConfig;
 
 @WebServlet(name = "CheckoutController", urlPatterns = {"/checkout"})
 public class CheckoutController extends HttpServlet {
@@ -54,6 +63,15 @@ public class CheckoutController extends HttpServlet {
 
         if ("success".equals(action)) {
             String orderIdStr = request.getParameter("orderId");
+            if (orderIdStr != null && !orderIdStr.trim().isEmpty()) {
+                try {
+                    int orderId = Integer.parseInt(orderIdStr);
+                    SaleOrder order = orderDAO.getOrderById(orderId);
+                    request.setAttribute("order", order);
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
             request.setAttribute("orderId", orderIdStr);
             request.getRequestDispatcher("/customer/checkout-success.jsp").forward(request, response);
             return;
@@ -342,7 +360,78 @@ public class CheckoutController extends HttpServlet {
                 "Đặt hàng thành công",
                 "Đơn hàng #" + order.getSaleOrderId() + " đã được đặt thành công! Tổng thanh toán: " 
                 + String.format("%,.0fđ", order.getTotalPayment()) + ". Cảm ơn bạn đã mua hàng tại GreenStock!");
-            response.sendRedirect(request.getContextPath() + "/checkout?action=success&orderId=" + order.getSaleOrderId());
+            
+            if ("VNPAY".equals(paymentMethod)) {
+                try {
+                    // Generate VNPay URL
+                    String vnp_Version = "2.1.0";
+                    String vnp_Command = "pay";
+                    String orderType = "190000"; // Grocery / Food
+                    long amount = Math.round(order.getTotalPayment() * 100);
+                    
+                    String vnp_TxnRef = String.valueOf(order.getSaleOrderId());
+                    String vnp_IpAddr = VNPayConfig.getIpAddress(request);
+                    String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+                    
+                    Map<String, String> vnp_Params = new HashMap<>();
+                    vnp_Params.put("vnp_Version", vnp_Version);
+                    vnp_Params.put("vnp_Command", vnp_Command);
+                    vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+                    vnp_Params.put("vnp_Amount", String.valueOf(amount));
+                    vnp_Params.put("vnp_CurrCode", "VND");
+                    vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+                    vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang #" + order.getSaleOrderId());
+                    vnp_Params.put("vnp_OrderType", orderType);
+                    vnp_Params.put("vnp_Locale", "vn");
+                    
+                    // Dynamically build return URL
+                    String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+                    vnp_Params.put("vnp_ReturnUrl", baseUrl + "/vnpay-return");
+                    vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+                    
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+                    String vnp_CreateDate = formatter.format(new Date());
+                    vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+                    
+                    List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+                    Collections.sort(fieldNames);
+                    StringBuilder hashData = new StringBuilder();
+                    StringBuilder query = new StringBuilder();
+                    Iterator<String> itr = fieldNames.iterator();
+                    while (itr.hasNext()) {
+                        String fieldName = itr.next();
+                        String fieldValue = vnp_Params.get(fieldName);
+                        if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                            // Build hash data
+                            hashData.append(fieldName);
+                            hashData.append('=');
+                            hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+                            
+                            // Build query
+                            query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+                            query.append('=');
+                            query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+                            
+                            if (itr.hasNext()) {
+                                query.append('&');
+                                hashData.append('&');
+                            }
+                        }
+                    }
+                    
+                    String queryUrl = query.toString();
+                    String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+                    queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+                    String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+                    
+                    response.sendRedirect(paymentUrl);
+                } catch (Exception e) {
+                    session.setAttribute("checkoutError", "Không thể khởi tạo thanh toán VNPAY: " + e.getMessage());
+                    response.sendRedirect(request.getContextPath() + "/checkout");
+                }
+            } else {
+                response.sendRedirect(request.getContextPath() + "/checkout?action=success&orderId=" + order.getSaleOrderId());
+            }
         } else {
             session.setAttribute("checkoutError", "Đã xảy ra lỗi hệ thống trong quá trình đặt hàng. Vui lòng thử lại sau.");
             response.sendRedirect(request.getContextPath() + "/checkout");
