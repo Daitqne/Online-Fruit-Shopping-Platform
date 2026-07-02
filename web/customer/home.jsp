@@ -100,7 +100,7 @@
 
             <div class="product-grid">
                 <c:choose>
-                    <c:when test="${not empty products}">
+                    <c:when test="${not empty products}">            
                         <c:forEach var="p" items="${products}">
                             <div class="product-card" onclick="location.href='product-detail?id=${p.id}'" style="cursor:pointer;">
                                 <div class="product-image-container">
