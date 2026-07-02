@@ -28,7 +28,7 @@ public class RevenueDAO extends DBContext {
         List<RevenueReport> reports = new ArrayList<>();
         String sql = """
             SELECT 
-                CAST(COALESCE(so.delivered_date, so.order_date) AS DATE) as report_date,
+                CAST(so.delivered_date AS DATE) as report_date,
                 COUNT(DISTINCT so.sale_order_id) as total_orders,
                 SUM(soi.quantity) as total_products_sold,
                 SUM(soi.quantity * soi.unit_price) as subtotal,
@@ -38,8 +38,9 @@ public class RevenueDAO extends DBContext {
             JOIN Product p ON soi.product_id = p.product_id
             WHERE p.shop_owner_id = ?
                 AND so.order_status = 'Delivered'
-                AND CAST(COALESCE(so.delivered_date, so.order_date) AS DATE) BETWEEN ? AND ?
-            GROUP BY CAST(COALESCE(so.delivered_date, so.order_date) AS DATE)
+                AND so.delivered_date IS NOT NULL
+                AND CAST(so.delivered_date AS DATE) BETWEEN ? AND ?
+            GROUP BY CAST(so.delivered_date AS DATE)
             ORDER BY report_date DESC
         """;
 
@@ -56,8 +57,8 @@ public class RevenueDAO extends DBContext {
                     report.setTotalOrders(rs.getInt("total_orders"));
                     report.setTotalProductsSold(rs.getInt("total_products_sold"));
                     report.setSubtotal(rs.getDouble("subtotal"));
-                    report.setTotalDiscount(0.0); // Simplified for now
-                    report.setTotalShippingFee(0.0); // Simplified for now
+                    report.setTotalDiscount(0.0);
+                    report.setTotalShippingFee(0.0);
                     report.setTotalPayment(rs.getDouble("total_payment"));
                     report.setNetRevenue(rs.getDouble("subtotal"));
                     reports.add(report);
@@ -80,10 +81,10 @@ public class RevenueDAO extends DBContext {
         List<RevenueReport> reports = new ArrayList<>();
         String sql = """
             SELECT 
-                DATEPART(ISO_WEEK, COALESCE(so.delivered_date, so.order_date)) as week_number,
-                DATEPART(YEAR, COALESCE(so.delivered_date, so.order_date)) as year_number,
-                MIN(CAST(COALESCE(so.delivered_date, so.order_date) AS DATE)) as week_start,
-                MAX(CAST(COALESCE(so.delivered_date, so.order_date) AS DATE)) as week_end,
+                DATEPART(ISO_WEEK, so.delivered_date) as week_number,
+                DATEPART(YEAR, so.delivered_date) as year_number,
+                MIN(CAST(so.delivered_date AS DATE)) as week_start,
+                MAX(CAST(so.delivered_date AS DATE)) as week_end,
                 COUNT(DISTINCT so.sale_order_id) as total_orders,
                 SUM(soi.quantity) as total_products_sold,
                 SUM(soi.quantity * soi.unit_price) as subtotal,
@@ -93,9 +94,10 @@ public class RevenueDAO extends DBContext {
             JOIN Product p ON soi.product_id = p.product_id
             WHERE p.shop_owner_id = ?
                 AND so.order_status = 'Delivered'
-                AND CAST(COALESCE(so.delivered_date, so.order_date) AS DATE) BETWEEN ? AND ?
-            GROUP BY DATEPART(ISO_WEEK, COALESCE(so.delivered_date, so.order_date)), 
-                     DATEPART(YEAR, COALESCE(so.delivered_date, so.order_date))
+                AND so.delivered_date IS NOT NULL
+                AND CAST(so.delivered_date AS DATE) BETWEEN ? AND ?
+            GROUP BY DATEPART(ISO_WEEK, so.delivered_date), 
+                     DATEPART(YEAR, so.delivered_date)
             ORDER BY year_number DESC, week_number DESC
         """;
 
@@ -151,9 +153,9 @@ public class RevenueDAO extends DBContext {
         List<RevenueReport> reports = new ArrayList<>();
         String sql = """
             SELECT 
-                DATEPART(MONTH, COALESCE(so.delivered_date, so.order_date)) as month_number,
-                DATEPART(YEAR, COALESCE(so.delivered_date, so.order_date)) as year_number,
-                MIN(CAST(COALESCE(so.delivered_date, so.order_date) AS DATE)) as month_start,
+                DATEPART(MONTH, so.delivered_date) as month_number,
+                DATEPART(YEAR, so.delivered_date) as year_number,
+                MIN(CAST(so.delivered_date AS DATE)) as month_start,
                 COUNT(DISTINCT so.sale_order_id) as total_orders,
                 SUM(soi.quantity) as total_products_sold,
                 SUM(soi.quantity * soi.unit_price) as subtotal,
@@ -163,9 +165,10 @@ public class RevenueDAO extends DBContext {
             JOIN Product p ON soi.product_id = p.product_id
             WHERE p.shop_owner_id = ?
                 AND so.order_status = 'Delivered'
-                AND CAST(COALESCE(so.delivered_date, so.order_date) AS DATE) BETWEEN ? AND ?
-            GROUP BY DATEPART(MONTH, COALESCE(so.delivered_date, so.order_date)), 
-                     DATEPART(YEAR, COALESCE(so.delivered_date, so.order_date))
+                AND so.delivered_date IS NOT NULL
+                AND CAST(so.delivered_date AS DATE) BETWEEN ? AND ?
+            GROUP BY DATEPART(MONTH, so.delivered_date), 
+                     DATEPART(YEAR, so.delivered_date)
             ORDER BY year_number DESC, month_number DESC
         """;
 
@@ -220,7 +223,8 @@ public class RevenueDAO extends DBContext {
             JOIN Product p ON soi.product_id = p.product_id
             WHERE p.shop_owner_id = ?
                 AND so.order_status = 'Delivered'
-                AND CAST(COALESCE(so.delivered_date, so.order_date) AS DATE) BETWEEN ? AND ?
+                AND so.delivered_date IS NOT NULL
+                AND CAST(so.delivered_date AS DATE) BETWEEN ? AND ?
         """;
 
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {

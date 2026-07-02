@@ -20,7 +20,8 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet(name = "ShopOwnerRevenueController", urlPatterns = {"/shop-owner-revenue"})
 public class ShopOwnerRevenueController extends HttpServlet {
 
-    private final RevenueDAO revenueDAO = new RevenueDAO();
+    //final là không thể thay đổi sau khi khởi tọa như là đã gán r thì không gán đc lần 2
+    private final  RevenueDAO revenueDAO = new RevenueDAO();
     private final NotificationDAO notificationDAO = new NotificationDAO();
 
     @Override
@@ -34,29 +35,31 @@ public class ShopOwnerRevenueController extends HttpServlet {
         }
         
         Authen user = (Authen) session.getAttribute("user");
+        //ss ngược để đỡ null pointerException
         if (!"Shop Owner".equals(user.getRole())) {
+            //SC_FORBIDDEN: Status code 403 (Forbidden - Không có quyền)
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này!");
             return;
         }
 
         int shopOwnerId = user.getId();
         
-        // Get filter parameters
+        // lấy filter parameters(dữ liệu) from request
         String reportType = request.getParameter("type");
         String startDateStr = request.getParameter("startDate");
         String endDateStr = request.getParameter("endDate");
         
-        // Default values based on report type
+        // mặc định type là day
         if (reportType == null || reportType.trim().isEmpty()) {
             reportType = "day";
         }
         
+        // lấy ngày hôm nay của máy chủ đang chạy chương trình set end date 
         LocalDate endDate = LocalDate.now();
         LocalDate startDate;
         
-        // Smart default date range based on report type
+
         if (startDateStr == null || startDateStr.trim().isEmpty() || endDateStr == null || endDateStr.trim().isEmpty()) {
-            // No date parameters provided, use smart defaults
             if ("week".equals(reportType)) {
                 // Tuần này: từ thứ 2 đến hôm nay
                 int dayOfWeek = endDate.getDayOfWeek().getValue(); // 1 = Monday, 7 = Sunday
@@ -82,7 +85,7 @@ public class ShopOwnerRevenueController extends HttpServlet {
                 endDate = LocalDate.now();
             }
         }
-        
+        //Convert LocalDate → java.sql.Date "LocalDate: Java 8+ (không dùng được cho JDBC)"
         Date sqlStartDate = Date.valueOf(startDate);
         Date sqlEndDate = Date.valueOf(endDate);
         
