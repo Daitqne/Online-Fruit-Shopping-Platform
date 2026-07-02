@@ -250,6 +250,12 @@
                                 <span class="align-middle">Quản lý Voucher</span>
                             </a>
                         </li>
+                        <li class="sidebar-item active">
+                        <a class="sidebar-link" href="admin-orders">
+                            <i class="align-middle" data-feather="activity"></i>
+                            <span class="align-middle">Theo dõi đơn hàng</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </nav>

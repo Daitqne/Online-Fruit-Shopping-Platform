@@ -3,17 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/controller/CheckoutController.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/controller/OrderController.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/dal/DeliveryDAO.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/web/orders_shop_owner.jsp</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/dal/NotificationDAO.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/dal/OrderDAO.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/model/MailUtil.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/web/delivery.jsp</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/controller/DeliveryController.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/controller/ShopOwnerOrderController.java</file>
-            <file>file:/E:/F/9/SWP/SWP391-G3/Online-Fruit-Shopping-Platform/Online-Fruit-Shopping-Platform/src/java/model/Delivery.java</file>
+            <file>file:/D:/SWP-391/web/admin/admin_products.jsp</file>
+            <file>file:/D:/SWP-391/web/admin/admin-promotions.jsp</file>
+            <file>file:/D:/SWP-391/web/admin/order-tracking.jsp</file>
         </group>
     </open-files>
 </project-private>
