@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -187,6 +187,12 @@
                             </div>
                         </c:if>
 
+                        <c:if test="${not empty error}">
+                            <div class="alert alert-danger" style="border-radius: 10px; padding: 0.9rem 1.25rem; margin-bottom: 1.25rem; background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; display: flex; align-items: center; gap: 0.65rem; font-weight: 500; font-size: 0.9rem;">
+                                <i data-feather="alert-triangle"></i> ${error}
+                            </div>
+                        </c:if>
+
                         <div class="row">
                             <div class="col-12 col-md-4">
                                 <div class="card">
@@ -205,8 +211,8 @@
                                             <div class="mb-3">
                                                 <label class="form-label">Loại giảm giá</label>
                                                 <select class="form-select" name="discountType">
-                                                    <option value="percentage">Phần trăm (%)</option>
-                                                    <option value="fixed">Tiền cố định</option>
+                                                    <option value="Percentage">Phần trăm (%)</option>
+                                                    <option value="Fixed">Tiền cố định</option>
                                                 </select>
                                             </div>
 
@@ -261,12 +267,30 @@
                                                         <c:when test="${not empty promotionList}">
                                                             <c:forEach items="${promotionList}" var="p">
                                                                 <tr>
-                                                                    <td><span class="promo-code-badge">${p.code}</span></td>
-                                                                    <td>${p.type}</td>
-                                                                    <td>${p.discountDisplay}</td>
-                                                                    <td><fmt:formatNumber value="${p.minOrder}" type="currency" currencySymbol="đ"/></td>
-                                                                    <td>${p.startDate}</td>
-                                                                    <td>${p.endDate}</td>
+                                                                    <td><span class="promo-code-badge">${p.promoCode}</span></td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when test="${p.discountType eq 'Percentage' or p.discountType eq 'percentage'}">
+                                                                                Phần trăm
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                Tiền cố định
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when test="${p.discountType eq 'Percentage' or p.discountType eq 'percentage'}">
+                                                                                <fmt:formatNumber value="${p.discountValue}" type="number" maxFractionDigits="0"/> %
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <fmt:formatNumber value="${p.discountValue}" type="number" maxFractionDigits="0"/> đ
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
+                                                                    <td><fmt:formatNumber value="${p.minOrderValue}" type="number" maxFractionDigits="0"/> đ</td>
+                                                                    <td><fmt:formatDate value="${p.startDate}" pattern="dd/MM/yyyy"/></td>
+                                                                    <td><fmt:formatDate value="${p.endDate}" pattern="dd/MM/yyyy"/></td>
                                                                 </tr>
                                                             </c:forEach>
                                                         </c:when>
