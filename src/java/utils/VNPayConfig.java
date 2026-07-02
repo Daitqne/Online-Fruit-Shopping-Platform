@@ -11,8 +11,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class VNPayConfig {
     public static final String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static final String vnp_TmnCode = "A9I75806"; // Default VNPay Sandbox test merchant code
-    public static final String vnp_HashSecret = "AHWJGDTCXOMSSGZSZUXPBRFYXQLXNKKW"; // Default VNPay Sandbox test hash secret
+    public static final String vnp_TmnCode = "BE55VO5K"; // Default VNPay Sandbox test merchant code
+    public static final String vnp_HashSecret = "DY5CPJKYJCU9V52QLSA2I786PNHHTGEU"; // Default VNPay Sandbox test hash secret
 
     public static String md5(String message) {
         String digest = null;

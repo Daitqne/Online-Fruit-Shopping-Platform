@@ -61,3 +61,61 @@
         </div>
     </div>
 </footer>
+
+<!-- AI Chat Box Widget -->
+<div id="ai-chat-widget" data-context-path="${pageContext.request.contextPath}">
+    <!-- Chat Toggle Button -->
+    <button id="ai-chat-toggle" title="Chat với GreenStock AI">
+        <i class="fa-solid fa-robot"></i>
+        <span class="chat-badge">1</span>
+    </button>
+    
+    <!-- Chat Window -->
+    <div id="ai-chat-window" class="hidden">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="chat-status-wrapper">
+                    <h4 class="chat-title">GreenStock AI</h4>
+                    <span class="chat-status">Đang trực tuyến</span>
+                </div>
+            </div>
+            <button id="ai-chat-close" class="chat-close-btn" title="Đóng">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages-list">
+            <!-- Default Welcome Message -->
+            <div class="chat-msg bot">
+                <div class="chat-msg-bubble">
+                    Xin chào! Tôi là trợ lý ảo **GreenStock AI**. Tôi có thể giúp gì cho bạn hôm nay?
+                </div>
+                <span class="chat-msg-time">Vừa xong</span>
+            </div>
+        </div>
+        
+        <!-- Quick Suggestions -->
+        <div class="chat-quick-replies">
+            <button class="quick-reply-btn" data-query="Cửa hàng bán các loại trái cây nào?">🍎 Loại trái cây</button>
+            <button class="quick-reply-btn" data-query="Chính sách giao hàng như thế nào?">🚚 Giao hàng</button>
+            <button class="quick-reply-btn" data-query="Liên hệ hotline của shop?">📞 Hotline</button>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <form id="chat-input-form">
+                <input type="text" id="chat-message-input" placeholder="Nhập tin nhắn..." autocomplete="off" required>
+                <button type="submit" class="chat-send-btn" title="Gửi">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link href="${pageContext.request.contextPath}/css/ai-chatbot.css" rel="stylesheet" type="text/css">
+<script src="${pageContext.request.contextPath}/js/ai-chatbot.js" defer></script>
+

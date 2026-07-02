@@ -50,17 +50,19 @@ public class VNPayReturnController extends HttpServlet {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
-        for (Iterator<String> itr = fieldNames.iterator(); itr.hasNext();) {
-            String fieldName = itr.next();
+        boolean isFirst = true;
+        for (String fieldName : fieldNames) {
             String fieldValue = fields.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                if (!isFirst) {
+                    hashData.append('&');
+                }
+                isFirst = false;
+                
                 // Build hash data (re-encoding values because request.getParameter() decoded them)
                 hashData.append(fieldName);
                 hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
-                if (itr.hasNext()) {
-                    hashData.append('&');
-                }
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
             }
         }
 

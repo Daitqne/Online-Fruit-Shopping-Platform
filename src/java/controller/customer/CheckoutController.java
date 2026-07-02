@@ -371,6 +371,9 @@ public class CheckoutController extends HttpServlet {
                     
                     String vnp_TxnRef = String.valueOf(order.getSaleOrderId());
                     String vnp_IpAddr = VNPayConfig.getIpAddress(request);
+                    if (vnp_IpAddr == null || vnp_IpAddr.contains(":") || "0:0:0:0:0:0:0:1".equals(vnp_IpAddr)) {
+                        vnp_IpAddr = "127.0.0.1";
+                    }
                     String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
                     
                     Map<String, String> vnp_Params = new HashMap<>();
@@ -380,7 +383,7 @@ public class CheckoutController extends HttpServlet {
                     vnp_Params.put("vnp_Amount", String.valueOf(amount));
                     vnp_Params.put("vnp_CurrCode", "VND");
                     vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-                    vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang #" + order.getSaleOrderId());
+                    vnp_Params.put("vnp_OrderInfo", "ThanhToanDonHang" + order.getSaleOrderId());
                     vnp_Params.put("vnp_OrderType", orderType);
                     vnp_Params.put("vnp_Locale", "vn");
                     
@@ -397,25 +400,25 @@ public class CheckoutController extends HttpServlet {
                     Collections.sort(fieldNames);
                     StringBuilder hashData = new StringBuilder();
                     StringBuilder query = new StringBuilder();
-                    Iterator<String> itr = fieldNames.iterator();
-                    while (itr.hasNext()) {
-                        String fieldName = itr.next();
+                    boolean isFirst = true;
+                    for (String fieldName : fieldNames) {
                         String fieldValue = vnp_Params.get(fieldName);
                         if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                            if (!isFirst) {
+                                hashData.append('&');
+                                query.append('&');
+                            }
+                            isFirst = false;
+                            
                             // Build hash data
                             hashData.append(fieldName);
                             hashData.append('=');
-                            hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+                            hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                             
                             // Build query
-                            query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
+                            query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                             query.append('=');
-                            query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replaceAll("\\+", "%20"));
-                            
-                            if (itr.hasNext()) {
-                                query.append('&');
-                                hashData.append('&');
-                            }
+                            query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                         }
                     }
                     
@@ -423,6 +426,21 @@ public class CheckoutController extends HttpServlet {
                     String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
                     queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
                     String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+                    
+                    // Write debug log to file
+                    try {
+                        java.io.FileWriter fw = new java.io.FileWriter("d:\\SWP391-G3\\vnpay_debug.log", true);
+                        fw.write("=== VNPAY PAYMENT REQUEST ===\n");
+                        fw.write("Time: " + new Date().toString() + "\n");
+                        fw.write("TmnCode: " + vnp_TmnCode + "\n");
+                        fw.write("HashSecret: " + VNPayConfig.vnp_HashSecret + "\n");
+                        fw.write("Raw HashData: " + hashData.toString() + "\n");
+                        fw.write("Generated SecureHash: " + vnp_SecureHash + "\n");
+                        fw.write("Redirect URL: " + paymentUrl + "\n\n");
+                        fw.close();
+                    } catch (Exception ex) {
+                        // ignore
+                    }
                     
                     response.sendRedirect(paymentUrl);
                 } catch (Exception e) {
