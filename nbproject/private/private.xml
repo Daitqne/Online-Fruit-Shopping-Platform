@@ -3,37 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/dal/ProductDAO.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/products_shop_owner.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ChangePasswordServlet.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ResetPasswordServlet.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/AdminUserController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/login.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/dal/AdminDAO.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/about.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ProductController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/home.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/HomeController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/css/light.css</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/LogoutController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/products.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/SearchSuggestionServlet.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/LoginController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ShopOwnerProfileServlet.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/dal/AddressDAO.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/dal/AuthenDAO.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/dal/DBContext.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ProductDetailController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/addresses.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/profile.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/AddProductController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/model/Product.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/admin_user.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ShopOwnerProductsController.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/admin_products.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/web/contact.jsp</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ForgotPasswordServlet.java</file>
-            <file>file:/C:/Users/nguye/Downloads/SWP/src/java/controller/ProfileServlet.java</file>
+            <file>file:/D:/SWP-391/web/admin/admin_products.jsp</file>
+            <file>file:/D:/SWP-391/web/admin/admin-promotions.jsp</file>
+            <file>file:/D:/SWP-391/web/admin/order-tracking.jsp</file>
         </group>
     </open-files>
 </project-private>
