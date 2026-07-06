@@ -419,7 +419,15 @@
                         <c:set var="itemTotal" value="${item.quantity * item.unitPrice}" />
                         <c:set var="totalGoodsPrice" value="${totalGoodsPrice + itemTotal}" />
                         <tr>
-                            <td><strong>${item.product.name}</strong></td>
+                            <td>
+                                <strong>${item.product.name}</strong>
+                                <c:if test="${not empty item.weightLabel || not empty item.packagingName}">
+                                    <div style="font-size: 0.85em; color: #555; margin-top: 2px;">
+                                        <c:if test="${not empty item.weightLabel}">[Trọng lượng: ${item.weightLabel}]</c:if>
+                                        <c:if test="${not empty item.packagingName}">[Đóng gói: ${item.packagingName}]</c:if>
+                                    </div>
+                                </c:if>
+                            </td>
                             <td class="td-price"><fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/>đ</td>
                             <td class="td-qty">${item.quantity}</td>
                             <td class="td-price"><fmt:formatNumber value="${itemTotal}" maxFractionDigits="0"/>đ</td>

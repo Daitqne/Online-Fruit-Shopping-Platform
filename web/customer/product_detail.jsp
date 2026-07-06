@@ -180,6 +180,11 @@
             .related-grid { grid-template-columns: 1fr; }
             .qty-cart-row { flex-direction: column; }
         }
+        .variant-label-card.active, .packaging-label-card.active {
+            border-color: var(--primary) !important;
+            background-color: var(--primary-light) !important;
+            color: var(--primary) !important;
+        }
     </style>
 </head>
 <body>
@@ -281,6 +286,49 @@
                     <p class="product-description">${product.description}</p>
                 </c:if>
 
+                <!-- BIẾN THỂ TRỌNG LƯỢNG & ĐÓNG GÓI -->
+                <c:if test="${not empty weightVariants}">
+                    <div style="margin-top: 1rem;">
+                        <label style="display:block; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem; font-size: 0.9rem;">Chọn trọng lượng:</label>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <c:forEach var="v" items="${weightVariants}" varStatus="status">
+                                <label style="display: flex; align-items: center; gap: 0.4rem; background: var(--slate-100); padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="variant-label-card ${status.first ? 'active' : ''}" onclick="selectWeightVariant(this, ${v.variantId}, ${v.priceAdjustment})">
+                                    <input type="radio" name="weightVariant" value="${v.variantId}" ${status.first ? 'checked' : ''} style="display: none;">
+                                    ${v.weightLabel} 
+                                    <c:if test="${v.priceAdjustment != 0}">
+                                        <span style="font-size: 0.8rem; color: var(--primary); font-weight: normal;">
+                                            (${v.priceAdjustment > 0 ? '+' : ''}<fmt:formatNumber value="${v.priceAdjustment}" maxFractionDigits="0"/>đ)
+                                        </span>
+                                    </c:if>
+                                </label>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </c:if>
+
+                <c:if test="${not empty packagingOptions}">
+                    <div style="margin-top: 1rem;">
+                        <label style="display:block; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem; font-size: 0.9rem;">Chọn quy cách đóng gói:</label>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 0.4rem; background: var(--slate-100); padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="packaging-label-card active" onclick="selectPackagingOption(this, '', 0)">
+                                <input type="radio" name="packagingOption" value="" checked style="display: none;">
+                                Mặc định
+                            </label>
+                            <c:forEach var="k" items="${packagingOptions}">
+                                <label style="display: flex; align-items: center; gap: 0.4rem; background: var(--slate-100); padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="packaging-label-card" onclick="selectPackagingOption(this, ${k.packagingId}, ${k.priceAdjustment})">
+                                    <input type="radio" name="packagingOption" value="${k.packagingId}" style="display: none;">
+                                    ${k.packagingName} 
+                                    <c:if test="${k.priceAdjustment != 0}">
+                                        <span style="font-size: 0.8rem; color: var(--primary); font-weight: normal;">
+                                            (${k.priceAdjustment > 0 ? '+' : ''}<fmt:formatNumber value="${k.priceAdjustment}" maxFractionDigits="0"/>đ)
+                                        </span>
+                                    </c:if>
+                                </label>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </c:if>
+
                 <hr class="divider">
 
                 <!-- SỐ LƯỢNG & THÊM GIỎ HÀNG -->
@@ -295,9 +343,9 @@
                             <button class="btn-add-cart" onclick="addToCart(${product.id})">
                                 <i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ
                             </button>
-                            <a href="cart" class="btn-buy-now">
+                            <button class="btn-buy-now" onclick="buyNow(${product.id})" style="border: none; cursor: pointer;">
                                 <i class="fa-solid fa-bolt"></i> Mua ngay
-                            </a>
+                            </button>
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -344,6 +392,18 @@
     </div>
 
     <script>
+        const basePrice = ${product.discountPrice > 0 && product.discountPrice < product.price ? product.discountPrice : product.price};
+        let selectedWeightAdjustment = 0;
+        let selectedPackagingAdjustment = 0;
+        
+        let selectedWeightVariantId = null;
+        let selectedPackagingOptionId = null;
+        
+        <c:if test="${not empty weightVariants}">
+            selectedWeightVariantId = ${weightVariants[0].variantId};
+            selectedWeightAdjustment = ${weightVariants[0].priceAdjustment};
+        </c:if>
+
         function changeQty(delta) {
             const input = document.getElementById('qty');
             const max = parseInt(input.max);
@@ -351,6 +411,38 @@
             if (val < 1) val = 1;
             if (val > max) val = max;
             input.value = val;
+        }
+
+        function updateDisplayPrice() {
+            const currentPrice = basePrice + selectedWeightAdjustment + selectedPackagingAdjustment;
+            const formattedPrice = currentPrice.toLocaleString('vi-VN') + 'đ';
+            document.querySelector('.price-main').innerText = formattedPrice;
+        }
+
+        function selectWeightVariant(card, variantId, adjustment) {
+            document.querySelectorAll('.variant-label-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            selectedWeightVariantId = variantId;
+            selectedWeightAdjustment = adjustment;
+            
+            const radio = card.querySelector('input[name="weightVariant"]');
+            if (radio) radio.checked = true;
+            
+            updateDisplayPrice();
+        }
+        
+        function selectPackagingOption(card, packagingId, adjustment) {
+            document.querySelectorAll('.packaging-label-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            selectedPackagingOptionId = packagingId ? packagingId : null;
+            selectedPackagingAdjustment = adjustment;
+            
+            const radio = card.querySelector('input[name="packagingOption"]');
+            if (radio) radio.checked = true;
+            
+            updateDisplayPrice();
         }
 
         function addToCart(productId) {
@@ -363,7 +455,36 @@
                 return;
             }
             
-            window.location.href = 'cart?action=add&productId=' + productId + '&quantity=' + qty;
+            let url = 'cart?action=add&productId=' + productId + '&quantity=' + qty;
+            if (selectedWeightVariantId) {
+                url += '&variantId=' + selectedWeightVariantId;
+            }
+            if (selectedPackagingOptionId) {
+                url += '&packagingId=' + selectedPackagingOptionId;
+            }
+            
+            window.location.href = url;
+        }
+
+        function buyNow(productId) {
+            const qtyInput = document.getElementById('qty');
+            const qty = parseInt(qtyInput.value);
+            const max = parseInt(qtyInput.max);
+            
+            if (qty > max) {
+                alert('Số lượng không được vượt quá ' + max + ' sản phẩm!');
+                return;
+            }
+            
+            let url = 'cart?action=add&productId=' + productId + '&quantity=' + qty;
+            if (selectedWeightVariantId) {
+                url += '&variantId=' + selectedWeightVariantId;
+            }
+            if (selectedPackagingOptionId) {
+                url += '&packagingId=' + selectedPackagingOptionId;
+            }
+            
+            window.location.href = url; // Thêm xong tự động redirect sang /cart theo logic controller
         }
     </script>
 

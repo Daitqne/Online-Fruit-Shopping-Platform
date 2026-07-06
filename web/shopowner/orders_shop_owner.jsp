@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -368,10 +368,16 @@
                                                                     <img src="${item.product.image}" class="product-thumb"
                                                                          onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=200'"
                                                                          alt="${item.product.name}">
-                                                                    <span>
-                                                                        ${item.product.name}
-                                                                        <span class="text-muted">x${item.quantity}</span>
-                                                                    </span>
+                                                                     <span>
+                                                                         ${item.product.name}
+                                                                         <c:if test="${not empty item.weightLabel || not empty item.packagingName}">
+                                                                             <small class="text-muted" style="display:block; font-size: 0.8em; margin-left: 2px;">
+                                                                                 <c:if test="${not empty item.weightLabel}">Trọng lượng: ${item.weightLabel}</c:if>
+                                                                                 <c:if test="${not empty item.packagingName}"> | Đóng gói: ${item.packagingName}</c:if>
+                                                                             </small>
+                                                                         </c:if>
+                                                                         <span class="text-muted">x${item.quantity}</span>
+                                                                     </span>
                                                                 </li>
                                                             </c:forEach>
                                                         </ul>

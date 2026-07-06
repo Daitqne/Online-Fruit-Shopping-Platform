@@ -109,16 +109,22 @@ public class VNPayReturnController extends HttpServlet {
                             "Giao dịch thanh toán VNPAY cho đơn hàng #" + orderId + " đã thất bại hoặc bị hủy.");
                     }
                     
-                    session.setAttribute("checkoutError", "Thanh toán qua VNPAY không thành công hoặc bị hủy. (Mã lỗi: " + responseCode + ")");
-                    response.sendRedirect(request.getContextPath() + "/checkout");
+                    session.setAttribute("orderError", "Thanh toán qua VNPAY cho đơn hàng #" + orderId + " không thành công hoặc bị hủy. Quý khách có thể thử lại bằng nút 'Thanh toán lại' bên dưới.");
+                    response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderId);
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/checkout");
+                    session.setAttribute("orderError", "Thanh toán qua VNPAY không thành công hoặc bị hủy.");
+                    response.sendRedirect(request.getContextPath() + "/orders");
                 }
             }
         } else {
             // Invalid Signature
-            session.setAttribute("checkoutError", "Chữ ký bảo mật VNPAY không hợp lệ hoặc dữ liệu bị giả mạo. Giao dịch thất bại.");
-            response.sendRedirect(request.getContextPath() + "/checkout");
+            String orderIdStr = request.getParameter("vnp_TxnRef");
+            session.setAttribute("orderError", "Chữ ký bảo mật VNPAY không hợp lệ hoặc dữ liệu bị giả mạo. Giao dịch thất bại.");
+            if (orderIdStr != null && !orderIdStr.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderIdStr);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/orders");
+            }
         }
     }
 }

@@ -26,7 +26,9 @@ public class OrderDAO extends DBContext {
             "ALTER TABLE Sale_Order ADD discount_amount DECIMAL(10, 2) NULL DEFAULT 0",
             "ALTER TABLE Sale_Order ADD promo_code VARCHAR(50) NULL",
             "ALTER TABLE Sale_Order ADD shipping_fee DECIMAL(10, 2) NULL DEFAULT 0",
-            "ALTER TABLE Sale_Order ADD total_payment DECIMAL(10, 2) NULL DEFAULT 0"
+            "ALTER TABLE Sale_Order ADD total_payment DECIMAL(10, 2) NULL DEFAULT 0",
+            "ALTER TABLE Sale_Order_Item ADD weight_label NVARCHAR(100) NULL",
+            "ALTER TABLE Sale_Order_Item ADD packaging_name NVARCHAR(100) NULL"
         };
         for (String sql : cols) {
             try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
@@ -50,8 +52,8 @@ public class OrderDAO extends DBContext {
         """;
         
         String insertItemSql = """
-            INSERT INTO Sale_Order_Item (sale_order_id, product_id, quantity, unit_price)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO Sale_Order_Item (sale_order_id, product_id, quantity, unit_price, weight_label, packaging_name)
+            VALUES (?, ?, ?, ?, ?, ?)
         """;
 
         String updateInventorySql = """
@@ -104,6 +106,8 @@ public class OrderDAO extends DBContext {
                     psItem.setInt(2, item.getProductId());
                     psItem.setInt(3, item.getQuantity());
                     psItem.setDouble(4, item.getUnitPrice());
+                    psItem.setNString(5, item.getWeightLabel());
+                    psItem.setNString(6, item.getPackagingName());
                     psItem.executeUpdate();
 
                     // Update Stock in Inventory
@@ -191,7 +195,7 @@ public class OrderDAO extends DBContext {
         
         String itemsSql = """
             SELECT soi.sale_item_id, soi.sale_order_id, soi.product_id, soi.quantity, soi.unit_price,
-                   p.product_name,
+                   soi.weight_label, soi.packaging_name, p.product_name,
                    (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url
             FROM Sale_Order_Item soi
             JOIN Product p ON soi.product_id = p.product_id
@@ -232,6 +236,8 @@ public class OrderDAO extends DBContext {
                                 soi.setProductId(rsItem.getInt("product_id"));
                                 soi.setQuantity(rsItem.getInt("quantity"));
                                 soi.setUnitPrice(rsItem.getDouble("unit_price"));
+                                soi.setWeightLabel(rsItem.getNString("weight_label"));
+                                soi.setPackagingName(rsItem.getNString("packaging_name"));
                                 
                                 model.Product p = new model.Product();
                                 p.setId(rsItem.getInt("product_id"));
@@ -275,7 +281,7 @@ public class OrderDAO extends DBContext {
 
         String itemsSql = """
             SELECT soi.sale_item_id, soi.sale_order_id, soi.product_id, soi.quantity, soi.unit_price,
-                   p.product_name,
+                   soi.weight_label, soi.packaging_name, p.product_name,
                    (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url
             FROM Sale_Order_Item soi
             JOIN Product p ON soi.product_id = p.product_id
@@ -314,6 +320,8 @@ public class OrderDAO extends DBContext {
                                 soi.setProductId(rsItem.getInt("product_id"));
                                 soi.setQuantity(rsItem.getInt("quantity"));
                                 soi.setUnitPrice(rsItem.getDouble("unit_price"));
+                                soi.setWeightLabel(rsItem.getNString("weight_label"));
+                                soi.setPackagingName(rsItem.getNString("packaging_name"));
                                 model.Product prod = new model.Product();
                                 prod.setId(rsItem.getInt("product_id"));
                                 prod.setName(rsItem.getNString("product_name"));
@@ -469,6 +477,22 @@ public class OrderDAO extends DBContext {
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setNString(1, newOrderStatus);
             ps.setNString(2, newPaymentStatus);
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    /**
+     * Updates both the payment method and payment status of an order.
+     */
+    public boolean updatePaymentMethodAndStatus(int orderId, String newMethod, String newStatus) {
+        String sql = "UPDATE Sale_Order SET payment_method = ?, payment_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setString(1, newMethod);
+            ps.setString(2, newStatus);
             ps.setInt(3, orderId);
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {

@@ -70,4 +70,24 @@ public class PackagingDAO extends DBContext {
         }
         return false;
     }
+
+    public PackagingOption getPackagingById(int packagingId) {
+        String sql = "SELECT packaging_id, product_id, packaging_name, price_adjustment FROM Product_Packaging WHERE packaging_id = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, packagingId);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    PackagingOption p = new PackagingOption();
+                    p.setPackagingId(rs.getInt("packaging_id"));
+                    p.setProductId(rs.getInt("product_id"));
+                    p.setPackagingName(rs.getNString("packaging_name"));
+                    p.setPriceAdjustment(rs.getDouble("price_adjustment"));
+                    return p;
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(PackagingDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
 }

@@ -73,9 +73,16 @@ public class ProductDetailController extends HttpServlet {
         // Lấy số lượng tồn kho
         int stockQuantity = productDAO.getProductStock(productId);
 
+        dal.WeightVariantDAO variantDAO = new dal.WeightVariantDAO();
+        dal.PackagingDAO packagingDAO = new dal.PackagingDAO();
+        List<model.WeightVariant> weightVariants = variantDAO.getVariantsByProductId(productId);
+        List<model.PackagingOption> packagingOptions = packagingDAO.getPackagingByProductId(productId);
+
         request.setAttribute("product", product);
         request.setAttribute("stockQuantity", stockQuantity);
         request.setAttribute("relatedProducts", relatedProducts);
+        request.setAttribute("weightVariants", weightVariants);
+        request.setAttribute("packagingOptions", packagingOptions);
         request.getRequestDispatcher("/customer/product_detail.jsp").forward(request, response);
     }
 }

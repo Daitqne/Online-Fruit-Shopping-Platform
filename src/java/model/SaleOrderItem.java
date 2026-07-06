@@ -6,6 +6,8 @@ public class SaleOrderItem {
     private int productId;
     private int quantity;
     private double unitPrice;
+    private String weightLabel;
+    private String packagingName;
     
     // Join field
     private Product product;
@@ -61,6 +63,22 @@ public class SaleOrderItem {
         this.unitPrice = unitPrice;
     }
 
+    public String getWeightLabel() {
+        return weightLabel;
+    }
+
+    public void setWeightLabel(String weightLabel) {
+        this.weightLabel = weightLabel;
+    }
+
+    public String getPackagingName() {
+        return packagingName;
+    }
+
+    public void setPackagingName(String packagingName) {
+        this.packagingName = packagingName;
+    }
+
     public Product getProduct() {
         return product;
     }
@@ -77,6 +95,8 @@ public class SaleOrderItem {
                 ", productId=" + productId +
                 ", quantity=" + quantity +
                 ", unitPrice=" + unitPrice +
+                ", weightLabel='" + weightLabel + '\'' +
+                ", packagingName='" + packagingName + '\'' +
                 '}';
     }
 }

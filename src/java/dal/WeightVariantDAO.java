@@ -70,4 +70,24 @@ public class WeightVariantDAO extends DBContext {
         }
         return false;
     }
+
+    public WeightVariant getVariantById(int variantId) {
+        String sql = "SELECT variant_id, product_id, weight_label, price_adjustment FROM Product_Weight_Variant WHERE variant_id = ?";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, variantId);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    WeightVariant v = new WeightVariant();
+                    v.setVariantId(rs.getInt("variant_id"));
+                    v.setProductId(rs.getInt("product_id"));
+                    v.setWeightLabel(rs.getNString("weight_label"));
+                    v.setPriceAdjustment(rs.getDouble("price_adjustment"));
+                    return v;
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(WeightVariantDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
 }

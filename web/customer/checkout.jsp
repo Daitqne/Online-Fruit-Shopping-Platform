@@ -211,25 +211,39 @@
                                      alt="${item.product.name}" class="item-thumb">
                                 <div class="item-details">
                                     <div class="item-name">${item.product.name}</div>
+                                    <c:if test="${not empty item.weightLabel || not empty item.packagingName}">
+                                        <div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 0.15rem; font-weight: 600;">
+                                            <c:if test="${not empty item.weightLabel}">
+                                                <span style="background: var(--slate-200); padding: 0.1rem 0.3rem; border-radius: 4px; margin-right: 4px;">
+                                                    ${item.weightLabel}
+                                                </span>
+                                            </c:if>
+                                            <c:if test="${not empty item.packagingName}">
+                                                <span style="background: var(--slate-200); padding: 0.1rem 0.3rem; border-radius: 4px;">
+                                                    ${item.packagingName}
+                                                </span>
+                                            </c:if>
+                                        </div>
+                                    </c:if>
                                     <div class="item-meta">
                                         SL: ${item.quantity} x 
                                         <c:choose>
                                             <c:when test="${item.product.discountPrice > 0 && item.product.discountPrice < item.product.price}">
                                                 <span style="text-decoration: line-through; color: var(--slate-400); font-size: 0.9em; margin-right: 4px;">
-                                                    <fmt:formatNumber value="${item.product.price}" maxFractionDigits="0"/>đ
+                                                    <fmt:formatNumber value="${item.product.price + item.variantPriceAdjustment + item.packagingPriceAdjustment}" maxFractionDigits="0"/>đ
                                                 </span>
                                                 <span style="color: var(--primary); font-weight: 600;">
-                                                    <fmt:formatNumber value="${item.product.effectivePrice}" maxFractionDigits="0"/>đ
+                                                    <fmt:formatNumber value="${item.effectiveUnitPrice}" maxFractionDigits="0"/>đ
                                                 </span>
                                             </c:when>
                                             <c:otherwise>
-                                                <fmt:formatNumber value="${item.product.price}" maxFractionDigits="0"/>đ
+                                                <fmt:formatNumber value="${item.effectiveUnitPrice}" maxFractionDigits="0"/>đ
                                             </c:otherwise>
                                         </c:choose>
                                     </div>
                                 </div>
                                 <div class="item-total-price">
-                                    <fmt:formatNumber value="${item.quantity * item.product.effectivePrice}" maxFractionDigits="0"/>đ
+                                    <fmt:formatNumber value="${item.quantity * item.effectiveUnitPrice}" maxFractionDigits="0"/>đ
                                 </div>
                             </div>
                         </c:forEach>
