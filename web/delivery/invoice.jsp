@@ -42,7 +42,7 @@
             background-color: var(--slate-100);
             color: var(--dark);
             line-height: 1.5;
-            padding: 2.5rem 1.5rem;
+            padding: 1.5rem 1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -105,14 +105,33 @@
             width: 100%;
             max-width: 800px;
             background-color: var(--white);
-            padding: 3rem;
+            padding: 2rem;
             border-radius: 16px;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
             border: 1px solid var(--slate-200);
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 1.25rem;
             position: relative;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .status-paid {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+        
+        .status-pending-cod {
+            background-color: #FEE2E2;
+            color: #991B1B;
         }
 
         /* --- HEADER SECTION --- */
@@ -383,11 +402,8 @@
         <!-- DETAILS GRID -->
         <div class="details-grid">
             <div class="details-block">
-                <h3>Thông tin người nhận</h3>
-                <!-- Parse full address string formatted in CheckoutController -->
-                <!-- fullAddress format: "Label: Name (Phone) - Details" -->
-                <c:set var="addrParts" value="${order.shippingAddress}" />
-                <p class="buyer-name">Khách hàng: ${order.shippingPhone != null ? order.shippingAddress : 'Khách vãng lai'}</p>
+                <h3>Thông tin giao hàng</h3>
+                <p><strong>Người nhận:</strong> ${order.shippingPhone != null ? order.shippingAddress : 'Khách vãng lai'}</p>
                 <c:if test="${not empty order.shipperNote}">
                     <p style="margin-top:0.4rem; font-style: italic; color:var(--slate-600);">
                         * Ghi chú: "${order.shipperNote}"
@@ -396,9 +412,25 @@
             </div>
             <div class="details-block">
                 <h3>Thông tin thanh toán</h3>
-                <p><strong>Phương thức:</strong> ${order.paymentMethod == 'COD' ? 'Thanh toán COD' : 'Chuyển khoản ngân hàng'}</p>
-                <p><strong>Trạng thái:</strong> ${order.paymentStatus == 'Paid' ? 'Đã thanh toán (Paid)' : 'Chờ thanh toán (Pending)'}</p>
-                <p><strong>Tiền tệ:</strong> Việt Nam Đồng (VND)</p>
+                <p><strong>Phương thức:</strong> ${order.paymentMethod == 'COD' ? 'Thanh toán COD' : 'VNPAY (Chuyển khoản)'}</p>
+                <p style="margin-top: 0.25rem;">
+                    <strong>Trạng thái:</strong> 
+                    <c:choose>
+                        <c:when test="${order.paymentStatus == 'Paid'}">
+                            <span class="status-badge status-paid">ĐÃ THANH TOÁN</span>
+                        </c:when>
+                        <c:otherwise>
+                            <c:choose>
+                                <c:when test="${order.paymentMethod == 'COD'}">
+                                    <span class="status-badge status-pending-cod">THU HỘ COD: <fmt:formatNumber value="${order.totalPayment}" maxFractionDigits="0"/>đ</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="status-badge status-pending-cod">CHƯA THANH TOÁN</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:otherwise>
+                    </c:choose>
+                </p>
             </div>
         </div>
 
@@ -466,17 +498,6 @@
             </div>
         </div>
 
-        <!-- SIGNATURE AREA -->
-        <div class="signature-section">
-            <div class="sig-block">
-                <div class="sig-title">Người mua hàng</div>
-                <div class="sig-name">(Ký, ghi rõ họ tên)</div>
-            </div>
-            <div class="sig-block">
-                <div class="sig-title">Đại diện GreenStock</div>
-                <div class="sig-name">(Ký, đóng dấu)</div>
-            </div>
-        </div>
 
         <!-- INVOICE FOOTER -->
         <div class="invoice-footer">
