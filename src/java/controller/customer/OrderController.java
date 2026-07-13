@@ -55,6 +55,9 @@ public class OrderController extends HttpServlet {
             case "cancel":
                 handleCancelOrder(request, response, session, user);
                 break;
+            case "changeToCOD":
+                handleChangeToCOD(request, response, session, user);
+                break;
             case "invoice":
                 handleViewInvoice(request, response, session, user);
                 break;
@@ -161,6 +164,53 @@ public class OrderController extends HttpServlet {
             
             request.getRequestDispatcher("/delivery/invoice.jsp").forward(request, response);
 
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/orders");
+        }
+    }
+
+    private void handleChangeToCOD(HttpServletRequest request, HttpServletResponse response, HttpSession session, Authen user)
+            throws IOException {
+        
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/orders");
+            return;
+        }
+
+        try {
+            int orderId = Integer.parseInt(idStr);
+            SaleOrder order = orderDAO.getOrderById(orderId);
+            
+            if (order == null || order.getCreatedBy() != user.getId()) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy đơn hàng hoặc đơn hàng không thuộc về bạn.");
+                return;
+            }
+
+            if (!"Pending".equalsIgnoreCase(order.getOrderStatus())) {
+                session.setAttribute("orderError", "Đơn hàng này đã được xử lý hoặc đã hủy, không thể đổi phương thức thanh toán.");
+                response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderId);
+                return;
+            }
+
+            if ("Paid".equalsIgnoreCase(order.getPaymentStatus())) {
+                session.setAttribute("orderError", "Đơn hàng này đã được thanh toán thành công, không thể đổi sang COD.");
+                response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderId);
+                return;
+            }
+
+            boolean success = orderDAO.updatePaymentMethodAndStatus(orderId, "COD", "Pending");
+            if (success) {
+                dal.NotificationDAO notifDAO = new dal.NotificationDAO();
+                notifDAO.addNotification(user.getId(),
+                    "Thay đổi phương thức thanh toán",
+                    "Đơn hàng #" + orderId + " đã được thay đổi phương thức thanh toán sang COD thành công.");
+                
+                session.setAttribute("orderSuccess", "Đổi phương thức thanh toán sang COD thành công!");
+            } else {
+                session.setAttribute("orderError", "Không thể cập nhật phương thức thanh toán trong cơ sở dữ liệu.");
+            }
+            response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderId);
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/orders");
         }

@@ -83,7 +83,7 @@ public class CartController extends HttpServlet {
         
         double totalAmount = 0;
         for (CartItem item : cartItems) {
-            totalAmount += item.getQuantity() * item.getProduct().getEffectivePrice();
+            totalAmount += item.getQuantity() * item.getEffectiveUnitPrice();
         }
         
         // Calculate shipping fee:
@@ -167,6 +167,11 @@ public class CartController extends HttpServlet {
             String qtyStr = request.getParameter("quantity");
             int quantity = (qtyStr == null || qtyStr.trim().isEmpty()) ? 1 : Integer.parseInt(qtyStr);
             
+            String variantIdStr = request.getParameter("variantId");
+            String packagingIdStr = request.getParameter("packagingId");
+            Integer variantId = (variantIdStr == null || variantIdStr.trim().isEmpty()) ? null : Integer.parseInt(variantIdStr.trim());
+            Integer packagingId = (packagingIdStr == null || packagingIdStr.trim().isEmpty()) ? null : Integer.parseInt(packagingIdStr.trim());
+            
             if (quantity > 0) {
                 model.Product prod = productDAO.getProductById(productId);
                 if (prod == null) {
@@ -199,7 +204,7 @@ public class CartController extends HttpServlet {
                         message = "Không thể thêm sản phẩm. Số lượng vượt quá tồn kho (Còn lại: " + availableStock + ")";
                     } else {
                         if (cart != null) {
-                            cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, quantity);
+                            cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, quantity, variantId, packagingId);
                             totalCount = cartDAO.getCartItemsCount(cart.getCartId());
                         } else {
                             List<CartItem> guestCart = (List<CartItem>) session.getAttribute("guestCart");
@@ -210,7 +215,10 @@ public class CartController extends HttpServlet {
                             
                             boolean found = false;
                             for (CartItem item : guestCart) {
-                                if (item.getProductId() == productId) {
+                                boolean matchProduct = item.getProductId() == productId;
+                                boolean matchVariant = (variantId == null && item.getVariantId() == null) || (variantId != null && variantId.equals(item.getVariantId()));
+                                boolean matchPackaging = (packagingId == null && item.getPackagingId() == null) || (packagingId != null && packagingId.equals(item.getPackagingId()));
+                                if (matchProduct && matchVariant && matchPackaging) {
                                     item.setQuantity(item.getQuantity() + quantity);
                                     found = true;
                                     break;
@@ -221,8 +229,26 @@ public class CartController extends HttpServlet {
                                 CartItem newItem = new CartItem();
                                 newItem.setProductId(productId);
                                 newItem.setQuantity(quantity);
+                                newItem.setVariantId(variantId);
+                                newItem.setPackagingId(packagingId);
+                                
+                                if (variantId != null) {
+                                    model.WeightVariant wv = new dal.WeightVariantDAO().getVariantById(variantId);
+                                    if (wv != null) {
+                                        newItem.setWeightLabel(wv.getWeightLabel());
+                                        newItem.setVariantPriceAdjustment(wv.getPriceAdjustment());
+                                    }
+                                }
+                                if (packagingId != null) {
+                                    model.PackagingOption po = new dal.PackagingDAO().getPackagingById(packagingId);
+                                    if (po != null) {
+                                        newItem.setPackagingName(po.getPackagingName());
+                                        newItem.setPackagingPriceAdjustment(po.getPriceAdjustment());
+                                    }
+                                }
+                                
                                 newItem.setProduct(prod);
-                                newItem.setCartItemId(productId);
+                                newItem.setCartItemId((int)(System.currentTimeMillis() & 0xfffffff));
                                 guestCart.add(newItem);
                             }
                             
@@ -378,7 +404,7 @@ public class CartController extends HttpServlet {
         
         double totalAmount = 0;
         for (CartItem item : cartItems) {
-            totalAmount += item.getQuantity() * item.getProduct().getEffectivePrice();
+            totalAmount += item.getQuantity() * item.getEffectiveUnitPrice();
         }
         
         Timestamp now = new Timestamp(System.currentTimeMillis());

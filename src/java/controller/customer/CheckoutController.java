@@ -59,6 +59,9 @@ public class CheckoutController extends HttpServlet {
         } else if ("removePromo".equals(action)) {
             handleRemovePromo(request, response, session);
             return;
+        } else if ("repay".equals(action)) {
+            handleRepay(request, response, session, user);
+            return;
         }
 
         if ("success".equals(action)) {
@@ -89,12 +92,29 @@ public class CheckoutController extends HttpServlet {
             return;
         }
 
-        // Validate stock before checkout
+        // Validate stock and product status before checkout
         dal.ProductDAO productDAO = new dal.ProductDAO();
         for (CartItem item : cartItems) {
-            int availableStock = productDAO.getProductStock(item.getProductId());
+            model.Product currentProduct = productDAO.getProductById(item.getProductId());
+            if (currentProduct == null) {
+                session.setAttribute("cartError", "Sản phẩm \"" + item.getProduct().getName() + "\" không còn tồn tại trong hệ thống. Vui lòng cập nhật lại giỏ hàng.");
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+            
+            String pStatus = currentProduct.getStatus();
+            boolean isAvailable = "Approved".equalsIgnoreCase(pStatus) 
+                                || "Available".equalsIgnoreCase(pStatus) 
+                                || "Featured".equalsIgnoreCase(pStatus);
+            if (!isAvailable) {
+                session.setAttribute("cartError", "Sản phẩm \"" + currentProduct.getName() + "\" hiện ngừng bán. Vui lòng xóa khỏi giỏ hàng trước khi đặt hàng.");
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+
+            int availableStock = currentProduct.getStockQuantity();
             if (item.getQuantity() > availableStock) {
-                session.setAttribute("cartError", "Sản phẩm \"" + item.getProduct().getName() + "\" vượt quá số lượng tồn kho (Còn lại: " + availableStock + "). Vui lòng cập nhật lại giỏ hàng.");
+                session.setAttribute("cartError", "Sản phẩm \"" + currentProduct.getName() + "\" vượt quá số lượng tồn kho (Còn lại: " + availableStock + "). Vui lòng cập nhật lại giỏ hàng.");
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
@@ -103,7 +123,7 @@ public class CheckoutController extends HttpServlet {
         // Calculate totals
         double totalAmount = 0;
         for (CartItem item : cartItems) {
-            totalAmount += item.getQuantity() * item.getProduct().getEffectivePrice();
+            totalAmount += item.getQuantity() * item.getEffectiveUnitPrice();
         }
 
         double shippingFee = (totalAmount >= 150000) ? 0 : 30000;
@@ -279,12 +299,29 @@ public class CheckoutController extends HttpServlet {
             return;
         }
 
-        // Validate stock before placing order
+        // Validate stock and product status before placing order
         dal.ProductDAO productDAO = new dal.ProductDAO();
         for (CartItem item : cartItems) {
-            int availableStock = productDAO.getProductStock(item.getProductId());
+            model.Product currentProduct = productDAO.getProductById(item.getProductId());
+            if (currentProduct == null) {
+                session.setAttribute("cartError", "Sản phẩm \"" + item.getProduct().getName() + "\" không còn tồn tại trong hệ thống. Vui lòng cập nhật lại giỏ hàng.");
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+            
+            String pStatus = currentProduct.getStatus();
+            boolean isAvailable = "Approved".equalsIgnoreCase(pStatus) 
+                                || "Available".equalsIgnoreCase(pStatus) 
+                                || "Featured".equalsIgnoreCase(pStatus);
+            if (!isAvailable) {
+                session.setAttribute("cartError", "Sản phẩm \"" + currentProduct.getName() + "\" hiện ngừng bán. Vui lòng xóa khỏi giỏ hàng trước khi đặt hàng.");
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+
+            int availableStock = currentProduct.getStockQuantity();
             if (item.getQuantity() > availableStock) {
-                session.setAttribute("cartError", "Sản phẩm \"" + item.getProduct().getName() + "\" vượt quá số lượng tồn kho (Còn lại: " + availableStock + "). Vui lòng cập nhật lại giỏ hàng trước khi đặt hàng.");
+                session.setAttribute("cartError", "Sản phẩm \"" + currentProduct.getName() + "\" vượt quá số lượng tồn kho (Còn lại: " + availableStock + "). Vui lòng cập nhật lại giỏ hàng trước khi đặt hàng.");
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
@@ -294,7 +331,7 @@ public class CheckoutController extends HttpServlet {
         // Calculate pricing
         double totalAmount = 0;
         for (CartItem item : cartItems) {
-            totalAmount += item.getQuantity() * item.getProduct().getEffectivePrice();
+            totalAmount += item.getQuantity() * item.getEffectiveUnitPrice();
         }
 
         double shippingFee = (totalAmount >= 150000) ? 0 : 30000;
@@ -342,7 +379,9 @@ public class CheckoutController extends HttpServlet {
             SaleOrderItem soi = new SaleOrderItem();
             soi.setProductId(ci.getProductId());
             soi.setQuantity(ci.getQuantity());
-            soi.setUnitPrice(ci.getProduct().getEffectivePrice());
+            soi.setUnitPrice(ci.getEffectiveUnitPrice());
+            soi.setWeightLabel(ci.getWeightLabel());
+            soi.setPackagingName(ci.getPackagingName());
             orderItems.add(soi);
         }
         order.setItems(orderItems);
@@ -453,6 +492,117 @@ public class CheckoutController extends HttpServlet {
         } else {
             session.setAttribute("checkoutError", "Đã xảy ra lỗi hệ thống trong quá trình đặt hàng. Vui lòng thử lại sau.");
             response.sendRedirect(request.getContextPath() + "/checkout");
+        }
+    }
+
+    private void handleRepay(HttpServletRequest request, HttpServletResponse response, HttpSession session, Authen user)
+            throws IOException {
+        String orderIdStr = request.getParameter("orderId");
+        if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/orders");
+            return;
+        }
+
+        int orderId = 0;
+        try {
+            orderId = Integer.parseInt(orderIdStr);
+            SaleOrder order = orderDAO.getOrderById(orderId);
+            
+            if (order == null || order.getCreatedBy() != user.getId()) {
+                session.setAttribute("orderError", "Đơn hàng không tồn tại hoặc không thuộc sở hữu của bạn.");
+                response.sendRedirect(request.getContextPath() + "/orders");
+                return;
+            }
+
+            if (!"Pending".equalsIgnoreCase(order.getOrderStatus())) {
+                session.setAttribute("orderError", "Đơn hàng này không thể thanh toán lại vì đã được xử lý hoặc đã hủy.");
+                response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderId);
+                return;
+            }
+
+            if ("Paid".equalsIgnoreCase(order.getPaymentStatus())) {
+                session.setAttribute("orderError", "Đơn hàng này đã được thanh toán thành công.");
+                response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderId);
+                return;
+            }
+
+            // Generate VNPay URL
+            String vnp_Version = "2.1.0";
+            String vnp_Command = "pay";
+            String orderType = "190000"; // Grocery / Food
+            long amount = Math.round(order.getTotalPayment() * 100);
+            
+            String vnp_TxnRef = String.valueOf(order.getSaleOrderId());
+            String vnp_IpAddr = VNPayConfig.getIpAddress(request);
+            if (vnp_IpAddr == null || vnp_IpAddr.contains(":") || "0:0:0:0:0:0:0:1".equals(vnp_IpAddr)) {
+                vnp_IpAddr = "127.0.0.1";
+            }
+            String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+            
+            Map<String, String> vnp_Params = new HashMap<>();
+            vnp_Params.put("vnp_Version", vnp_Version);
+            vnp_Params.put("vnp_Command", vnp_Command);
+            vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+            vnp_Params.put("vnp_Amount", String.valueOf(amount));
+            vnp_Params.put("vnp_CurrCode", "VND");
+            vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+            vnp_Params.put("vnp_OrderInfo", "ThanhToanDonHang" + order.getSaleOrderId());
+            vnp_Params.put("vnp_OrderType", orderType);
+            vnp_Params.put("vnp_Locale", "vn");
+            
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+            vnp_Params.put("vnp_ReturnUrl", baseUrl + "/vnpay-return");
+            vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+            
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+            String vnp_CreateDate = formatter.format(new Date());
+            vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+            
+            List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+            Collections.sort(fieldNames);
+            StringBuilder hashData = new StringBuilder();
+            StringBuilder query = new StringBuilder();
+            boolean isFirst = true;
+            for (String fieldName : fieldNames) {
+                String fieldValue = vnp_Params.get(fieldName);
+                if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                    if (!isFirst) {
+                        hashData.append('&');
+                        query.append('&');
+                    }
+                    isFirst = false;
+                    
+                    hashData.append(fieldName);
+                    hashData.append('=');
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
+                    
+                    query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
+                    query.append('=');
+                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
+                }
+            }
+            
+            String queryUrl = query.toString();
+            String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+            queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+            String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+            
+            // Log for debugging
+            try {
+                java.io.FileWriter fw = new java.io.FileWriter("d:\\SWP391-G3\\vnpay_debug.log", true);
+                fw.write("=== VNPAY REPAY REQUEST ===\n");
+                fw.write("Time: " + new Date().toString() + "\n");
+                fw.write("OrderId: " + orderId + "\n");
+                fw.write("Redirect URL: " + paymentUrl + "\n\n");
+                fw.close();
+            } catch (Exception ex) {
+                // ignore
+            }
+            
+            response.sendRedirect(paymentUrl);
+        } catch (Exception e) {
+            session.setAttribute("orderError", "Không thể khởi tạo thanh toán lại qua VNPAY: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/orders?action=detail&id=" + orderIdStr);
         }
     }
 }

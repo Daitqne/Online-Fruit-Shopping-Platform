@@ -5,9 +5,15 @@ public class CartItem {
     private int cartId;
     private int productId;
     private int quantity;
+    private Integer variantId;
+    private Integer packagingId;
     
     // Joint fields for convenient display in JSP
     private Product product;
+    private String weightLabel;
+    private double variantPriceAdjustment;
+    private String packagingName;
+    private double packagingPriceAdjustment;
 
     public CartItem() {
     }
@@ -51,12 +57,65 @@ public class CartItem {
         this.quantity = quantity;
     }
 
+    public Integer getVariantId() {
+        return variantId;
+    }
+
+    public void setVariantId(Integer variantId) {
+        this.variantId = variantId;
+    }
+
+    public Integer getPackagingId() {
+        return packagingId;
+    }
+
+    public void setPackagingId(Integer packagingId) {
+        this.packagingId = packagingId;
+    }
+
     public Product getProduct() {
         return product;
     }
 
     public void setProduct(Product product) {
         this.product = product;
+    }
+
+    public String getWeightLabel() {
+        return weightLabel;
+    }
+
+    public void setWeightLabel(String weightLabel) {
+        this.weightLabel = weightLabel;
+    }
+
+    public double getVariantPriceAdjustment() {
+        return variantPriceAdjustment;
+    }
+
+    public void setVariantPriceAdjustment(double variantPriceAdjustment) {
+        this.variantPriceAdjustment = variantPriceAdjustment;
+    }
+
+    public String getPackagingName() {
+        return packagingName;
+    }
+
+    public void setPackagingName(String packagingName) {
+        this.packagingName = packagingName;
+    }
+
+    public double getPackagingPriceAdjustment() {
+        return packagingPriceAdjustment;
+    }
+
+    public void setPackagingPriceAdjustment(double packagingPriceAdjustment) {
+        this.packagingPriceAdjustment = packagingPriceAdjustment;
+    }
+
+    public double getEffectiveUnitPrice() {
+        if (product == null) return 0;
+        return product.getEffectivePrice() + variantPriceAdjustment + packagingPriceAdjustment;
     }
 
     @Override
@@ -66,6 +125,8 @@ public class CartItem {
                 ", cartId=" + cartId +
                 ", productId=" + productId +
                 ", quantity=" + quantity +
+                ", variantId=" + variantId +
+                ", packagingId=" + packagingId +
                 '}';
     }
 }

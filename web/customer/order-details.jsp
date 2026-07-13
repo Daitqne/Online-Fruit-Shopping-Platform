@@ -180,6 +180,20 @@
                                  alt="${item.product.name}" class="item-img">
                             <div class="item-main">
                                 <div class="item-name">${item.product.name}</div>
+                                <c:if test="${not empty item.weightLabel || not empty item.packagingName}">
+                                    <div style="font-size: 0.8rem; color: var(--slate-600); margin-top: 0.25rem;">
+                                        <c:if test="${not empty item.weightLabel}">
+                                            <span style="background: var(--slate-200); padding: 0.15rem 0.4rem; border-radius: 4px; margin-right: 4px; font-weight: 600;">
+                                                Trọng lượng: ${item.weightLabel}
+                                            </span>
+                                        </c:if>
+                                        <c:if test="${not empty item.packagingName}">
+                                            <span style="background: var(--slate-200); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">
+                                                Đóng gói: ${item.packagingName}
+                                            </span>
+                                        </c:if>
+                                    </div>
+                                </c:if>
                                 <div class="item-meta">Số lượng: ${item.quantity} x <fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/>đ</div>
                             </div>
                             <div class="item-price">
@@ -240,6 +254,23 @@
                         <i class="fa-solid fa-circle-xmark"></i> Hủy đơn hàng này
                     </button>
                 </c:if>
+
+                <!-- CÁC NÚT THANH TOÁN LẠI & THAY ĐỔI PHƯƠNG THỨC (CHỈ KHI CHƯA THANH TOÁN VÀ ĐƠN HÀNG CHỜ XỬ LÝ) -->
+                <c:if test="${order.orderStatus == 'Pending' && order.paymentStatus != 'Paid'}">
+                    <!-- Nút Thanh toán lại qua VNPAY -->
+                    <c:if test="${order.paymentMethod == 'VNPAY'}">
+                        <a href="${pageContext.request.contextPath}/checkout?action=repay&orderId=${order.saleOrderId}" class="btn-cancel-order" style="background-color: #2563EB; color: white; border-color: #2563EB; margin-top: 0.5rem; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-credit-card"></i> Thanh toán lại qua VNPAY
+                        </a>
+                    </c:if>
+                    
+                    <!-- Nút Đổi sang thanh toán COD -->
+                    <c:if test="${order.paymentMethod == 'VNPAY' || order.paymentMethod == 'Bank Transfer'}">
+                        <a href="javascript:void(0);" onclick="confirmChangeToCOD(${order.saleOrderId})" class="btn-cancel-order" style="background-color: #F59E0B; color: white; border-color: #F59E0B; margin-top: 0.5rem; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Đổi sang thanh toán COD
+                        </a>
+                    </c:if>
+                </c:if>
             </div>
         </div>
     </div>
@@ -252,6 +283,12 @@
         function confirmCancelOrder(orderId) {
             if (confirm("Bạn có chắc chắn muốn hủy đơn hàng #" + orderId + " không?\nLưu ý: Thao tác này không thể hoàn tác và số lượng sản phẩm sẽ được hoàn trả lại vào kho hàng.")) {
                 window.location.href = "${pageContext.request.contextPath}/orders?action=cancel&id=" + orderId;
+            }
+        }
+        
+        function confirmChangeToCOD(orderId) {
+            if (confirm("Bạn có chắc chắn muốn chuyển đổi phương thức thanh toán của đơn hàng #" + orderId + " sang COD (Thanh toán khi nhận hàng) không?")) {
+                window.location.href = "${pageContext.request.contextPath}/orders?action=changeToCOD&id=" + orderId;
             }
         }
     </script>

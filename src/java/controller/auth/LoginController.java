@@ -67,9 +67,14 @@ public class LoginController extends HttpServlet {
                     for (model.CartItem guestItem : guestCart) {
                         int productId = guestItem.getProductId();
                         int guestQty = guestItem.getQuantity();
+                        Integer variantId = guestItem.getVariantId();
+                        Integer packagingId = guestItem.getPackagingId();
                         int dbQty = 0;
                         for (model.CartItem dbItem : dbItems) {
-                            if (dbItem.getProductId() == productId) {
+                            boolean matchProduct = dbItem.getProductId() == productId;
+                            boolean matchVariant = (variantId == null && dbItem.getVariantId() == null) || (variantId != null && variantId.equals(dbItem.getVariantId()));
+                            boolean matchPackaging = (packagingId == null && dbItem.getPackagingId() == null) || (packagingId != null && packagingId.equals(dbItem.getPackagingId()));
+                            if (matchProduct && matchVariant && matchPackaging) {
                                 dbQty = dbItem.getQuantity();
                                 break;
                             }
@@ -84,7 +89,7 @@ public class LoginController extends HttpServlet {
                         
                         int qtyToAdd = finalQty - dbQty;
                         if (qtyToAdd > 0) {
-                            cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, qtyToAdd);
+                            cartDAO.addOrUpdateCartItem(cart.getCartId(), productId, qtyToAdd, variantId, packagingId);
                         }
                     }
                     
