@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -29,6 +29,31 @@
         }
         .price-adj-zero {
             color: #6c757d;
+        }
+        .suggestion-chip {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-right: 0.3rem;
+            margin-bottom: 0.3rem;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #495057;
+            display: inline-block;
+            user-select: none;
+        }
+        .suggestion-chip:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+            color: #212529;
+        }
+        .suggestion-chip.active-packaging {
+            background-color: #198754;
+            border-color: #198754;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);
         }
     </style>
 </head>
@@ -170,9 +195,31 @@
                                         <input type="hidden" name="productId" value="${product.id}">
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-bold" for="packagingName">Tên tùy chọn đóng gói <span class="text-danger">*</span></label>
-                                            <input type="text" id="packagingName" name="packagingName" class="form-control" 
-                                                   placeholder="Ví dụ: Hộp quà gỗ, Hộp carton, Túi tự hủy" required>
+                                            <label class="form-label fw-bold">Chọn quy cách đóng gói <span class="text-danger">*</span></label>
+                                            <div class="mb-2">
+                                                <label class="form-label text-muted small d-block mb-1">Gợi ý chọn nhanh:</label>
+                                                <div class="d-flex flex-wrap">
+                                                    <span class="suggestion-chip packaging-chip" onclick="selectPackaging('Hộp quà gỗ')">Hộp quà gỗ</span>
+                                                    <span class="suggestion-chip packaging-chip" onclick="selectPackaging('Hộp carton')">Hộp carton</span>
+                                                    <span class="suggestion-chip packaging-chip" onclick="selectPackaging('Túi tự hủy')">Túi tự hủy</span>
+                                                    <span class="suggestion-chip packaging-chip" onclick="selectPackaging('Hộp nhựa')">Hộp nhựa</span>
+                                                    <span class="suggestion-chip packaging-chip" onclick="selectPackaging('Túi nilon')">Túi nilon</span>
+                                                </div>
+                                            </div>
+                                            <select id="packagingSelect" name="packagingName" class="form-select mb-2" onchange="handlePackagingChange(this)" required>
+                                                <option value="" disabled selected>-- Chọn đóng gói hoặc "Tự nhập" --</option>
+                                                <option value="Hộp quà gỗ">Hộp quà gỗ</option>
+                                                <option value="Hộp carton">Hộp carton</option>
+                                                <option value="Túi tự hủy">Túi tự hủy</option>
+                                                <option value="Hộp nhựa">Hộp nhựa</option>
+                                                <option value="Túi nilon">Túi nilon</option>
+                                                <option value="custom">Khác (Tự nhập)...</option>
+                                            </select>
+                                            
+                                            <div id="customPackagingDiv" style="display: none;" class="mt-2">
+                                                <label class="form-label text-muted small fw-bold" for="packagingName">Nhập quy cách đóng gói khác:</label>
+                                                <input type="text" id="packagingName" class="form-control" placeholder="Ví dụ: Hộp thiếc, Hộp tre...">
+                                            </div>
                                         </div>
 
                                         <div class="mb-3">
@@ -205,6 +252,39 @@
                 feather.replace();
             }
         });
+
+        function selectPackaging(value) {
+            const selectEl = document.getElementById('packagingSelect');
+            selectEl.value = value;
+            handlePackagingChange(selectEl);
+        }
+
+        function handlePackagingChange(selectEl) {
+            const customDiv = document.getElementById('customPackagingDiv');
+            const customInput = document.getElementById('packagingName');
+            
+            if (selectEl.value === 'custom') {
+                customDiv.style.display = 'block';
+                customInput.setAttribute('name', 'packagingName');
+                customInput.setAttribute('required', 'true');
+                selectEl.removeAttribute('name');
+                customInput.focus();
+            } else {
+                customDiv.style.display = 'none';
+                customInput.removeAttribute('name');
+                customInput.removeAttribute('required');
+                selectEl.setAttribute('name', 'packagingName');
+            }
+            
+            // Sync active visual state for packaging suggestion chips
+            document.querySelectorAll('.packaging-chip').forEach(chip => {
+                if (chip.textContent.trim() === selectEl.value) {
+                    chip.classList.add('active-packaging');
+                } else {
+                    chip.classList.remove('active-packaging');
+                }
+            });
+        }
     </script>
 </body>
 

@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -29,6 +29,31 @@
         }
         .price-adj-zero {
             color: #6c757d;
+        }
+        .suggestion-chip {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-right: 0.3rem;
+            margin-bottom: 0.3rem;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #495057;
+            display: inline-block;
+            user-select: none;
+        }
+        .suggestion-chip:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+            color: #212529;
+        }
+        .suggestion-chip.active-weight {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(13, 202, 240, 0.2);
         }
     </style>
 </head>
@@ -170,9 +195,37 @@
                                         <input type="hidden" name="productId" value="${product.id}">
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-bold" for="weightLabel">Nhãn trọng lượng <span class="text-danger">*</span></label>
-                                            <input type="text" id="weightLabel" name="weightLabel" class="form-control" 
-                                                   placeholder="Ví dụ: 500g, 1kg, 2.5kg" required>
+                                            <label class="form-label fw-bold">Chọn nhãn trọng lượng <span class="text-danger">*</span></label>
+                                            <div class="mb-2">
+                                                <label class="form-label text-muted small d-block mb-1">Gợi ý chọn nhanh:</label>
+                                                <div class="d-flex flex-wrap">
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('100g')">100g</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('200g')">200g</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('250g')">250g</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('500g')">500g</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('1kg')">1kg</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('2kg')">2kg</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('5kg')">5kg</span>
+                                                    <span class="suggestion-chip weight-chip" onclick="selectWeight('10kg')">10kg</span>
+                                                </div>
+                                            </div>
+                                            <select id="weightSelect" name="weightLabel" class="form-select mb-2" onchange="handleWeightChange(this)" required>
+                                                <option value="" disabled selected>-- Chọn trọng lượng hoặc "Tự nhập" --</option>
+                                                <option value="100g">100g</option>
+                                                <option value="200g">200g</option>
+                                                <option value="250g">250g</option>
+                                                <option value="500g">500g</option>
+                                                <option value="1kg">1kg</option>
+                                                <option value="2kg">2kg</option>
+                                                <option value="5kg">5kg</option>
+                                                <option value="10kg">10kg</option>
+                                                <option value="custom">Khác (Tự nhập)...</option>
+                                            </select>
+                                            
+                                            <div id="customWeightDiv" style="display: none;" class="mt-2">
+                                                <label class="form-label text-muted small fw-bold" for="weightLabel">Nhập nhãn trọng lượng khác:</label>
+                                                <input type="text" id="weightLabel" class="form-control" placeholder="Ví dụ: 1.5kg, 300g...">
+                                            </div>
                                         </div>
 
                                         <div class="mb-3">
@@ -205,6 +258,39 @@
                 feather.replace();
             }
         });
+
+        function selectWeight(value) {
+            const selectEl = document.getElementById('weightSelect');
+            selectEl.value = value;
+            handleWeightChange(selectEl);
+        }
+
+        function handleWeightChange(selectEl) {
+            const customDiv = document.getElementById('customWeightDiv');
+            const customInput = document.getElementById('weightLabel');
+            
+            if (selectEl.value === 'custom') {
+                customDiv.style.display = 'block';
+                customInput.setAttribute('name', 'weightLabel');
+                customInput.setAttribute('required', 'true');
+                selectEl.removeAttribute('name');
+                customInput.focus();
+            } else {
+                customDiv.style.display = 'none';
+                customInput.removeAttribute('name');
+                customInput.removeAttribute('required');
+                selectEl.setAttribute('name', 'weightLabel');
+            }
+            
+            // Sync active visual state for weight suggestion chips
+            document.querySelectorAll('.weight-chip').forEach(chip => {
+                if (chip.textContent.trim() === selectEl.value) {
+                    chip.classList.add('active-weight');
+                } else {
+                    chip.classList.remove('active-weight');
+                }
+            });
+        }
     </script>
 </body>
 
