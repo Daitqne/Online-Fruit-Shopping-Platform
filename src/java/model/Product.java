@@ -11,6 +11,9 @@ public class Product {
     private String name;
     private double price;
     private double discountPrice;
+    private double importPrice;
+    private java.sql.Date importDate;
+    private java.sql.Date expiredDate;
     private String unit;
     private String origin;
     private String status;
@@ -241,6 +244,30 @@ public class Product {
         this.packagingOptions = packagingOptions;
     }
 
+    public double getImportPrice() {
+        return importPrice;
+    }
+
+    public void setImportPrice(double importPrice) {
+        this.importPrice = importPrice;
+    }
+
+    public java.sql.Date getImportDate() {
+        return importDate;
+    }
+
+    public void setImportDate(java.sql.Date importDate) {
+        this.importDate = importDate;
+    }
+
+    public java.sql.Date getExpiredDate() {
+        return expiredDate;
+    }
+
+    public void setExpiredDate(java.sql.Date expiredDate) {
+        this.expiredDate = expiredDate;
+    }
+
     @Override
     public String toString() {
         return "Product{" +
@@ -248,6 +275,9 @@ public class Product {
                 ", name='" + name + '\'' +
                 ", price=" + price +
                 ", discountPrice=" + discountPrice +
+                ", importPrice=" + importPrice +
+                ", importDate=" + importDate +
+                ", expiredDate=" + expiredDate +
                 ", unit='" + unit + '\'' +
                 ", origin='" + origin + '\'' +
                 ", status='" + status + '\'' +

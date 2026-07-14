@@ -29,7 +29,7 @@ public class ProductDAO extends DBContext {
         List<Product> products = new ArrayList<>();
         String sql =
             "SELECT TOP 8 " +
-            "    p.product_id, p.product_name, p.price, p.discount_price, " +
+            "    p.product_id, p.product_name, p.price, p.discount_price, p.import_price, " +
             "    p.unit, p.origin, p.status, p.description, " +
             "    c.category_name, pi.image_url, " +
             "    COALESCE(SUM(soi.quantity), 0) AS total_sold " + // Tổng số lượng đã bán từ bảng Sale_Order_Item
@@ -44,7 +44,7 @@ public class ProductDAO extends DBContext {
             "    ) t WHERE rn = 1 " +
             ") pi ON pi.product_id = p.product_id " +
             "GROUP BY " +
-            "    p.product_id, p.product_name, p.price, p.discount_price, " +
+            "    p.product_id, p.product_name, p.price, p.discount_price, p.import_price, " +
             "    p.unit, p.origin, p.status, p.description, " +
             "    c.category_name, pi.image_url " +
             "ORDER BY total_sold DESC, p.product_id DESC";
@@ -72,7 +72,7 @@ public class ProductDAO extends DBContext {
                                               Double minPrice, Double maxPrice,
                                               String availability, Integer shopOwnerId) {
         List<Product> products = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
+        StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.import_price, p.import_date, p.expired_date, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
                                               "FROM Product p " +
                                               "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
                                               "LEFT JOIN Inventory i ON p.product_id = i.product_id " +
@@ -145,8 +145,8 @@ public class ProductDAO extends DBContext {
     }
 
     public boolean addProduct(Product p) {
-        String sqlProduct = "INSERT INTO Product (product_name, category_id, price, discount_price, unit, origin, status, description, shop_owner_id, low_stock_threshold) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlProduct = "INSERT INTO Product (product_name, category_id, price, discount_price, unit, origin, status, description, shop_owner_id, low_stock_threshold, import_price, import_date, expired_date) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             int categoryId = getCategoryIdOrCreate(p.getCategory());
@@ -177,6 +177,9 @@ public class ProductDAO extends DBContext {
                     stProduct.setNull(9, java.sql.Types.INTEGER);
                 }
                 stProduct.setInt(10, p.getLowStockThreshold() > 0 ? p.getLowStockThreshold() : 10);
+                stProduct.setDouble(11, p.getImportPrice());
+                stProduct.setDate(12, p.getImportDate());
+                stProduct.setDate(13, p.getExpiredDate());
 
                 int rowsAffected = stProduct.executeUpdate();
                 if (rowsAffected > 0) {
@@ -221,7 +224,7 @@ public class ProductDAO extends DBContext {
     }
 
     public Product getProductById(int id) {
-        String sql = "SELECT p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
+        String sql = "SELECT p.product_id, p.product_name, p.price, p.discount_price, p.import_price, p.import_date, p.expired_date, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
                      "FROM Product p " +
                      "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
                      "LEFT JOIN Inventory i ON p.product_id = i.product_id " +
@@ -247,7 +250,7 @@ public class ProductDAO extends DBContext {
     }
 
     public boolean updateProduct(Product p) {
-        String sql = "UPDATE Product SET product_name=?, category_id=?, price=?, discount_price=?, unit=?, origin=?, status=?, description=?, low_stock_threshold=? " +
+        String sql = "UPDATE Product SET product_name=?, category_id=?, price=?, discount_price=?, unit=?, origin=?, status=?, description=?, low_stock_threshold=?, import_price=?, import_date=?, expired_date=? " +
                      "WHERE product_id=?";
 
         try {
@@ -268,7 +271,10 @@ public class ProductDAO extends DBContext {
                 st.setNString(7, status);
                 st.setNString(8, p.getDescription());
                 st.setInt(9, p.getLowStockThreshold() > 0 ? p.getLowStockThreshold() : 10);
-                st.setInt(10, p.getId());
+                st.setDouble(10, p.getImportPrice());
+                st.setDate(11, p.getImportDate());
+                st.setDate(12, p.getExpiredDate());
+                st.setInt(13, p.getId());
 
                 int rowsAffected = st.executeUpdate();
                 if (rowsAffected > 0) {
@@ -398,7 +404,7 @@ public class ProductDAO extends DBContext {
         if (query == null || query.trim().isEmpty()) {
             return products;
         }
-        String sql = "SELECT TOP 5 p.product_id, p.product_name, p.price, p.discount_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
+        String sql = "SELECT TOP 5 p.product_id, p.product_name, p.price, p.discount_price, p.import_price, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url " +
                      "FROM Product p " +
                      "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
                      "LEFT JOIN (" +
@@ -431,6 +437,21 @@ public class ProductDAO extends DBContext {
         p.setName(rs.getNString("product_name"));
         p.setPrice(rs.getDouble("price"));
         p.setDiscountPrice(rs.getDouble("discount_price"));
+        try {
+            p.setImportPrice(rs.getDouble("import_price"));
+        } catch (SQLException e) {
+            // column not selected
+        }
+        try {
+            p.setImportDate(rs.getDate("import_date"));
+        } catch (SQLException e) {
+            // column not selected
+        }
+        try {
+            p.setExpiredDate(rs.getDate("expired_date"));
+        } catch (SQLException e) {
+            // column not selected
+        }
         p.setUnit(rs.getNString("unit"));
         p.setOrigin(rs.getNString("origin"));
         p.setStatus(rs.getNString("status") != null ? rs.getNString("status") : DEFAULT_STATUS);
