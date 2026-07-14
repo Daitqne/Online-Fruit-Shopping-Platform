@@ -22,22 +22,33 @@ public class AdminPromotionController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Authen user = (Authen) session.getAttribute("user");
-        
+
         // Kiểm tra quyền Admin
         if (user == null || user.getRole() == null || !user.getRole().equalsIgnoreCase("Admin")) {
             response.sendRedirect("login");
             return;
         }
+        String action = request.getParameter("action");
+
+        if ("delete".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("id"));
+
+            PromotionDAO dao = new PromotionDAO();
+            dao.deletePromotion(id);
+
+            response.sendRedirect("admin-promotions");
+            return;
+        }
 
         PromotionDAO dao = new PromotionDAO();
         List<Promotion> list = dao.getAllPromotions();
-        
+
         // Đọc thông báo thành công nếu có
         String msg = request.getParameter("msg");
         if ("success".equals(msg)) {
             request.setAttribute("successMessage", "Thêm mã khuyến mãi mới thành công!");
         }
-        
+
         // Đẩy danh sách list này sang file JSP với tên biến là "promotionList" để khớp với JSP
         request.setAttribute("promotionList", list);
         request.getRequestDispatcher("/admin/admin-promotions.jsp").forward(request, response);
@@ -50,7 +61,7 @@ public class AdminPromotionController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Authen user = (Authen) session.getAttribute("user");
-        
+
         // Kiểm tra quyền Admin
         if (user == null || user.getRole() == null || !user.getRole().equalsIgnoreCase("Admin")) {
             response.sendRedirect("login");
@@ -61,14 +72,14 @@ public class AdminPromotionController extends HttpServlet {
             // Lấy dữ liệu từ các ô input của Form
             String code = request.getParameter("code");
             String type = request.getParameter("discountType");
-            
+
             // Xử lý và làm sạch dữ liệu số
             double value = parseDiscountValue(request.getParameter("discountValue"), type);
             double minOrder = parseMinOrderValue(request.getParameter("minOrderValue"));
-            
+
             String startDate = request.getParameter("startDate");
             String endDate = request.getParameter("endDate");
-            
+
             // Kiểm tra tính hợp lệ của ngày tháng
             if (startDate == null || endDate == null || startDate.isEmpty() || endDate.isEmpty()) {
                 throw new IllegalArgumentException("Ngày bắt đầu và ngày kết thúc không được để trống!");
@@ -107,10 +118,10 @@ public class AdminPromotionController extends HttpServlet {
         if (rawValue == null || rawValue.trim().isEmpty()) {
             throw new IllegalArgumentException("Mức giảm giá không được để trống!");
         }
-        
+
         // Loại bỏ ký tự %, đ, chữ VND và các khoảng trắng
         String cleanValue = rawValue.trim().replaceAll("(?i)[%đđ\\s]|vnd", "");
-        
+
         if ("Percentage".equalsIgnoreCase(type)) {
             // Đối với phần trăm, đổi dấu phẩy thành dấu chấm thập phân (VD: 10,5 -> 10.5)
             cleanValue = cleanValue.replace(",", ".");
@@ -135,13 +146,13 @@ public class AdminPromotionController extends HttpServlet {
         if (rawValue == null || rawValue.trim().isEmpty()) {
             return 0; // Mặc định không có đơn tối thiểu nếu trống
         }
-        
+
         // Loại bỏ ký tự đ, chữ VND và các khoảng trắng, dấu chấm/dấu phẩy
         String cleanValue = rawValue.trim()
                 .replaceAll("(?i)[đđ\\s]|vnd", "")
                 .replace(".", "")
                 .replace(",", "");
-                
+
         double val = Double.parseDouble(cleanValue);
         if (val < 0) {
             throw new IllegalArgumentException("Giá trị đơn tối thiểu không được âm!");
