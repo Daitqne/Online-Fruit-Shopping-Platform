@@ -43,9 +43,15 @@
 
         .stat-tiles {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1.5rem;
             margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .stat-tiles {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .stat-tile {
@@ -156,6 +162,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="import-receipt">
+                            <i class="align-middle" data-feather="clipboard"></i>
+                            <span class="align-middle">Nhập kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-orders">
                             <i class="align-middle" data-feather="shopping-bag"></i>
                             <span class="align-middle">Đơn hàng</span>
@@ -249,19 +262,33 @@
 
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h1 class="h3 mb-0">Quản lý tồn kho</h1>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="products-shop-owner">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Tồn kho</li>
-                            </ol>
-                        </nav>
+                        <div class="d-flex align-items-center gap-3">
+                            <a href="import-receipt" class="btn btn-success">
+                                <i data-feather="plus-circle" style="width:18px;height:18px;"></i>
+                                Nhập kho mới
+                            </a>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="products-shop-owner">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Tồn kho</li>
+                                </ol>
+                            </nav>
+                        </div>
                     </div>
 
                     <!-- Success Alert -->
-                    <c:if test="${param.success eq 'true'}">
+                    <c:if test="${param.success eq 'true' or not empty inventorySuccess}">
                         <div class="alert-success-custom">
                             <i data-feather="check-circle" style="width:18px;height:18px;"></i>
-                            <span>Cập nhật thông tin tồn kho thành công!</span>
+                            <span>${not empty inventorySuccess ? inventorySuccess : 'Cập nhật thông tin tồn kho thành công!'}</span>
+                        </div>
+                    </c:if>
+                    
+                    <!-- Error Alert -->
+                    <c:if test="${not empty inventoryError}">
+                        <div class="alert alert-danger d-flex align-items-center">
+                            <i data-feather="alert-circle" style="width:18px;height:18px;" class="me-2"></i>
+                            <span>${inventoryError}</span>
                         </div>
                     </c:if>
 
@@ -276,6 +303,18 @@
                                 ${lowStockProducts}
                             </div>
                             <div class="stat-tile-label">Sản phẩm sắp hết hàng</div>
+                        </div>
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color: ${expiringSoonProducts > 0 ? '#ff9800' : '#28a745'};">
+                                ${expiringSoonProducts}
+                            </div>
+                            <div class="stat-tile-label">Sắp hết hạn (&lt; 7 ngày)</div>
+                        </div>
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color: ${expiredProducts > 0 ? '#dc3545' : '#28a745'};">
+                                ${expiredProducts}
+                            </div>
+                            <div class="stat-tile-label">Đã hết hạn</div>
                         </div>
                     </div>
 
@@ -295,9 +334,10 @@
                                             <th>Danh mục</th>
                                             <th class="text-center">Số lượng tồn</th>
                                             <th class="text-center">Ngưỡng cảnh báo</th>
+                                            <th class="text-center">HSD gần nhất</th>
                                             <th>Tình trạng kho</th>
-                                            <th class="text-center" style="width: 230px;">Nhập thêm hàng</th>
                                             <th class="text-center" style="width: 230px;">Cập nhật ngưỡng</th>
+                                            <th class="text-center" style="width: 120px;">Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -305,7 +345,11 @@
                                             <c:when test="${not empty products}">
                                                 <c:forEach var="p" items="${products}">
                                                     <c:set var="isLowStock" value="${p.stockQuantity <= p.lowStockThreshold}" />
-                                                    <tr style="${isLowStock ? 'background-color: #fff8f8;' : ''}">
+                                                    <c:set var="nearestExpiry" value="${nearestExpiryMap[p.id]}" />
+                                                    <c:set var="hasExpired" value="${hasExpiredMap[p.id] != null}" />
+                                                    <c:set var="hasExpiringSoon" value="${hasExpiringSoonMap[p.id] != null}" />
+                                                    
+                                                    <tr style="${isLowStock or hasExpired ? 'background-color: #fff8f8;' : ''}">
                                                         <td><strong>${p.id}</strong></td>
                                                         <td>
                                                             <img src="${p.image}" class="product-thumb" alt="${p.name}" 
@@ -320,8 +364,30 @@
                                                             ${p.stockQuantity}
                                                         </td>
                                                         <td class="text-center fw-bold">${p.lowStockThreshold}</td>
+                                                        <td class="text-center">
+                                                            <c:choose>
+                                                                <c:when test="${not empty nearestExpiry}">
+                                                                    <span class="badge ${hasExpired ? 'bg-danger' : (hasExpiringSoon ? 'bg-warning text-dark' : 'bg-success')}">
+                                                                        <fmt:formatDate value="${nearestExpiry}" pattern="dd/MM/yyyy" />
+                                                                    </span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <span class="text-muted" style="font-size: 0.85rem;">Chưa có lô</span>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </td>
                                                         <td>
                                                             <c:choose>
+                                                                <c:when test="${hasExpired}">
+                                                                    <span class="badge bg-danger">
+                                                                        <i data-feather="x-circle" style="width:12px;height:12px;"></i> Có lô hết hạn
+                                                                    </span>
+                                                                </c:when>
+                                                                <c:when test="${hasExpiringSoon}">
+                                                                    <span class="badge bg-warning text-dark">
+                                                                        <i data-feather="alert-triangle" style="width:12px;height:12px;"></i> Sắp hết hạn
+                                                                    </span>
+                                                                </c:when>
                                                                 <c:when test="${isLowStock}">
                                                                     <span class="badge bg-danger">
                                                                         <i data-feather="alert-triangle" style="width:12px;height:12px;"></i> Sắp hết hàng
@@ -334,16 +400,6 @@
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </td>
-                                                        <!-- Nhập thêm hàng -->
-                                                        <td>
-                                                            <form action="inventory-shop-owner" method="POST" class="action-form">
-                                                                <input type="hidden" name="action" value="restock">
-                                                                <input type="hidden" name="productId" value="${p.id}">
-                                                                <input type="number" name="quantity" class="form-control form-control-sm action-input" 
-                                                                       placeholder="+ Số lượng" min="1" required>
-                                                                <button type="submit" class="btn btn-sm btn-success">Nhập</button>
-                                                            </form>
-                                                        </td>
                                                         <!-- Cập nhật ngưỡng cảnh báo -->
                                                         <td>
                                                             <form action="inventory-shop-owner" method="POST" class="action-form">
@@ -354,12 +410,21 @@
                                                                 <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
                                                             </form>
                                                         </td>
+                                                        <!-- Xem chi tiết lô -->
+                                                        <td class="text-center">
+                                                            <button type="button" class="btn btn-sm btn-info" 
+                                                                    onclick="viewBatches(${p.id}, '${fn:escapeXml(p.name)}')"
+                                                                    title="Xem chi tiết các lô">
+                                                                <i data-feather="list" style="width:14px;height:14px;"></i>
+                                                                Xem lô
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 </c:forEach>
                                             </c:when>
                                             <c:otherwise>
                                                 <tr>
-                                                    <td colspan="9" class="text-center py-5 text-muted">
+                                                    <td colspan="10" class="text-center py-5 text-muted">
                                                         <i data-feather="info" class="mb-2" style="width:32px;height:32px;"></i>
                                                         <p class="mb-0 fw-bold">Không tìm thấy sản phẩm nào trong kho!</p>
                                                     </td>
@@ -374,6 +439,33 @@
 
                 </div>
             </main>
+
+            <!-- Modal xem chi tiết lô -->
+            <div class="modal fade" id="batchModal" tabindex="-1" aria-labelledby="batchModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="batchModalLabel">
+                                <i data-feather="package" style="width:20px;height:20px;"></i>
+                                Chi tiết lô hàng: <span id="productNameDisplay"></span>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="batchTableContainer">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <footer class="footer">
                 <div class="container-fluid">
@@ -394,6 +486,127 @@
                 feather.replace();
             }
         });
+
+        // Xem chi tiết các lô của sản phẩm
+        function viewBatches(productId, productName) {
+            document.getElementById('productNameDisplay').textContent = productName;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('batchModal'));
+            modal.show();
+            
+            // Load batches via AJAX
+            fetch('${pageContext.request.contextPath}/api/batches?productId=' + productId)
+                .then(response => response.json())
+                .then(data => {
+                    displayBatches(data);
+                })
+                .catch(error => {
+                    document.getElementById('batchTableContainer').innerHTML = 
+                        '<div class="alert alert-danger">Không thể tải dữ liệu lô hàng. Vui lòng thử lại!</div>';
+                });
+        }
+
+        function displayBatches(batches) {
+            const container = document.getElementById('batchTableContainer');
+            
+            if (!batches || batches.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">Sản phẩm này chưa có lô hàng nào.</div>';
+                return;
+            }
+
+            let html = '<table class="table table-hover table-sm">';
+            html += '<thead><tr>';
+            html += '<th>Mã lô</th>';
+            html += '<th class="text-center">Nhập vào</th>';
+            html += '<th class="text-center">Còn lại</th>';
+            html += '<th class="text-center">Ngày SX</th>';
+            html += '<th class="text-center">HSD</th>';
+            html += '<th class="text-center">Trạng thái</th>';
+            html += '<th class="text-center">Hành động</th>';
+            html += '</tr></thead><tbody>';
+
+            const now = new Date();
+            batches.forEach(batch => {
+                const expiryDate = new Date(batch.expiryDate);
+                const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                
+                let statusBadge = '';
+                let rowClass = '';
+                if (daysUntilExpiry < 0) {
+                    statusBadge = '<span class="badge bg-danger">Đã hết hạn</span>';
+                    rowClass = 'table-danger';
+                } else if (daysUntilExpiry <= 7) {
+                    statusBadge = '<span class="badge bg-warning text-dark">Sắp hết hạn (' + daysUntilExpiry + ' ngày)</span>';
+                    rowClass = 'table-warning';
+                } else {
+                    statusBadge = '<span class="badge bg-success">Còn HSD</span>';
+                }
+
+                html += '<tr class="' + rowClass + '">';
+                html += '<td><code>' + batch.batchNumber + '</code></td>';
+                html += '<td class="text-center">' + batch.quantityIn + '</td>';
+                html += '<td class="text-center"><strong>' + batch.quantityRemain + '</strong></td>';
+                html += '<td class="text-center">' + (batch.manufactureDate ? formatDate(batch.manufactureDate) : '-') + '</td>';
+                html += '<td class="text-center">' + formatDate(batch.expiryDate) + '</td>';
+                html += '<td class="text-center">' + statusBadge + '</td>';
+                html += '<td class="text-center">';
+                
+                if (daysUntilExpiry < 0 || batch.quantityRemain === 0) {
+                    html += '<button class="btn btn-sm btn-danger" onclick="removeBatch(' + batch.batchId + ')" title="Loại bỏ lô này">';
+                    html += '<i data-feather="trash-2" style="width:14px;height:14px;"></i> Xóa';
+                    html += '</button>';
+                } else {
+                    html += '<span class="text-muted" style="font-size:0.8rem;">-</span>';
+                }
+                
+                html += '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            
+            // Re-initialize feather icons
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return day + '/' + month + '/' + year;
+        }
+
+        function removeBatch(batchId) {
+            if (!confirm('Bạn có chắc chắn muốn loại bỏ lô hàng này?\nSố lượng trong lô sẽ bị trừ khỏi tồn kho tổng.')) {
+                return;
+            }
+
+            // Submit form to remove batch
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '${pageContext.request.contextPath}/inventory-shop-owner';
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'remove-batch';
+            form.appendChild(actionInput);
+            
+            const batchInput = document.createElement('input');
+            batchInput.type = 'hidden';
+            batchInput.name = 'batchId';
+            batchInput.value = batchId;
+            form.appendChild(batchInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 </body>
 

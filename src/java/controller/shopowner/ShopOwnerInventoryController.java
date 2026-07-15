@@ -2,11 +2,16 @@ package controller.shopowner;
 
 import dal.ProductDAO;
 import dal.NotificationDAO;
+import dal.ImportReceiptDAO;
 import model.Product;
 import model.Authen;
 import model.Notification;
+import model.InventoryBatch;
 import java.io.IOException;
+import java.sql.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -35,26 +40,68 @@ public class ShopOwnerInventoryController extends HttpServlet {
 
         int shopOwnerId = user.getId();
         ProductDAO productDAO = new ProductDAO();
+        ImportReceiptDAO batchDAO = new ImportReceiptDAO();
         
         // Fetch all products of this shop owner
         List<Product> products = productDAO.getFilteredProducts("", "All", null, null, "All", shopOwnerId);
+        
+        // Get all batches for this shop owner
+        List<InventoryBatch> allBatches = batchDAO.getBatchesByShopOwner(shopOwnerId);
+        
+        // Build map: productId -> nearest expiry date
+        Map<Integer, Date> nearestExpiryMap = new HashMap<>();
+        Map<Integer, Boolean> hasExpiredMap = new HashMap<>();
+        Map<Integer, Boolean> hasExpiringSoonMap = new HashMap<>();
+        
+        for (InventoryBatch batch : allBatches) {
+            int pid = batch.getProductId();
+            Date expiryDate = batch.getExpiryDate();
+            
+            // Track nearest expiry
+            if (!nearestExpiryMap.containsKey(pid) || expiryDate.before(nearestExpiryMap.get(pid))) {
+                nearestExpiryMap.put(pid, expiryDate);
+            }
+            
+            // Track expired/expiring status
+            if (batch.isExpired()) {
+                hasExpiredMap.put(pid, true);
+            }
+            if (batch.isExpiringSoon()) {
+                hasExpiringSoonMap.put(pid, true);
+            }
+        }
         
         // Calculate statistics
         long totalProducts = products.size();
         long lowStockProducts = products.stream()
                 .filter(p -> p.getStockQuantity() <= p.getLowStockThreshold())
                 .count();
+        long expiredProducts = hasExpiredMap.size();
+        long expiringSoonProducts = hasExpiringSoonMap.size();
 
         // Get notifications for Shop Owner
         NotificationDAO notificationDAO = new NotificationDAO();
         List<Notification> notifications = notificationDAO.getNotificationsByUserId(shopOwnerId);
         long unreadCount = notifications.stream().filter(n -> !n.isRead()).count();
 
+        // Flash messages
+        String inventorySuccess = (String) session.getAttribute("inventorySuccess");
+        String inventoryError = (String) session.getAttribute("inventoryError");
+        session.removeAttribute("inventorySuccess");
+        session.removeAttribute("inventoryError");
+
         request.setAttribute("products", products);
         request.setAttribute("totalProducts", totalProducts);
         request.setAttribute("lowStockProducts", lowStockProducts);
+        request.setAttribute("expiredProducts", expiredProducts);
+        request.setAttribute("expiringSoonProducts", expiringSoonProducts);
+        request.setAttribute("nearestExpiryMap", nearestExpiryMap);
+        request.setAttribute("hasExpiredMap", hasExpiredMap);
+        request.setAttribute("hasExpiringSoonMap", hasExpiringSoonMap);
         request.setAttribute("notifications", notifications);
         request.setAttribute("unreadCount", unreadCount);
+        request.setAttribute("inventorySuccess", inventorySuccess);
+        request.setAttribute("inventoryError", inventoryError);
 
         request.getRequestDispatcher("/shopowner/inventory_shop_owner.jsp").forward(request, response);
     }
@@ -78,37 +125,56 @@ public class ShopOwnerInventoryController extends HttpServlet {
         String action = request.getParameter("action");
         String productIdStr = request.getParameter("productId");
         
-        if (productIdStr == null || action == null) {
+        if (action == null) {
             response.sendRedirect("inventory-shop-owner");
             return;
         }
 
-        int productId = Integer.parseInt(productIdStr);
         ProductDAO productDAO = new ProductDAO();
-        Product p = productDAO.getProductById(productId);
+        ImportReceiptDAO batchDAO = new ImportReceiptDAO();
 
-        if (p == null || p.getShopOwnerId() != user.getId()) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Sản phẩm không thuộc quyền quản lý của bạn!");
-            return;
-        }
-
-        if ("restock".equals(action)) {
-            String qtyStr = request.getParameter("quantity");
-            if (qtyStr != null && !qtyStr.trim().isEmpty()) {
-                int addQty = Integer.parseInt(qtyStr);
-                int newQty = p.getStockQuantity() + addQty;
-                if (newQty < 0) newQty = 0;
-                productDAO.updateStock(productId, newQty);
+        if ("update-threshold".equals(action)) {
+            if (productIdStr == null) {
+                response.sendRedirect("inventory-shop-owner");
+                return;
             }
-        } else if ("update-threshold".equals(action)) {
+            
+            int productId = Integer.parseInt(productIdStr);
+            Product p = productDAO.getProductById(productId);
+
+            if (p == null || p.getShopOwnerId() != user.getId()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Sản phẩm không thuộc quyền quản lý của bạn!");
+                return;
+            }
+
             String thresholdStr = request.getParameter("threshold");
             if (thresholdStr != null && !thresholdStr.trim().isEmpty()) {
                 int threshold = Integer.parseInt(thresholdStr);
                 if (threshold < 0) threshold = 0;
                 productDAO.updateLowStockThreshold(productId, threshold);
             }
+            
+            response.sendRedirect("inventory-shop-owner?success=true");
+            
+        } else if ("remove-batch".equals(action)) {
+            String batchIdStr = request.getParameter("batchId");
+            if (batchIdStr == null) {
+                response.sendRedirect("inventory-shop-owner");
+                return;
+            }
+            
+            int batchId = Integer.parseInt(batchIdStr);
+            boolean success = batchDAO.removeExpiredBatch(batchId, user.getId());
+            
+            if (success) {
+                session.setAttribute("inventorySuccess", "Đã loại bỏ lô hết hạn thành công!");
+            } else {
+                session.setAttribute("inventoryError", "Không thể loại bỏ lô. Vui lòng kiểm tra lại!");
+            }
+            
+            response.sendRedirect("inventory-shop-owner");
+        } else {
+            response.sendRedirect("inventory-shop-owner");
         }
-
-        response.sendRedirect("inventory-shop-owner?success=true");
     }
 }

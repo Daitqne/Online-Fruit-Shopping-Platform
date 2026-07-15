@@ -202,6 +202,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="import-receipt">
+                            <i class="align-middle" data-feather="clipboard"></i>
+                            <span class="align-middle">Nhập kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-orders">
                             <i class="align-middle" data-feather="shopping-bag"></i>
                             <span class="align-middle">Đơn hàng</span>

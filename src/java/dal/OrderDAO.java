@@ -56,8 +56,21 @@ public class OrderDAO extends DBContext {
 
         String updateInventorySql = """
             UPDATE Inventory 
-            SET quantity = quantity - ? 
+            SET quantity = quantity - ?, last_updated = GETDATE()
             WHERE product_id = ?
+        """;
+        
+        String getBatchesSql = """
+            SELECT batch_id, quantity_remain 
+            FROM Inventory_Batch 
+            WHERE product_id = ? AND quantity_remain > 0 AND expiry_date > GETDATE()
+            ORDER BY expiry_date ASC
+        """;
+        
+        String updateBatchSql = """
+            UPDATE Inventory_Batch 
+            SET quantity_remain = ? 
+            WHERE batch_id = ?
         """;
 
         try {
@@ -94,9 +107,11 @@ public class OrderDAO extends DBContext {
                 }
             }
 
-            // 2. Insert Order Items and Update Inventory
+            // 2. Insert Order Items and Update Inventory with FEFO
             try (PreparedStatement psItem = getConnection().prepareStatement(insertItemSql);
-                 PreparedStatement psInventory = getConnection().prepareStatement(updateInventorySql)) {
+                 PreparedStatement psInventory = getConnection().prepareStatement(updateInventorySql);
+                 PreparedStatement psGetBatches = getConnection().prepareStatement(getBatchesSql);
+                 PreparedStatement psUpdateBatch = getConnection().prepareStatement(updateBatchSql)) {
                 
                 for (SaleOrderItem item : order.getItems()) {
                     // Insert Item
@@ -106,10 +121,36 @@ public class OrderDAO extends DBContext {
                     psItem.setDouble(4, item.getUnitPrice());
                     psItem.executeUpdate();
 
-                    // Update Stock in Inventory
+                    // Update Stock in Inventory (tổng số)
                     psInventory.setInt(1, item.getQuantity());
                     psInventory.setInt(2, item.getProductId());
                     psInventory.executeUpdate();
+                    
+                    // FEFO: Trừ từ các lô theo thứ tự hết hạn
+                    int remainingQty = item.getQuantity();
+                    psGetBatches.setInt(1, item.getProductId());
+                    
+                    try (ResultSet rsBatch = psGetBatches.executeQuery()) {
+                        while (rsBatch.next() && remainingQty > 0) {
+                            int batchId = rsBatch.getInt("batch_id");
+                            int batchQty = rsBatch.getInt("quantity_remain");
+                            
+                            int qtyToDeduct = Math.min(remainingQty, batchQty);
+                            int newBatchQty = batchQty - qtyToDeduct;
+                            
+                            // Update batch quantity_remain
+                            psUpdateBatch.setInt(1, newBatchQty);
+                            psUpdateBatch.setInt(2, batchId);
+                            psUpdateBatch.executeUpdate();
+                            
+                            remainingQty -= qtyToDeduct;
+                        }
+                    }
+                    
+                    // Nếu vẫn còn số lượng chưa trừ được (không đủ lô hợp lệ)
+                    if (remainingQty > 0) {
+                        throw new SQLException("Không đủ hàng hợp lệ (chưa hết hạn) cho sản phẩm ID: " + item.getProductId());
+                    }
                 }
             }
 
@@ -361,7 +402,7 @@ public class OrderDAO extends DBContext {
     }
 
     /**
-     * Cancels an order, restoring the inventory stock quantities.
+     * Cancels an order, restoring the inventory stock quantities to both Inventory and Inventory_Batch.
      * Only works if the order is currently 'Pending'.
      */
     public boolean cancelOrder(int orderId, int userId) {
@@ -369,6 +410,13 @@ public class OrderDAO extends DBContext {
         String updateStatusSql = "UPDATE Sale_Order SET order_status = 'Cancelled' WHERE sale_order_id = ? AND created_by = ?";
         String getItemsSql = "SELECT product_id, quantity FROM Sale_Order_Item WHERE sale_order_id = ?";
         String restoreInventorySql = "UPDATE Inventory SET quantity = quantity + ? WHERE product_id = ?";
+        String getLatestBatchSql = """
+            SELECT TOP 1 batch_id 
+            FROM Inventory_Batch 
+            WHERE product_id = ? 
+            ORDER BY created_at DESC
+        """;
+        String restoreBatchSql = "UPDATE Inventory_Batch SET quantity_remain = quantity_remain + ? WHERE batch_id = ?";
 
         try {
             // Get connection and start transaction
@@ -417,12 +465,27 @@ public class OrderDAO extends DBContext {
                 }
             }
 
-            // 4. Restore Inventory quantity
-            try (PreparedStatement psRestore = getConnection().prepareStatement(restoreInventorySql)) {
+            // 4. Restore Inventory quantity and Batch
+            try (PreparedStatement psRestore = getConnection().prepareStatement(restoreInventorySql);
+                 PreparedStatement psGetBatch = getConnection().prepareStatement(getLatestBatchSql);
+                 PreparedStatement psRestoreBatch = getConnection().prepareStatement(restoreBatchSql)) {
+                
                 for (SaleOrderItem item : items) {
+                    // Restore tổng số trong Inventory
                     psRestore.setInt(1, item.getQuantity());
                     psRestore.setInt(2, item.getProductId());
                     psRestore.executeUpdate();
+                    
+                    // Restore vào lô mới nhất (đơn giản hóa - thực tế nên track chính xác lô nào đã trừ)
+                    psGetBatch.setInt(1, item.getProductId());
+                    try (ResultSet rsBatch = psGetBatch.executeQuery()) {
+                        if (rsBatch.next()) {
+                            int batchId = rsBatch.getInt("batch_id");
+                            psRestoreBatch.setInt(1, item.getQuantity());
+                            psRestoreBatch.setInt(2, batchId);
+                            psRestoreBatch.executeUpdate();
+                        }
+                    }
                 }
             }
 

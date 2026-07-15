@@ -246,7 +246,7 @@
                 </div>
             </c:if>
 
-            <!-- DANH SÁCH ĐỊA CHỈ -->
+            <!-- DANH SÁCH ĐỊA CHỈ --> 
             <div class="address-list">
                 <c:choose>
                     <c:when test="${not empty addresses}">
