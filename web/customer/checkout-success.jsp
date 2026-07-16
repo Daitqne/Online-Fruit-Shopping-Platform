@@ -345,17 +345,71 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Trạng thái đơn hàng:</span>
-                <span class="info-value" style="color: var(--secondary);">Chờ xử lý (Pending)</span>
+                <span class="info-value" style="color: var(--secondary); font-weight: 700;">
+                    <c:choose>
+                        <c:when test="${order.orderStatus == 'Pending'}">Chờ xử lý (Pending)</c:when>
+                        <c:when test="${order.orderStatus == 'Processing'}">Đang chuẩn bị (Processing)</c:when>
+                        <c:when test="${order.orderStatus == 'Shipping'}">Đang giao hàng (Shipping)</c:when>
+                        <c:when test="${order.orderStatus == 'Delivered'}">Đã giao hàng (Delivered)</c:when>
+                        <c:when test="${order.orderStatus == 'Cancelled'}">Đã hủy (Cancelled)</c:when>
+                        <c:otherwise>${order.orderStatus != null ? order.orderStatus : 'Chờ xử lý (Pending)'}</c:otherwise>
+                    </c:choose>
+                </span>
             </div>
             <div class="info-row">
                 <span class="info-label">Trạng thái thanh toán:</span>
-                <span class="info-value">Chưa thanh toán (Pending)</span>
+                <span class="info-value" style="font-weight: 700; color: ${order.paymentStatus == 'Paid' ? '#10B981' : (order.paymentStatus == 'Failed' ? '#EF4444' : 'var(--secondary)')};">
+                    <c:choose>
+                        <c:when test="${order.paymentStatus == 'Paid'}">Đã thanh toán (Paid)</c:when>
+                        <c:when test="${order.paymentStatus == 'Failed'}">Thanh toán thất bại (Failed)</c:when>
+                        <c:otherwise>Chưa thanh toán (Pending)</c:otherwise>
+                    </c:choose>
+                </span>
             </div>
+            <c:if test="${order != null}">
+                <div class="info-row">
+                    <span class="info-label">Phương thức thanh toán:</span>
+                    <span class="info-value" style="font-weight: 600;">
+                        <c:choose>
+                            <c:when test="${order.paymentMethod == 'COD'}">Thanh toán khi nhận hàng (COD)</c:when>
+                            <c:when test="${order.paymentMethod == 'Bank Transfer'}">Chuyển khoản ngân hàng</c:when>
+                            <c:when test="${order.paymentMethod == 'VNPAY'}">Cổng thanh toán VNPAY</c:when>
+                            <c:otherwise>${order.paymentMethod}</c:otherwise>
+                        </c:choose>
+                    </span>
+                </div>
+            </c:if>
             <div class="info-row" style="border-top: 1px dashed var(--slate-300); padding-top: 0.75rem; margin-top: 0.25rem;">
                 <span class="info-label" style="font-weight: 700; color: var(--dark);">Thời gian đặt:</span>
                 <span class="info-value" id="orderTime">Vừa xong</span>
             </div>
         </div>
+
+        <!-- Hiển thị VietQR nếu chọn Chuyển khoản ngân hàng và chưa thanh toán -->
+        <fmt:formatNumber value="${order.totalPayment}" pattern="#" var="formattedAmount"/>
+        <c:if test="${order.paymentMethod == 'Bank Transfer' && order.paymentStatus != 'Paid'}">
+            <div style="margin-top: -1rem; margin-bottom: 2rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 16px; background-color: var(--primary-light); text-align: center; display: flex; flex-direction: column; align-items: center;">
+                <h4 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--primary-hover); margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-qrcode"></i> Quét mã VietQR để thanh toán nhanh
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--slate-600); margin-bottom: 1rem; max-width: 450px; line-height: 1.4;">
+                    Mở ứng dụng ngân hàng và quét mã QR dưới đây. Thông tin số tiền và nội dung chuyển khoản sẽ được tự động điền sẵn chính xác.
+                </p>
+                <img src="https://img.vietqr.io/image/vietcombank-1234567890-compact.png?amount=${formattedAmount}&addInfo=GS${order.saleOrderId}&accountName=CONG%20TY%20CO%20PHAN%20GREENSTOCK%20VIET%20NAM" 
+                     alt="VietQR Code" 
+                     style="max-width: 220px; border-radius: 12px; box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); background-color: white; padding: 6px;">
+                <div style="margin-top: 1rem; font-size: 0.9rem; text-align: left; background-color: white; padding: 0.75rem 1.25rem; border-radius: 10px; border: 1px solid var(--slate-200); width: 100%; max-width: 320px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                        <span style="color:var(--slate-600); font-size:0.85rem;">Số tiền:</span>
+                        <span style="font-weight:700; color:#DC2626;"><fmt:formatNumber value="${order.totalPayment}" maxFractionDigits="0"/>đ</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--slate-600); font-size:0.85rem;">Nội dung CK:</span>
+                        <span style="font-weight:700; color:var(--primary-hover);">GS${order.saleOrderId}</span>
+                    </div>
+                </div>
+            </div>
+        </c:if>
 
         <div class="actions-group">
             <a href="products" class="btn-primary">Tiếp tục mua sắm</a>

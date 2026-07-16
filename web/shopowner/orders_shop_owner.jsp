@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -162,10 +162,24 @@
                     </a>
                 </li>
 
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="import-receipt">
+                        <i class="align-middle" data-feather="clipboard"></i>
+                        <span class="align-middle">Nhập kho</span>
+                    </a>
+                </li>
+
                 <li class="sidebar-item active">
                     <a class="sidebar-link" href="shop-owner-orders">
                         <i class="align-middle" data-feather="shopping-bag"></i>
                         <span class="align-middle">Đơn hàng</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="shop-owner-revenue">
+                        <i class="align-middle" data-feather="trending-up"></i>
+                        <span class="align-middle">Báo cáo doanh thu</span>
                     </a>
                 </li>
 
@@ -361,10 +375,16 @@
                                                                     <img src="${item.product.image}" class="product-thumb"
                                                                          onerror="this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=200'"
                                                                          alt="${item.product.name}">
-                                                                    <span>
-                                                                        ${item.product.name}
-                                                                        <span class="text-muted">x${item.quantity}</span>
-                                                                    </span>
+                                                                     <span>
+                                                                         ${item.product.name}
+                                                                         <c:if test="${not empty item.weightLabel || not empty item.packagingName}">
+                                                                             <small class="text-muted" style="display:block; font-size: 0.8em; margin-left: 2px;">
+                                                                                 <c:if test="${not empty item.weightLabel}">Trọng lượng: ${item.weightLabel}</c:if>
+                                                                                 <c:if test="${not empty item.packagingName}"> | Đóng gói: ${item.packagingName}</c:if>
+                                                                             </small>
+                                                                         </c:if>
+                                                                         <span class="text-muted">x${item.quantity}</span>
+                                                                     </span>
                                                                 </li>
                                                             </c:forEach>
                                                         </ul>

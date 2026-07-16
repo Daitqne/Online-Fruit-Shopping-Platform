@@ -8,13 +8,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
+// Khi truy cập /profile servelet sẽ được gọi
 @WebServlet(name = "ProfileServlet", urlPatterns = {"/profile"})
 public class ProfileServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+        // Lấy session hiện tại của user (false là không tạo session mới)
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/login");

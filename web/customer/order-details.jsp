@@ -112,7 +112,14 @@
                     <div class="info-grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
                         <div class="info-block">
                             <h4>Phương thức thanh toán</h4>
-                            <p>${order.paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng (COD)' : 'Chuyển khoản ngân hàng'}</p>
+                            <p>
+                                <c:choose>
+                                    <c:when test="${order.paymentMethod == 'COD'}">Thanh toán khi nhận hàng (COD)</c:when>
+                                    <c:when test="${order.paymentMethod == 'Bank Transfer'}">Chuyển khoản ngân hàng</c:when>
+                                    <c:when test="${order.paymentMethod == 'VNPAY'}">Cổng thanh toán VNPAY</c:when>
+                                    <c:otherwise>${order.paymentMethod}</c:otherwise>
+                                </c:choose>
+                            </p>
                         </div>
                         <div class="info-block">
                             <h4>Trạng thái thanh toán</h4>
@@ -120,6 +127,9 @@
                                 <c:choose>
                                     <c:when test="${order.paymentStatus == 'Paid'}">
                                         <span class="status-badge pay-paid" style="padding: 0.2rem 0.5rem;"><i class="fa-solid fa-circle-check"></i> Đã thanh toán</span>
+                                    </c:when>
+                                    <c:when test="${order.paymentStatus == 'Failed'}">
+                                        <span class="status-badge pay-failed" style="padding: 0.2rem 0.5rem; background-color: #FEF2F2; color: #EF4444; border: 1px solid #FCA5A5; border-radius: 6px; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Thanh toán thất bại</span>
                                     </c:when>
                                     <c:otherwise>
                                         <span class="status-badge pay-pending" style="padding: 0.2rem 0.5rem;"><i class="fa-solid fa-clock"></i> Chưa thanh toán</span>
@@ -129,6 +139,28 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Hiển thị VietQR thanh toán nếu chọn Chuyển khoản ngân hàng và chưa thanh toán -->
+                <fmt:formatNumber value="${order.totalPayment}" pattern="#" var="formattedAmount"/>
+                <c:if test="${order.paymentMethod == 'Bank Transfer' && order.paymentStatus != 'Paid'}">
+                    <div style="margin-top: 1.5rem; padding: 1.25rem; border: 1px dashed var(--primary); border-radius: 16px; background-color: var(--primary-light); display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <h4 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--primary-hover); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-qrcode"></i> Quét VietQR thanh toán nhanh
+                        </h4>
+                        <p style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 0.75rem; max-width: 450px; line-height: 1.4;">
+                            Quét mã này bằng ứng dụng ngân hàng để chuyển khoản thanh toán tự động điền sẵn thông tin.
+                        </p>
+                        <img src="https://img.vietqr.io/image/vietcombank-1234567890-compact.png?amount=${formattedAmount}&addInfo=GS${order.saleOrderId}&accountName=CONG%20TY%20CO%20PHAN%20GREENSTOCK%20VIET%20NAM" 
+                             alt="VietQR Code" 
+                             style="max-width: 180px; border-radius: 10px; box-shadow: var(--shadow-md); border: 1px solid var(--slate-200); background-color: white; padding: 4px; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--dark);">
+                            Số tiền: <span style="color:#DC2626;"><fmt:formatNumber value="${order.totalPayment}" maxFractionDigits="0"/>đ</span>
+                        </div>
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--dark);">
+                            Nội dung: <span style="color:var(--primary-hover);">GS${order.saleOrderId}</span>
+                        </div>
+                    </div>
+                </c:if>
                 
                 <c:if test="${not empty order.shipperNote}">
                     <div class="info-block" style="margin-top: 1.5rem; border-top: 1px solid var(--slate-100); padding-top: 1rem;">
@@ -148,6 +180,20 @@
                                  alt="${item.product.name}" class="item-img">
                             <div class="item-main">
                                 <div class="item-name">${item.product.name}</div>
+                                <c:if test="${not empty item.weightLabel || not empty item.packagingName}">
+                                    <div style="font-size: 0.8rem; color: var(--slate-600); margin-top: 0.25rem;">
+                                        <c:if test="${not empty item.weightLabel}">
+                                            <span style="background: var(--slate-200); padding: 0.15rem 0.4rem; border-radius: 4px; margin-right: 4px; font-weight: 600;">
+                                                Trọng lượng: ${item.weightLabel}
+                                            </span>
+                                        </c:if>
+                                        <c:if test="${not empty item.packagingName}">
+                                            <span style="background: var(--slate-200); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">
+                                                Đóng gói: ${item.packagingName}
+                                            </span>
+                                        </c:if>
+                                    </div>
+                                </c:if>
                                 <div class="item-meta">Số lượng: ${item.quantity} x <fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/>đ</div>
                             </div>
                             <div class="item-price">
@@ -208,6 +254,23 @@
                         <i class="fa-solid fa-circle-xmark"></i> Hủy đơn hàng này
                     </button>
                 </c:if>
+
+                <!-- CÁC NÚT THANH TOÁN LẠI & THAY ĐỔI PHƯƠNG THỨC (CHỈ KHI CHƯA THANH TOÁN VÀ ĐƠN HÀNG CHỜ XỬ LÝ) -->
+                <c:if test="${order.orderStatus == 'Pending' && order.paymentStatus != 'Paid'}">
+                    <!-- Nút Thanh toán lại qua VNPAY -->
+                    <c:if test="${order.paymentMethod == 'VNPAY'}">
+                        <a href="${pageContext.request.contextPath}/checkout?action=repay&orderId=${order.saleOrderId}" class="btn-cancel-order" style="background-color: #2563EB; color: white; border-color: #2563EB; margin-top: 0.5rem; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-credit-card"></i> Thanh toán lại qua VNPAY
+                        </a>
+                    </c:if>
+                    
+                    <!-- Nút Đổi sang thanh toán COD -->
+                    <c:if test="${order.paymentMethod == 'VNPAY' || order.paymentMethod == 'Bank Transfer'}">
+                        <a href="javascript:void(0);" onclick="confirmChangeToCOD(${order.saleOrderId})" class="btn-cancel-order" style="background-color: #F59E0B; color: white; border-color: #F59E0B; margin-top: 0.5rem; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Đổi sang thanh toán COD
+                        </a>
+                    </c:if>
+                </c:if>
             </div>
         </div>
     </div>
@@ -220,6 +283,12 @@
         function confirmCancelOrder(orderId) {
             if (confirm("Bạn có chắc chắn muốn hủy đơn hàng #" + orderId + " không?\nLưu ý: Thao tác này không thể hoàn tác và số lượng sản phẩm sẽ được hoàn trả lại vào kho hàng.")) {
                 window.location.href = "${pageContext.request.contextPath}/orders?action=cancel&id=" + orderId;
+            }
+        }
+        
+        function confirmChangeToCOD(orderId) {
+            if (confirm("Bạn có chắc chắn muốn chuyển đổi phương thức thanh toán của đơn hàng #" + orderId + " sang COD (Thanh toán khi nhận hàng) không?")) {
+                window.location.href = "${pageContext.request.contextPath}/orders?action=changeToCOD&id=" + orderId;
             }
         }
     </script>

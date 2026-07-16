@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -101,6 +101,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="import-receipt">
+                            <i class="align-middle" data-feather="clipboard"></i>
+                            <span class="align-middle">Nhập kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-profile">
                             <i class="align-middle" data-feather="user"></i>
                             <span class="align-middle">Hồ sơ cá nhân</span>
@@ -192,21 +199,28 @@
                                             </div>
 
                                             <!-- Original Price -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="price">Giá gốc (đ / đơn vị)</label>
                                                 <input type="number" id="price" name="price" class="form-control" 
                                                        placeholder="Ví dụ: 80000" min="0" step="1000">
                                             </div>
 
                                             <!-- Discount Price -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="discountPrice">Giá khuyến mãi (đ)</label>
                                                 <input type="number" id="discountPrice" name="discountPrice" class="form-control" 
                                                        placeholder="Ví dụ: 69000" min="0" step="1000">
                                             </div>
 
+                                            <!-- Import Price -->
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold" for="importPrice">Giá nhập (đ)</label>
+                                                <input type="number" id="importPrice" name="importPrice" class="form-control" 
+                                                       placeholder="Ví dụ: 50000" min="0" step="1000">
+                                            </div>
+
                                             <!-- Unit -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="unit">Đơn vị tính</label>
                                                 <input type="text" id="unit" name="unit" class="form-control" 
                                                        placeholder="Ví dụ: Hộp, Kg">
@@ -229,18 +243,24 @@
                                                 </select>
                                             </div>
 
-                                            <!-- Initial Stock -->
-                                            <div class="col-md-6">
-                                                <label class="form-label fw-bold" for="initialStock">Số lượng tồn kho ban đầu <span class="text-danger">*</span></label>
-                                                <input type="number" id="initialStock" name="initialStock" class="form-control" 
-                                                       value="100" min="0" placeholder="Ví dụ: 100" required>
-                                            </div>
-
                                             <!-- Low Stock Threshold -->
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <label class="form-label fw-bold" for="lowStockThreshold">Ngưỡng cảnh báo hết hàng <span class="text-danger">*</span></label>
                                                 <input type="number" id="lowStockThreshold" name="lowStockThreshold" class="form-control" 
                                                        value="10" min="0" placeholder="Ví dụ: 10" required>
+                                                <small class="text-muted">Cảnh báo khi số lượng tồn kho dưới ngưỡng này</small>
+                                            </div>
+
+                                            <!-- Import Date -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold" for="importDate">Ngày nhập hàng</label>
+                                                <input type="date" id="importDate" name="importDate" class="form-control">
+                                            </div>
+
+                                            <!-- Expired Date -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold" for="expiredDate">Ngày hết hạn</label>
+                                                <input type="date" id="expiredDate" name="expiredDate" class="form-control">
                                             </div>
 
                                             <!-- Image URL -->
@@ -261,6 +281,17 @@
                                                 <label class="form-label fw-bold" for="description">Mô tả sản phẩm</label>
                                                 <textarea id="description" name="description" class="form-control" rows="4" 
                                                           placeholder="Nhập thông tin mô tả chi tiết sản phẩm..."></textarea>
+                                            </div>
+
+                                            <!-- Notice about inventory -->
+                                            <div class="col-12">
+                                                <div class="alert alert-info d-flex align-items-start">
+                                                    <i data-feather="info" style="width:20px;height:20px;margin-top:2px;flex-shrink:0;" class="me-2"></i>
+                                                    <div>
+                                                        <strong>Lưu ý về tồn kho:</strong> Sau khi thêm sản phẩm, vui lòng vào trang 
+                                                        <a href="import-receipt" class="alert-link fw-bold">Nhập Kho</a> để tạo phiếu nhập hàng với đầy đủ thông tin lô và hạn sử dụng.
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <!-- Action Buttons -->

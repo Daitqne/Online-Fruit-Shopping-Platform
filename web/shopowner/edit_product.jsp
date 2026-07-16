@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -101,6 +101,13 @@
                     </li>
 
                     <li class="sidebar-item">
+                        <a class="sidebar-link" href="import-receipt">
+                            <i class="align-middle" data-feather="clipboard"></i>
+                            <span class="align-middle">Nhập kho</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
                         <a class="sidebar-link" href="shop-owner-profile">
                             <i class="align-middle" data-feather="user"></i>
                             <span class="align-middle">Hồ sơ cá nhân</span>
@@ -196,21 +203,28 @@
                                             </div>
 
                                             <!-- Original Price -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="price">Giá gốc (đ / đơn vị)</label>
                                                 <input type="number" id="price" name="price" class="form-control" 
                                                        value="${product.price}" placeholder="0" min="0" step="1000">
                                             </div>
 
                                             <!-- Discount Price -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="discountPrice">Giá khuyến mãi (đ)</label>
                                                 <input type="number" id="discountPrice" name="discountPrice" class="form-control" 
                                                        value="${product.discountPrice}" placeholder="0" min="0" step="1000">
                                             </div>
 
+                                            <!-- Import Price -->
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold" for="importPrice">Giá nhập (đ)</label>
+                                                <input type="number" id="importPrice" name="importPrice" class="form-control" 
+                                                       value="${product.importPrice}" placeholder="0" min="0" step="1000">
+                                            </div>
+
                                             <!-- Unit -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="unit">Đơn vị tính</label>
                                                 <input type="text" id="unit" name="unit" class="form-control" 
                                                        value="${product.unit}" placeholder="Ví dụ: Hộp, Kg">
@@ -227,6 +241,20 @@
                                                 <label class="form-label fw-bold" for="lowStockThreshold">Ngưỡng cảnh báo hết hàng <span class="text-danger">*</span></label>
                                                 <input type="number" id="lowStockThreshold" name="lowStockThreshold" class="form-control" 
                                                        value="${product.lowStockThreshold}" min="0" placeholder="Ví dụ: 10" required>
+                                            </div>
+
+                                            <!-- Import Date -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold" for="importDate">Ngày nhập hàng</label>
+                                                <input type="date" id="importDate" name="importDate" class="form-control" 
+                                                       value="${product.importDate}">
+                                            </div>
+
+                                            <!-- Expired Date -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold" for="expiredDate">Ngày hết hạn</label>
+                                                <input type="date" id="expiredDate" name="expiredDate" class="form-control" 
+                                                       value="${product.expiredDate}">
                                             </div>
                                             <!-- Status (read-only info) -->
                                             <div class="col-md-12">

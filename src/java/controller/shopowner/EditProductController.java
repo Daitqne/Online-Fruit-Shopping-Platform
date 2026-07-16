@@ -127,6 +127,37 @@ public class EditProductController extends HttpServlet {
             }
         }
 
+        double importPrice = 0.0;
+        String importPriceStr = request.getParameter("importPrice");
+        if (importPriceStr != null && !importPriceStr.trim().isEmpty()) {
+            try {
+                importPrice = Double.parseDouble(importPriceStr);
+                if (importPrice < 0) importPrice = 0.0;
+            } catch (NumberFormatException e) {
+                importPrice = 0.0;
+            }
+        }
+
+        java.sql.Date importDate = null;
+        String importDateStr = request.getParameter("importDate");
+        if (importDateStr != null && !importDateStr.trim().isEmpty()) {
+            try {
+                importDate = java.sql.Date.valueOf(importDateStr.trim());
+            } catch (IllegalArgumentException e) {
+                // Invalid date
+            }
+        }
+
+        java.sql.Date expiredDate = null;
+        String expiredDateStr = request.getParameter("expiredDate");
+        if (expiredDateStr != null && !expiredDateStr.trim().isEmpty()) {
+            try {
+                expiredDate = java.sql.Date.valueOf(expiredDateStr.trim());
+            } catch (IllegalArgumentException e) {
+                // Invalid date
+            }
+        }
+
         if (image == null || image.trim().isEmpty()) {
             image = DEFAULT_FRUIT_IMAGE;
         }
@@ -165,6 +196,9 @@ public class EditProductController extends HttpServlet {
         p.setName(name != null ? name.trim() : "");
         p.setPrice(price);
         p.setDiscountPrice(discountPrice);
+        p.setImportPrice(importPrice);
+        p.setImportDate(importDate);
+        p.setExpiredDate(expiredDate);
         p.setUnit(unit != null ? unit.trim() : "");
         p.setOrigin(origin != null ? origin.trim() : "");
         p.setStatus("Pending");

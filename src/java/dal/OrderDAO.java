@@ -26,7 +26,9 @@ public class OrderDAO extends DBContext {
             "ALTER TABLE Sale_Order ADD discount_amount DECIMAL(10, 2) NULL DEFAULT 0",
             "ALTER TABLE Sale_Order ADD promo_code VARCHAR(50) NULL",
             "ALTER TABLE Sale_Order ADD shipping_fee DECIMAL(10, 2) NULL DEFAULT 0",
-            "ALTER TABLE Sale_Order ADD total_payment DECIMAL(10, 2) NULL DEFAULT 0"
+            "ALTER TABLE Sale_Order ADD total_payment DECIMAL(10, 2) NULL DEFAULT 0",
+            "ALTER TABLE Sale_Order_Item ADD weight_label NVARCHAR(100) NULL",
+            "ALTER TABLE Sale_Order_Item ADD packaging_name NVARCHAR(100) NULL"
         };
         for (String sql : cols) {
             try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
@@ -50,14 +52,27 @@ public class OrderDAO extends DBContext {
         """;
         
         String insertItemSql = """
-            INSERT INTO Sale_Order_Item (sale_order_id, product_id, quantity, unit_price)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO Sale_Order_Item (sale_order_id, product_id, quantity, unit_price, weight_label, packaging_name)
+            VALUES (?, ?, ?, ?, ?, ?)
         """;
 
         String updateInventorySql = """
             UPDATE Inventory 
-            SET quantity = quantity - ? 
+            SET quantity = quantity - ?, last_updated = GETDATE()
             WHERE product_id = ?
+        """;
+        
+        String getBatchesSql = """
+            SELECT batch_id, quantity_remain 
+            FROM Inventory_Batch 
+            WHERE product_id = ? AND quantity_remain > 0 AND expiry_date > GETDATE()
+            ORDER BY expiry_date ASC
+        """;
+        
+        String updateBatchSql = """
+            UPDATE Inventory_Batch 
+            SET quantity_remain = ? 
+            WHERE batch_id = ?
         """;
 
         try {
@@ -94,9 +109,11 @@ public class OrderDAO extends DBContext {
                 }
             }
 
-            // 2. Insert Order Items and Update Inventory
+            // 2. Insert Order Items and Update Inventory with FEFO
             try (PreparedStatement psItem = getConnection().prepareStatement(insertItemSql);
-                 PreparedStatement psInventory = getConnection().prepareStatement(updateInventorySql)) {
+                 PreparedStatement psInventory = getConnection().prepareStatement(updateInventorySql);
+                 PreparedStatement psGetBatches = getConnection().prepareStatement(getBatchesSql);
+                 PreparedStatement psUpdateBatch = getConnection().prepareStatement(updateBatchSql)) {
                 
                 for (SaleOrderItem item : order.getItems()) {
                     // Insert Item
@@ -104,12 +121,40 @@ public class OrderDAO extends DBContext {
                     psItem.setInt(2, item.getProductId());
                     psItem.setInt(3, item.getQuantity());
                     psItem.setDouble(4, item.getUnitPrice());
+                    psItem.setNString(5, item.getWeightLabel());
+                    psItem.setNString(6, item.getPackagingName());
                     psItem.executeUpdate();
 
-                    // Update Stock in Inventory
+                    // Update Stock in Inventory (tổng số)
                     psInventory.setInt(1, item.getQuantity());
                     psInventory.setInt(2, item.getProductId());
                     psInventory.executeUpdate();
+                    
+                    // FEFO: Trừ từ các lô theo thứ tự hết hạn
+                    int remainingQty = item.getQuantity();
+                    psGetBatches.setInt(1, item.getProductId());
+                    
+                    try (ResultSet rsBatch = psGetBatches.executeQuery()) {
+                        while (rsBatch.next() && remainingQty > 0) {
+                            int batchId = rsBatch.getInt("batch_id");
+                            int batchQty = rsBatch.getInt("quantity_remain");
+                            
+                            int qtyToDeduct = Math.min(remainingQty, batchQty);
+                            int newBatchQty = batchQty - qtyToDeduct;
+                            
+                            // Update batch quantity_remain
+                            psUpdateBatch.setInt(1, newBatchQty);
+                            psUpdateBatch.setInt(2, batchId);
+                            psUpdateBatch.executeUpdate();
+                            
+                            remainingQty -= qtyToDeduct;
+                        }
+                    }
+                    
+                    // Nếu vẫn còn số lượng chưa trừ được (không đủ lô hợp lệ)
+                    if (remainingQty > 0) {
+                        throw new SQLException("Không đủ hàng hợp lệ (chưa hết hạn) cho sản phẩm ID: " + item.getProductId());
+                    }
                 }
             }
 
@@ -191,7 +236,7 @@ public class OrderDAO extends DBContext {
         
         String itemsSql = """
             SELECT soi.sale_item_id, soi.sale_order_id, soi.product_id, soi.quantity, soi.unit_price,
-                   p.product_name,
+                   soi.weight_label, soi.packaging_name, p.product_name,
                    (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url
             FROM Sale_Order_Item soi
             JOIN Product p ON soi.product_id = p.product_id
@@ -232,6 +277,8 @@ public class OrderDAO extends DBContext {
                                 soi.setProductId(rsItem.getInt("product_id"));
                                 soi.setQuantity(rsItem.getInt("quantity"));
                                 soi.setUnitPrice(rsItem.getDouble("unit_price"));
+                                soi.setWeightLabel(rsItem.getNString("weight_label"));
+                                soi.setPackagingName(rsItem.getNString("packaging_name"));
                                 
                                 model.Product p = new model.Product();
                                 p.setId(rsItem.getInt("product_id"));
@@ -275,7 +322,7 @@ public class OrderDAO extends DBContext {
 
         String itemsSql = """
             SELECT soi.sale_item_id, soi.sale_order_id, soi.product_id, soi.quantity, soi.unit_price,
-                   p.product_name,
+                   soi.weight_label, soi.packaging_name, p.product_name,
                    (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url
             FROM Sale_Order_Item soi
             JOIN Product p ON soi.product_id = p.product_id
@@ -314,6 +361,8 @@ public class OrderDAO extends DBContext {
                                 soi.setProductId(rsItem.getInt("product_id"));
                                 soi.setQuantity(rsItem.getInt("quantity"));
                                 soi.setUnitPrice(rsItem.getDouble("unit_price"));
+                                soi.setWeightLabel(rsItem.getNString("weight_label"));
+                                soi.setPackagingName(rsItem.getNString("packaging_name"));
                                 model.Product prod = new model.Product();
                                 prod.setId(rsItem.getInt("product_id"));
                                 prod.setName(rsItem.getNString("product_name"));
@@ -336,9 +385,20 @@ public class OrderDAO extends DBContext {
     /**
      * Updates the status of an order. Used by Shop Owner to confirm/reject/ship orders.
      * Allowed target statuses: Processing, Shipping, Delivered, Cancelled.
+     * Automatically sets delivered_date when status is set to 'Delivered'.
      */
     public boolean updateOrderStatus(int orderId, String newStatus) {
-        String sql = "UPDATE Sale_Order SET order_status = ? WHERE sale_order_id = ?";
+        String sql;
+        
+        // If status is Delivered, also set delivered_date
+        if ("Delivered".equalsIgnoreCase(newStatus)) {
+            sql = "UPDATE Sale_Order SET order_status = ?, delivered_date = GETDATE() WHERE sale_order_id = ?";
+        } else if ("Shipping".equalsIgnoreCase(newStatus)) {
+            sql = "UPDATE Sale_Order SET order_status = ?, shipped_date = GETDATE() WHERE sale_order_id = ?";
+        } else {
+            sql = "UPDATE Sale_Order SET order_status = ? WHERE sale_order_id = ?";
+        }
+        
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setNString(1, newStatus);
             ps.setInt(2, orderId);
@@ -350,7 +410,7 @@ public class OrderDAO extends DBContext {
     }
 
     /**
-     * Cancels an order, restoring the inventory stock quantities.
+     * Cancels an order, restoring the inventory stock quantities to both Inventory and Inventory_Batch.
      * Only works if the order is currently 'Pending'.
      */
     public boolean cancelOrder(int orderId, int userId) {
@@ -358,6 +418,13 @@ public class OrderDAO extends DBContext {
         String updateStatusSql = "UPDATE Sale_Order SET order_status = 'Cancelled' WHERE sale_order_id = ? AND created_by = ?";
         String getItemsSql = "SELECT product_id, quantity FROM Sale_Order_Item WHERE sale_order_id = ?";
         String restoreInventorySql = "UPDATE Inventory SET quantity = quantity + ? WHERE product_id = ?";
+        String getLatestBatchSql = """
+            SELECT TOP 1 batch_id 
+            FROM Inventory_Batch 
+            WHERE product_id = ? 
+            ORDER BY created_at DESC
+        """;
+        String restoreBatchSql = "UPDATE Inventory_Batch SET quantity_remain = quantity_remain + ? WHERE batch_id = ?";
 
         try {
             // Get connection and start transaction
@@ -406,12 +473,27 @@ public class OrderDAO extends DBContext {
                 }
             }
 
-            // 4. Restore Inventory quantity
-            try (PreparedStatement psRestore = getConnection().prepareStatement(restoreInventorySql)) {
+            // 4. Restore Inventory quantity and Batch
+            try (PreparedStatement psRestore = getConnection().prepareStatement(restoreInventorySql);
+                 PreparedStatement psGetBatch = getConnection().prepareStatement(getLatestBatchSql);
+                 PreparedStatement psRestoreBatch = getConnection().prepareStatement(restoreBatchSql)) {
+                
                 for (SaleOrderItem item : items) {
+                    // Restore tổng số trong Inventory
                     psRestore.setInt(1, item.getQuantity());
                     psRestore.setInt(2, item.getProductId());
                     psRestore.executeUpdate();
+                    
+                    // Restore vào lô mới nhất (đơn giản hóa - thực tế nên track chính xác lô nào đã trừ)
+                    psGetBatch.setInt(1, item.getProductId());
+                    try (ResultSet rsBatch = psGetBatch.executeQuery()) {
+                        if (rsBatch.next()) {
+                            int batchId = rsBatch.getInt("batch_id");
+                            psRestoreBatch.setInt(1, item.getQuantity());
+                            psRestoreBatch.setInt(2, batchId);
+                            psRestoreBatch.executeUpdate();
+                        }
+                    }
                 }
             }
 
@@ -434,4 +516,52 @@ public class OrderDAO extends DBContext {
         }
         return false;
     }
+
+    /**
+     * Updates the payment status of an order (e.g. Pending, Paid, Failed).
+     */
+    public boolean updatePaymentStatus(int orderId, String newStatus) {
+        String sql = "UPDATE Sale_Order SET payment_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setNString(1, newStatus);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    /**
+     * Updates both the order status and payment status (e.g. Processing and Paid).
+     */
+    public boolean updateOrderStatusAndPaymentStatus(int orderId, String newOrderStatus, String newPaymentStatus) {
+        String sql = "UPDATE Sale_Order SET order_status = ?, payment_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setNString(1, newOrderStatus);
+            ps.setNString(2, newPaymentStatus);
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    /**
+     * Updates both the payment method and payment status of an order.
+     */
+    public boolean updatePaymentMethodAndStatus(int orderId, String newMethod, String newStatus) {
+        String sql = "UPDATE Sale_Order SET payment_method = ?, payment_status = ? WHERE sale_order_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setString(1, newMethod);
+            ps.setString(2, newStatus);
+            ps.setInt(3, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
 }
+
