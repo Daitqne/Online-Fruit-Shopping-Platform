@@ -13,3 +13,4 @@
 <!-- Centralized CSS Design System -->
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/global.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common/layout.css">
+<script src="${pageContext.request.contextPath}/js/variant-modal.js"></script>

@@ -1030,16 +1030,50 @@
         function addToCart(event, productId) {
             event.stopPropagation(); // Prevent card click
             
-            // Get the button element
             const button = event.currentTarget;
             const icon = button.querySelector('i');
             
-            // Disable button during request
+            // Check if product has variants first
+            fetch('get-product-variants?productId=' + productId)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.hasVariants) {
+                    // Show option selector modal
+                    openVariantModal(
+                        productId, 
+                        data.productName, 
+                        data.image, 
+                        data.unit, 
+                        data.basePrice, 
+                        data.discountPrice, 
+                        data.weightVariants, 
+                        data.packagingOptions,
+                        (qty, selectedWeightId, selectedPackagingId) => {
+                            // Execute adding to cart with selected options
+                            executeAddToCart(button, icon, productId, qty, selectedWeightId, selectedPackagingId);
+                        }
+                    );
+                } else {
+                    // Add directly to cart (quantity = 1, no variants)
+                    executeAddToCart(button, icon, productId, 1, null, null);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                executeAddToCart(button, icon, productId, 1, null, null);
+            });
+        }
+
+        function executeAddToCart(button, icon, productId, qty, variantId, packagingId) {
             button.disabled = true;
+            const originalIconClass = icon.className;
             icon.className = 'fa-solid fa-spinner fa-spin';
             
-            // Make AJAX request
-            fetch('cart?action=add&productId=' + productId + '&quantity=1', {
+            let url = 'cart?action=add&productId=' + productId + '&quantity=' + qty;
+            if (variantId) url += '&variantId=' + variantId;
+            if (packagingId) url += '&packagingId=' + packagingId;
+
+            fetch(url, {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'

@@ -113,9 +113,67 @@ public class CartItem {
         this.packagingPriceAdjustment = packagingPriceAdjustment;
     }
 
+    public double getWeightMultiplier() {
+        if (weightLabel == null) return 1.0;
+        if (product == null || product.getUnit() == null) return 1.0;
+        String unit = product.getUnit().toLowerCase().trim();
+        if (!unit.equals("kg") && !unit.equals("kilogam") && !unit.equals("kí") && !unit.equals("ky")) {
+            return 1.0;
+        }
+        
+        String label = weightLabel.toLowerCase().trim().replace(',', '.');
+        
+        // Match g/gr/gram
+        java.util.regex.Pattern gPattern = java.util.regex.Pattern.compile("^([0-9.]+)\\s*(g|gr|gram|grams)$");
+        java.util.regex.Matcher gMatcher = gPattern.matcher(label);
+        if (gMatcher.matches()) {
+            try {
+                return Double.parseDouble(gMatcher.group(1)) / 1000.0;
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+        
+        // Match kg/kilo/kilogam/ký/ky
+        java.util.regex.Pattern kgPattern = java.util.regex.Pattern.compile("^([0-9.]+)\\s*(kg|kilo|kilogam|ký|ky)$");
+        java.util.regex.Matcher kgMatcher = kgPattern.matcher(label);
+        if (kgMatcher.matches()) {
+            try {
+                return Double.parseDouble(kgMatcher.group(1));
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+        
+        // Fallback: search for first number in string
+        java.util.regex.Pattern numPattern = java.util.regex.Pattern.compile("^([0-9.]+)");
+        java.util.regex.Matcher numMatcher = numPattern.matcher(label);
+        if (numMatcher.find()) {
+            try {
+                double val = Double.parseDouble(numMatcher.group(1));
+                if (val >= 50.0) {
+                    return val / 1000.0;
+                } else {
+                    return val;
+                }
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+        
+        return 1.0;
+    }
+
+    public double getOriginalUnitPrice() {
+        if (product == null) return 0;
+        double multiplier = getWeightMultiplier();
+        return (product.getPrice() * multiplier) + variantPriceAdjustment + packagingPriceAdjustment;
+    }
+
     public double getEffectiveUnitPrice() {
         if (product == null) return 0;
-        return product.getEffectivePrice() + variantPriceAdjustment + packagingPriceAdjustment;
+        double multiplier = getWeightMultiplier();
+        return (product.getEffectivePrice() * multiplier) + variantPriceAdjustment + packagingPriceAdjustment;
     }
 
     @Override

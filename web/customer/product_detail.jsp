@@ -292,7 +292,7 @@
                         <label style="display:block; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem; font-size: 0.9rem;">Chọn trọng lượng:</label>
                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                             <c:forEach var="v" items="${weightVariants}" varStatus="status">
-                                <label style="display: flex; align-items: center; gap: 0.4rem; background: var(--slate-100); padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="variant-label-card ${status.first ? 'active' : ''}" onclick="selectWeightVariant(this, ${v.variantId}, ${v.priceAdjustment})">
+                                <label style="display: flex; align-items: center; gap: 0.4rem; background: var(--slate-100); padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="variant-label-card ${status.first ? 'active' : ''}" onclick="selectWeightVariant(this, ${v.variantId}, ${v.priceAdjustment}, '${v.weightLabel}')">
                                     <input type="radio" name="weightVariant" value="${v.variantId}" ${status.first ? 'checked' : ''} style="display: none;">
                                     ${v.weightLabel} 
                                     <c:if test="${v.priceAdjustment != 0}">
@@ -398,10 +398,15 @@
         
         let selectedWeightVariantId = null;
         let selectedPackagingOptionId = null;
+        let selectedWeightLabel = '';
+        
+        const unit = '${product.unit}'.toLowerCase().trim();
+        const isKg = (unit === 'kg' || unit === 'kilogam' || unit === 'kí' || unit === 'ky');
         
         <c:if test="${not empty weightVariants}">
             selectedWeightVariantId = ${weightVariants[0].variantId};
             selectedWeightAdjustment = ${weightVariants[0].priceAdjustment};
+            selectedWeightLabel = '${weightVariants[0].weightLabel}';
         </c:if>
 
         function changeQty(delta) {
@@ -413,18 +418,46 @@
             input.value = val;
         }
 
+        function parseWeightToKg(label) {
+            if (!label) return 1.0;
+            label = label.toLowerCase().trim().replace(',', '.');
+            
+            let gMatch = label.match(/^([0-9.]+)\s*(g|gr|gram|grams)$/);
+            if (gMatch) {
+                return parseFloat(gMatch[1]) / 1000.0;
+            }
+            
+            let kgMatch = label.match(/^([0-9.]+)\s*(kg|kilo|kilogam|ký|ky)$/);
+            if (kgMatch) {
+                return parseFloat(kgMatch[1]);
+            }
+            
+            let numMatch = label.match(/^([0-9.]+)/);
+            if (numMatch) {
+                let val = parseFloat(numMatch[1]);
+                if (val >= 50) {
+                    return val / 1000.0;
+                } else {
+                    return val;
+                }
+            }
+            return 1.0;
+        }
+
         function updateDisplayPrice() {
-            const currentPrice = basePrice + selectedWeightAdjustment + selectedPackagingAdjustment;
+            const multiplier = isKg ? parseWeightToKg(selectedWeightLabel) : 1.0;
+            const currentPrice = (basePrice * multiplier) + selectedWeightAdjustment + selectedPackagingAdjustment;
             const formattedPrice = currentPrice.toLocaleString('vi-VN') + 'đ';
             document.querySelector('.price-main').innerText = formattedPrice;
         }
 
-        function selectWeightVariant(card, variantId, adjustment) {
+        function selectWeightVariant(card, variantId, adjustment, weightLabel) {
             document.querySelectorAll('.variant-label-card').forEach(c => c.classList.remove('active'));
             card.classList.add('active');
             
             selectedWeightVariantId = variantId;
             selectedWeightAdjustment = adjustment;
+            selectedWeightLabel = weightLabel || '';
             
             const radio = card.querySelector('input[name="weightVariant"]');
             if (radio) radio.checked = true;

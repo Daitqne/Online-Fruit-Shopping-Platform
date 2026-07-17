@@ -82,7 +82,7 @@
                                             <c:choose>
                                                 <c:when test="${item.product.discountPrice > 0 && item.product.discountPrice < item.product.price}">
                                                     <span style="text-decoration: line-through; color: var(--slate-400); font-size: 0.9em; margin-right: 8px;">
-                                                        <fmt:formatNumber value="${item.product.price + item.variantPriceAdjustment + item.packagingPriceAdjustment}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
+                                                        <fmt:formatNumber value="${item.originalUnitPrice}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>
                                                     </span>
                                                     <span style="color: var(--primary); font-weight: 600;">
                                                         <fmt:formatNumber value="${item.effectiveUnitPrice}" type="currency" currencySymbol="đ" maxFractionDigits="0"/>

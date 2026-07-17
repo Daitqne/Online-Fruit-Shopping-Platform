@@ -78,7 +78,7 @@ public class CartDAO extends DBContext {
         List<CartItem> items = new ArrayList<>();
         String sql = """
             SELECT ci.cart_item_id, ci.cart_id, ci.product_id, ci.quantity, ci.variant_id, ci.packaging_id,
-                   p.product_name AS name, p.price, p.discount_price, p.description,
+                   p.product_name AS name, p.price, p.discount_price, p.description, p.unit,
                    c.category_name AS category,
                    v.weight_label, v.price_adjustment AS variant_price_adjustment,
                    k.packaging_name, k.price_adjustment AS packaging_price_adjustment,
@@ -132,6 +132,7 @@ public class CartDAO extends DBContext {
                     p.setDescription(rs.getNString("description"));
                     p.setCategory(rs.getNString("category"));
                     p.setImage(rs.getString("image"));
+                    p.setUnit(rs.getNString("unit"));
                     item.setProduct(p);
 
                     items.add(item);
