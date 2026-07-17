@@ -57,7 +57,7 @@
                 border-radius: 4px;
                 font-size: 0.85rem;
             }
-            
+
             .table > :not(caption) > * > * {
                 padding: 0.85rem 1rem;
                 vertical-align: middle;
@@ -172,7 +172,7 @@
 
                 <main class="content">
                     <div class="container-fluid p-0">
-                        
+
                         <div class="row">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -202,7 +202,7 @@
                                     <div class="card-body">
                                         <form action="admin-promotions" method="POST">
                                             <input type="hidden" name="action" value="create">
-                                            
+
                                             <div class="mb-3">
                                                 <label class="form-label">Mã Khuyến Mãi</label>
                                                 <input type="text" class="form-control" name="code" placeholder="Ví dụ: FRUIT10" required>
@@ -260,6 +260,7 @@
                                                         <th>Đơn tối thiểu</th>
                                                         <th>Ngày bắt đầu</th>
                                                         <th>Ngày hết hạn</th>
+                                                        <th>Thao tác</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -291,6 +292,13 @@
                                                                     <td><fmt:formatNumber value="${p.minOrderValue}" type="number" maxFractionDigits="0"/> đ</td>
                                                                     <td><fmt:formatDate value="${p.startDate}" pattern="dd/MM/yyyy"/></td>
                                                                     <td><fmt:formatDate value="${p.endDate}" pattern="dd/MM/yyyy"/></td>
+                                                                    <td>
+                                                                        <a href="admin-promotions?action=delete&id=${p.promoId}"
+                                                                           class="btn btn-danger btn-sm"
+                                                                           onclick="return confirm('Bạn có chắc muốn xóa voucher này không?')">
+                                                                            Xóa
+                                                                        </a>
+                                                                    </td>
                                                                 </tr>
                                                             </c:forEach>
                                                         </c:when>
@@ -358,12 +366,12 @@
 
         <script src="${pageContext.request.contextPath}/js/app.js"></script>
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Khởi tạo Feather icons cho các icon render động
-                if (typeof feather !== 'undefined') {
-                    feather.replace();
-                }
-            });
+                   document.addEventListener("DOMContentLoaded", function () {
+                       // Khởi tạo Feather icons cho các icon render động
+                       if (typeof feather !== 'undefined') {
+                           feather.replace();
+                       }
+                   });
         </script>
     </body>
 </html>
