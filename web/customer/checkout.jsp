@@ -270,6 +270,13 @@
                                 <span>-<fmt:formatNumber value="${discount}" maxFractionDigits="0"/>đ</span>
                             </div>
                         </c:if>
+                        <%-- Hiển thị thông tin giảm giá theo Hạng thành viên --%>
+                        <c:if test="${memberDiscount > 0}">
+                            <div class="breakdown-row" style="color: #6366f1; font-weight:600;">
+                                <span>Giảm giá Hạng (${membership.currentTier} - ${memberDiscountPercent}%)</span>
+                                <span>-<fmt:formatNumber value="${memberDiscount}" maxFractionDigits="0"/>đ</span>
+                            </div>
+                        </c:if>
                         <div class="breakdown-row total">
                             <span>Tổng thanh toán</span>
                             <span class="total-price"><fmt:formatNumber value="${totalPayment}" maxFractionDigits="0"/>đ</span>

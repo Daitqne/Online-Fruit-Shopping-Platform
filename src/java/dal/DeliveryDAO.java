@@ -181,6 +181,15 @@ public class DeliveryDAO extends DBContext{
             }
             syncOrderDelivered(orderId);
             connection.commit();
+            
+            // Tự động cộng điểm tích lũy thành viên khi giao hàng thành công
+            try {
+                MembershipDAO membershipDAO = new MembershipDAO();
+                membershipDAO.addPointsForOrder(orderId);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            
             return true;
 
         } 
