@@ -185,6 +185,182 @@
             background-color: var(--primary-light) !important;
             color: var(--primary) !important;
         }
+
+        /* --- PRODUCT REVIEWS SECTION --- */
+        .reviews-section {
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .reviews-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .reviews-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Summary Card */
+        .reviews-summary-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+        }
+
+        .avg-score-big {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stars-big {
+            font-size: 1.25rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 4px;
+        }
+
+        .total-reviews-count {
+            font-size: 0.85rem;
+            color: var(--slate-600);
+            font-weight: 600;
+        }
+
+        /* List Card */
+        .reviews-list-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .review-item {
+            border-bottom: 1px solid var(--slate-200);
+            padding-bottom: 1.5rem;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .review-item-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .reviewer-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: 1.5px solid var(--primary);
+        }
+
+        .reviewer-info {
+            flex-grow: 1;
+        }
+
+        .reviewer-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .review-date {
+            font-size: 0.8rem;
+            color: var(--slate-400);
+            margin-top: 0.15rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .reviewer-stars {
+            color: var(--secondary);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 2px;
+        }
+
+        .review-item-body {
+            font-size: 0.92rem;
+            color: var(--slate-600);
+            line-height: 1.6;
+            padding-left: 3.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .review-item-body {
+                padding-left: 0;
+            }
+            .review-item-header {
+                flex-wrap: wrap;
+            }
+            .reviewer-stars {
+                width: 100%;
+                margin-top: 0.5rem;
+                padding-left: 3.5rem;
+            }
+        }
+
+        /* No Reviews Empty State */
+        .no-reviews-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--slate-600);
+        }
+
+        .no-reviews-state i {
+            font-size: 3rem;
+            color: var(--slate-400);
+            margin-bottom: 1rem;
+        }
+
+        .no-reviews-state h4 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .no-reviews-state p {
+            font-size: 0.9rem;
+            color: var(--slate-600);
+        }
     </style>
 </head>
 <body>
@@ -226,6 +402,31 @@
                 </span>
 
                 <h1 class="product-name">${product.name}</h1>
+
+                <c:if test="${reviewCount > 0}">
+                    <div class="product-rating-summary-inline" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 0.5rem;">
+                        <div class="stars-inline" style="color: var(--secondary);">
+                            <c:forEach begin="1" end="5" var="i">
+                                <c:choose>
+                                    <c:when test="${i <= fullStars}">
+                                        <i class="fa-solid fa-star"></i>
+                                    </c:when>
+                                    <c:when test="${i == fullStars + 1 && hasHalfStar}">
+                                        <i class="fa-solid fa-star-half-stroke"></i>
+                                    </c:when>
+                                    <c:when test="${i == fullStars + 1 && roundUp}">
+                                        <i class="fa-solid fa-star"></i>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <i class="fa-regular fa-star"></i>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </div>
+                        <span style="font-weight: 700; color: var(--dark);"><fmt:formatNumber value="${avgRating}" pattern="#.0"/>/5</span>
+                        <span style="color: var(--slate-400);">(<a href="#reviews-section" style="color: var(--primary); text-decoration: none; font-weight: 600;">${reviewCount} đánh giá</a>)</span>
+                    </div>
+                </c:if>
 
                 <!-- GIÁ -->
                 <div class="price-block">
@@ -356,6 +557,120 @@
                     </c:otherwise>
                 </c:choose>
 
+                <!-- THÔNG TIN CỬA HÀNG / SHOP OWNER INFO -->
+                <c:if test="${not empty shopOwner}">
+                    <div class="shop-owner-card" style="margin-top: 1.5rem; padding: 1.25rem; border: 1px solid var(--slate-200); border-radius: 16px; background-color: var(--light); display: flex; align-items: center; gap: 1rem;">
+                        <img src="${not empty shopOwner.avatar ? shopOwner.avatar : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200'}" 
+                             alt="${shopOwner.fullName}" 
+                             style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); padding: 2px;">
+                        <div style="flex-grow: 1;">
+                            <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">Nhà cung cấp</div>
+                            <h4 style="font-family: var(--font-display); font-size: 1rem; font-weight: 800; color: var(--dark); margin: 0.1rem 0 0.3rem 0;">${shopOwner.fullName}</h4>
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.82rem; color: var(--slate-600);">
+                                <span><i class="fa-solid fa-phone" style="color: var(--primary); margin-right: 4px;"></i> ${shopOwner.phone}</span>
+                                <span><i class="fa-solid fa-envelope" style="color: var(--primary); margin-right: 4px;"></i> ${shopOwner.email}</span>
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
+
+            </div>
+        </div>
+
+        <!-- ĐÁNH GIÁ CỦA KHÁCH HÀNG (REVIEWS SECTION) -->
+        <div class="reviews-section" id="reviews-section">
+            <div class="section-title">
+                <i class="fa-solid fa-comments"></i> Đánh giá từ khách hàng
+            </div>
+            
+            <div class="reviews-container">
+                <!-- Cột trái: Tóm tắt điểm số -->
+                <div class="reviews-summary-card">
+                    <div class="avg-score-big">
+                        <c:choose>
+                            <c:when test="${reviewCount > 0}">
+                                <fmt:formatNumber value="${avgRating}" pattern="0.0"/>
+                            </c:when>
+                            <c:otherwise>
+                                0.0
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="stars-big">
+                        <c:choose>
+                            <c:when test="${reviewCount > 0}">
+                                <c:forEach begin="1" end="5" var="i">
+                                    <c:choose>
+                                        <c:when test="${i <= fullStars}">
+                                            <i class="fa-solid fa-star"></i>
+                                        </c:when>
+                                        <c:when test="${i == fullStars + 1 && hasHalfStar}">
+                                            <i class="fa-solid fa-star-half-stroke"></i>
+                                        </c:when>
+                                        <c:when test="${i == fullStars + 1 && roundUp}">
+                                            <i class="fa-solid fa-star"></i>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <i class="fa-regular fa-star"></i>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                            </c:when>
+                            <c:otherwise>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-regular fa-star"></i>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="total-reviews-count">Dựa trên ${reviewCount} đánh giá</div>
+                </div>
+                
+                <!-- Cột phải: Danh sách đánh giá chi tiết -->
+                <div class="reviews-list-card">
+                    <c:choose>
+                        <c:when test="${not empty reviews}">
+                            <div class="reviews-list">
+                                <c:forEach var="rev" items="${reviews}">
+                                    <div class="review-item">
+                                        <div class="review-item-header">
+                                            <div class="reviewer-avatar">
+                                                ${not empty rev.userFullName ? rev.userFullName.substring(0, 1).toUpperCase() : "K"}
+                                            </div>
+                                            <div class="reviewer-info">
+                                                <div class="reviewer-name">${not empty rev.userFullName ? rev.userFullName : "Khách hàng mua ẩn danh"}</div>
+                                                <div class="review-date">
+                                                    <i class="fa-regular fa-clock"></i> 
+                                                    <fmt:formatDate value="${rev.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                </div>
+                                            </div>
+                                            <div class="reviewer-stars">
+                                                <c:forEach begin="1" end="${rev.rating}">
+                                                    <i class="fa-solid fa-star"></i>
+                                                </c:forEach>
+                                                <c:forEach begin="${rev.rating + 1}" end="5">
+                                                    <i class="fa-regular fa-star"></i>
+                                                </c:forEach>
+                                            </div>
+                                        </div>
+                                        <div class="review-item-body">
+                                            <p>${not empty rev.comment ? rev.comment : "Người mua không để lại nhận xét bằng văn bản."}</p>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="no-reviews-state">
+                                <i class="fa-solid fa-face-meh"></i>
+                                <h4>Sản phẩm này chưa có đánh giá nào</h4>
+                                <p>Hãy là người mua đầu tiên sở hữu và đánh giá sản phẩm tươi ngon này nhé!</p>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </div>
 

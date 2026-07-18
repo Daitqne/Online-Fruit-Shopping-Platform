@@ -141,6 +141,28 @@ header {
     color: #DC2626;
 }
 
+/* --- LOGIN BUTTON --- */
+.btn-login {
+    background: var(--primary);
+    color: var(--white) !important;
+    text-decoration: none;
+    padding: 0.6rem 1.4rem;
+    border-radius: 50px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.btn-login:hover {
+    background: var(--primary-hover);
+    color: var(--white) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
 /* --- FOOTER --- */
 footer {
     background-color: var(--dark);

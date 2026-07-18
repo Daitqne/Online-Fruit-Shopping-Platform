@@ -10,8 +10,9 @@ import java.util.List;
 
 public class GeminiService {
 
-    private static final String MODEL_NAME = "gemini-1.5-flash";
+    private static final String MODEL_NAME = "gemini-2.5-flash";
     private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL_NAME + ":generateContent?key=";
+
 
     // ChatMessage model nested for convenience
     public static class ChatMessage {
@@ -40,10 +41,10 @@ public class GeminiService {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             apiKey = System.getProperty("GEMINI_API_KEY");
         }
-        
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalStateException("GEMINI_API_KEY is not configured.");
+            apiKey = "AIzaSyA_k_Co_3cmgPeeggNIgILsqYgZ99-B6js";
         }
+
 
         String requestJson = buildRequestJson(history, systemInstruction);
         URL url = new URL(API_URL + apiKey);

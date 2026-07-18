@@ -80,6 +80,16 @@ public class Review {
         this.createdAt = createdAt;
     }
 
+    private String userFullName;
+
+    public String getUserFullName() {
+        return userFullName;
+    }
+
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
+    }
+
     @Override
     public String toString() {
         return "Review{" +
@@ -90,6 +100,7 @@ public class Review {
                 ", comment='" + comment + '\'' +
                 ", status='" + status + '\'' +
                 ", createdAt=" + createdAt +
+                ", userFullName='" + userFullName + '\'' +
                 '}';
     }
 }

@@ -62,6 +62,18 @@ public class NotificationDAO extends DBContext {
         return false;
     }
     
+    public boolean markAsRead(int notificationId) {
+        String sql = "UPDATE Notifications SET is_read = 1 WHERE notification_id = ? AND is_read = 0";
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            st.setInt(1, notificationId);
+            return st.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            System.err.println("[NotificationDAO Error] Failed to mark notification " + notificationId + " as read!");
+            Logger.getLogger(NotificationDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+    
     private List<Integer> getDeliveryStaffIds() {
         List<Integer> list = new ArrayList<>();
         String sql = "select u.user_id from Users u "

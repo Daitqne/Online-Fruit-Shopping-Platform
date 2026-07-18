@@ -94,6 +94,20 @@ public class OrderController extends HttpServlet {
                 return;
             }
 
+            // Load reviews for products in this order
+            if ("Delivered".equalsIgnoreCase(order.getOrderStatus())) {
+                dal.ReviewDAO reviewDAO = new dal.ReviewDAO();
+                List<model.Review> reviews = reviewDAO.getReviewsByUserId(user.getId());
+                java.util.Set<Integer> reviewedProductIds = new java.util.HashSet<>();
+                java.util.Map<Integer, model.Review> productReviews = new java.util.HashMap<>();
+                for (model.Review r : reviews) {
+                    reviewedProductIds.add(r.getProductId());
+                    productReviews.put(r.getProductId(), r);
+                }
+                request.setAttribute("reviewedProductIds", reviewedProductIds);
+                request.setAttribute("productReviews", productReviews);
+            }
+
             // Flush flash attributes from session to request
             String orderSuccess = (String) session.getAttribute("orderSuccess");
             String orderError = (String) session.getAttribute("orderError");

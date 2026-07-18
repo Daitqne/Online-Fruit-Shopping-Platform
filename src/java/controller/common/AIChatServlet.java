@@ -49,6 +49,10 @@ public class AIChatServlet extends HttpServlet {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             apiKey = System.getProperty("GEMINI_API_KEY");
         }
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            apiKey = "AIzaSyA_k_Co_3cmgPeeggNIgILsqYgZ99-B6js";
+        }
+
 
         String botResponse;
         if (apiKey == null || apiKey.trim().isEmpty()) {

@@ -78,11 +78,41 @@ public class ProductDetailController extends HttpServlet {
         List<model.WeightVariant> weightVariants = variantDAO.getVariantsByProductId(productId);
         List<model.PackagingOption> packagingOptions = packagingDAO.getPackagingByProductId(productId);
 
+        // Load reviews for this product
+        dal.ReviewDAO reviewDAO = new dal.ReviewDAO();
+        List<model.Review> reviews = reviewDAO.getReviewsByProductId(productId);
+        double avgRating = 0.0;
+        int reviewCount = reviews.size();
+        int fullStars = 0;
+        boolean hasHalfStar = false;
+        boolean roundUp = false;
+        if (reviewCount > 0) {
+            int totalStars = 0;
+            for (model.Review r : reviews) {
+                totalStars += r.getRating();
+            }
+            avgRating = (double) totalStars / reviewCount;
+            fullStars = (int) avgRating;
+            hasHalfStar = (avgRating - fullStars >= 0.25 && avgRating - fullStars <= 0.75);
+            roundUp = (avgRating - fullStars > 0.75);
+        }
+
+        // Load shop owner info
+        dal.AuthenDAO authenDAO = new dal.AuthenDAO();
+        model.Authen shopOwner = authenDAO.findById(product.getShopOwnerId());
+
         request.setAttribute("product", product);
         request.setAttribute("stockQuantity", stockQuantity);
         request.setAttribute("relatedProducts", relatedProducts);
         request.setAttribute("weightVariants", weightVariants);
         request.setAttribute("packagingOptions", packagingOptions);
+        request.setAttribute("reviews", reviews);
+        request.setAttribute("avgRating", avgRating);
+        request.setAttribute("reviewCount", reviewCount);
+        request.setAttribute("fullStars", fullStars);
+        request.setAttribute("hasHalfStar", hasHalfStar);
+        request.setAttribute("roundUp", roundUp);
+        request.setAttribute("shopOwner", shopOwner);
         request.getRequestDispatcher("/customer/product_detail.jsp").forward(request, response);
     }
 }

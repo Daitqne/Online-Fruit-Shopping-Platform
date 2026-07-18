@@ -66,6 +66,50 @@ public class AuthenDAO extends DBContext{
     }
 
     // =====================================================
+    // FIND BY ID
+    // =====================================================
+    public Authen findById(int id) {
+        String sql = "SELECT u.user_id, u.username, u.password, u.status, " +
+                     "       ui.full_name, ui.phone, ui.email, " +
+                     "       ui.avatar, ui.gender, ui.dob, ui.address, " +
+                     "       r.role_id, r.role_name " +
+                     "FROM Users u " +
+                     "JOIN UserInfo ui ON u.user_id = ui.user_id " +
+                     "JOIN User_Role ur ON u.user_id = ur.user_id " +
+                     "JOIN Roles r ON ur.role_id = r.role_id " +
+                     "WHERE u.user_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Authen a = new Authen();
+                a.setId(rs.getInt("user_id"));
+                a.setUsername(rs.getString("username"));
+                a.setStatus(rs.getString("status"));
+
+                a.setFullName(rs.getString("full_name"));
+                a.setPhone(rs.getString("phone"));
+                a.setEmail(rs.getString("email"));
+                a.setAvatar(rs.getString("avatar"));
+                a.setGender(rs.getString("gender"));
+                java.sql.Date dob = rs.getDate("dob");
+                a.setDob(dob != null ? dob.toString() : null);
+                a.setAddress(rs.getString("address"));
+
+                a.setRoleId(rs.getInt("role_id"));
+                a.setRole(rs.getString("role_name"));
+
+                return a;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // =====================================================
     // CHECK USERNAME
     // =====================================================
     public boolean isUsernameExists(String username) {

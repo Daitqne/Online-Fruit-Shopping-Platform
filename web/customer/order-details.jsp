@@ -11,6 +11,222 @@
     <%@include file="../common/head.jsp" %>
     
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/order-details.css">
+    
+    <style>
+        /* --- REVIEW MODAL SYSTEM --- */
+        .btn-write-review {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-body);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-write-review:hover {
+            background-color: var(--primary);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+
+        .reviewed-badge {
+            text-align: right;
+        }
+
+        /* Modal Overlay */
+        .review-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Modal Content Box */
+        .review-modal-content {
+            background: var(--white);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--slate-200);
+            position: relative;
+            animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: left;
+        }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.8rem;
+            color: var(--slate-600);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: var(--dark);
+        }
+
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .modal-subtitle {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rating-stars-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .rating-stars-container label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            font-size: 1.8rem;
+            color: var(--slate-300);
+        }
+
+        .star-rating i {
+            cursor: pointer;
+            transition: color 0.15s, transform 0.15s;
+        }
+
+        .star-rating i.active, .star-rating i.hovered {
+            color: var(--secondary);
+        }
+
+        .star-rating i:hover {
+            transform: scale(1.15);
+        }
+
+        .comment-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .comment-container label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .comment-container textarea {
+            width: 100%;
+            border: 1px solid var(--slate-300);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .comment-container textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .view-comment-box {
+            background-color: var(--slate-100);
+            border: 1px solid var(--slate-200);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: var(--slate-600);
+            min-height: 80px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-modal-cancel {
+            flex: 1;
+            background: var(--slate-100);
+            color: var(--slate-600);
+            border: 1px solid var(--slate-300);
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+
+        .btn-modal-cancel:hover {
+            background: var(--slate-200);
+            color: var(--dark);
+        }
+
+        .btn-modal-submit {
+            flex: 1.5;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-modal-submit:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body>
 
@@ -196,8 +412,37 @@
                                 </c:if>
                                 <div class="item-meta">Số lượng: ${item.quantity} x <fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/>đ</div>
                             </div>
-                            <div class="item-price">
-                                <fmt:formatNumber value="${item.quantity * item.unitPrice}" maxFractionDigits="0"/>đ
+                            <div class="item-price" style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; min-width: 140px;">
+                                <div style="font-weight: 700; color: var(--dark);">
+                                    <fmt:formatNumber value="${item.quantity * item.unitPrice}" maxFractionDigits="0"/>đ
+                                </div>
+                                <c:if test="${order.orderStatus == 'Delivered'}">
+                                    <div class="review-action-container" data-product-id="${item.productId}" data-product-name="${item.product.name}">
+                                        <c:choose>
+                                            <c:when test="${reviewedProductIds.contains(item.productId)}">
+                                                <div class="reviewed-badge">
+                                                    <div class="stars-display" style="color: var(--secondary); font-size: 0.85rem; margin-bottom: 2px;">
+                                                        <c:forEach begin="1" end="${productReviews[item.productId].rating}">
+                                                            <i class="fa-solid fa-star"></i>
+                                                        </c:forEach>
+                                                        <c:forEach begin="${productReviews[item.productId].rating + 1}" end="5">
+                                                            <i class="fa-regular fa-star"></i>
+                                                        </c:forEach>
+                                                    </div>
+                                                    <span style="font-size: 0.75rem; color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline;" onclick="viewMyReview('${item.productId}', this)">Xem đánh giá</span>
+                                                    <!-- Hidden data for JavaScript -->
+                                                    <span class="hidden-review-rating" style="display:none;">${productReviews[item.productId].rating}</span>
+                                                    <span class="hidden-review-comment" style="display:none;"><c:out value="${productReviews[item.productId].comment}" /></span>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <button type="button" class="btn-write-review" onclick="openReviewModal('${item.productId}', this)">
+                                                    <i class="fa-regular fa-star-half-stroke"></i> Viết đánh giá
+                                                </button>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </c:if>
                             </div>
                         </div>
                     </c:forEach>
@@ -278,7 +523,68 @@
     <!-- FOOTER -->
     <%@include file="../common/footer.jsp" %>
 
-    <!-- CONFIRMATION SCRIPTS -->
+    <!-- REVIEW MODAL -->
+    <div id="reviewModal" class="review-modal" style="display: none;">
+        <div class="review-modal-content">
+            <span class="close-modal" onclick="closeReviewModal()">&times;</span>
+            <h3 class="modal-title">Đánh giá sản phẩm</h3>
+            <p class="modal-subtitle" id="modal-product-name">Tên sản phẩm</p>
+            
+            <form id="reviewForm" onsubmit="submitReview(event)">
+                <input type="hidden" id="review-product-id" name="productId">
+                
+                <div class="rating-stars-container">
+                    <label>Đánh giá số sao:</label>
+                    <div class="star-rating" id="star-rating-selector">
+                        <i class="fa-regular fa-star star-btn" data-value="1"></i>
+                        <i class="fa-regular fa-star star-btn" data-value="2"></i>
+                        <i class="fa-regular fa-star star-btn" data-value="3"></i>
+                        <i class="fa-regular fa-star star-btn" data-value="4"></i>
+                        <i class="fa-regular fa-star star-btn" data-value="5"></i>
+                    </div>
+                    <input type="hidden" id="selected-rating" name="rating" value="5">
+                </div>
+                
+                <div class="comment-container">
+                    <label for="review-comment">Nhận xét của bạn (Không bắt buộc):</label>
+                    <textarea id="review-comment" name="comment" rows="4" placeholder="Chia sẻ trải nghiệm của bạn về độ tươi ngon, đóng gói và dịch vụ giao nhận trái cây..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-cancel" onclick="closeReviewModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn-modal-submit" id="submit-review-btn">Gửi đánh giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW REVIEW MODAL -->
+    <div id="viewReviewModal" class="review-modal" style="display: none;">
+        <div class="review-modal-content">
+            <span class="close-modal" onclick="closeViewReviewModal()">&times;</span>
+            <h3 class="modal-title">Đánh giá của bạn</h3>
+            <p class="modal-subtitle" id="view-modal-product-name">Tên sản phẩm</p>
+            
+            <div class="rating-stars-container" style="margin-bottom: 1.25rem;">
+                <div class="star-rating" id="view-star-rating" style="color: var(--secondary); pointer-events: none;">
+                    <!-- Stars will be injected dynamically -->
+                </div>
+            </div>
+            
+            <div class="comment-container">
+                <label>Nhận xét đã gửi:</label>
+                <div class="view-comment-box" id="view-comment-text">
+                    Nội dung nhận xét...
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeViewReviewModal()" style="width: 100%;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION & REVIEW SCRIPTS -->
     <script>
         function confirmCancelOrder(orderId) {
             if (confirm("Bạn có chắc chắn muốn hủy đơn hàng #" + orderId + " không?\nLưu ý: Thao tác này không thể hoàn tác và số lượng sản phẩm sẽ được hoàn trả lại vào kho hàng.")) {
@@ -290,6 +596,152 @@
             if (confirm("Bạn có chắc chắn muốn chuyển đổi phương thức thanh toán của đơn hàng #" + orderId + " sang COD (Thanh toán khi nhận hàng) không?")) {
                 window.location.href = "${pageContext.request.contextPath}/orders?action=changeToCOD&id=" + orderId;
             }
+        }
+
+        // --- REVIEW MODAL CODE ---
+        const stars = document.querySelectorAll("#star-rating-selector .star-btn");
+        const ratingInput = document.getElementById("selected-rating");
+
+        stars.forEach(star => {
+            star.addEventListener("click", function() {
+                const val = parseInt(this.getAttribute("data-value"));
+                ratingInput.value = val;
+                highlightStars(val);
+            });
+
+            star.addEventListener("mouseover", function() {
+                const val = parseInt(this.getAttribute("data-value"));
+                highlightStars(val, true);
+            });
+
+            star.addEventListener("mouseout", function() {
+                const currentVal = parseInt(ratingInput.value);
+                highlightStars(currentVal);
+            });
+        });
+
+        function highlightStars(val, isHover = false) {
+            stars.forEach(s => {
+                const sVal = parseInt(s.getAttribute("data-value"));
+                if (sVal <= val) {
+                    s.classList.add("active");
+                    s.className = "fa-solid fa-star star-btn active";
+                } else {
+                    s.classList.remove("active");
+                    s.className = "fa-regular fa-star star-btn";
+                }
+            });
+        }
+
+        // Modal Controls
+        const reviewModal = document.getElementById("reviewModal");
+        const viewReviewModal = document.getElementById("viewReviewModal");
+
+        function openReviewModal(productId, buttonElement) {
+            const row = buttonElement.closest('.item-row');
+            const productName = row.querySelector('.item-name').innerText;
+            
+            document.getElementById("review-product-id").value = productId;
+            document.getElementById("modal-product-name").innerText = productName;
+            document.getElementById("review-comment").value = "";
+            ratingInput.value = 5;
+            highlightStars(5);
+            reviewModal.style.display = "flex";
+        }
+
+        function closeReviewModal() {
+            reviewModal.style.display = "none";
+        }
+
+        function openViewReviewModal(productName, rating, comment) {
+            document.getElementById("view-modal-product-name").innerText = productName;
+            const starContainer = document.getElementById("view-star-rating");
+            let starsHtml = "";
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    starsHtml += '<i class="fa-solid fa-star"></i> ';
+                } else {
+                    starsHtml += '<i class="fa-regular fa-star"></i> ';
+                }
+            }
+            starContainer.innerHTML = starsHtml;
+            document.getElementById("view-comment-text").innerText = comment ? comment : "(Không có nhận xét)";
+            viewReviewModal.style.display = "flex";
+        }
+
+        function closeViewReviewModal() {
+            viewReviewModal.style.display = "none";
+        }
+
+        function viewMyReview(productId, spanElement) {
+            const row = spanElement.closest('.item-row');
+            const productName = row.querySelector('.item-name').innerText;
+            const rating = parseInt(row.querySelector('.hidden-review-rating').innerText);
+            const comment = row.querySelector('.hidden-review-comment').innerText;
+            openViewReviewModal(productName, rating, comment);
+        }
+
+        // Submitting Review via AJAX
+        function submitReview(e) {
+            e.preventDefault();
+            const productId = document.getElementById("review-product-id").value;
+            const rating = ratingInput.value;
+            const comment = document.getElementById("review-comment").value;
+            const btn = document.getElementById("submit-review-btn");
+            const contextPath = "${pageContext.request.contextPath}";
+
+            btn.disabled = true;
+            btn.innerText = "Đang gửi...";
+
+            fetch(contextPath + "/customer/submit-review", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: "productId=" + productId + "&rating=" + rating + "&comment=" + encodeURIComponent(comment)
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerText = "Gửi đánh giá";
+                
+                if (data.success) {
+                    closeReviewModal();
+                    alert("Đánh giá sản phẩm thành công!");
+
+                    // Dynamically update the review-action-container to reviewed state
+                    const container = document.querySelector(`.review-action-container[data-product-id="${productId}"]`);
+                    if (container) {
+                        let starsDisplayHtml = "";
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= rating) {
+                                starsDisplayHtml += '<i class="fa-solid fa-star text-warning"></i>';
+                            } else {
+                                starsDisplayHtml += '<i class="fa-regular fa-star"></i>';
+                            }
+                        }
+
+                        container.innerHTML = `
+                            <div class="reviewed-badge">
+                                <div class="stars-display" style="color: var(--secondary); font-size: 0.85rem; margin-bottom: 2px;">
+                                    \${starsDisplayHtml}
+                                </div>
+                                <span style="font-size: 0.75rem; color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline;" onclick="viewMyReview('\${productId}', this)">Xem đánh giá</span>
+                                <span class="hidden-review-rating" style="display:none;">\${rating}</span>
+                                <span class="hidden-review-comment" style="display:none;">\${comment}</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    alert(data.message || "Có lỗi xảy ra khi gửi đánh giá.");
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = "Gửi đánh giá";
+                console.error("Lỗi gửi đánh giá:", err);
+                alert("Không thể gửi đánh giá. Vui lòng thử lại sau.");
+            });
         }
     </script>
 </body>
