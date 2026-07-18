@@ -4,6 +4,7 @@ import dal.AddressDAO;
 import dal.CartDAO;
 import dal.OrderDAO;
 import dal.PromotionDAO;
+import dal.MembershipDAO; // Bổ sung import MembershipDAO
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,6 +30,7 @@ import model.CustomerAddress;
 import model.Promotion;
 import model.SaleOrder;
 import model.SaleOrderItem;
+import model.Membership; // Bổ sung import model Membership
 import utils.VNPayConfig;
 
 @WebServlet(name = "CheckoutController", urlPatterns = {"/checkout"})
@@ -129,7 +131,7 @@ public class CheckoutController extends HttpServlet {
         double shippingFee = (totalAmount >= 150000) ? 0 : 30000;
 
         // Validate applied promo if any
-        double discount = 0;
+        double discount = 0; // Số tiền giảm giá từ Mã khuyến mãi (Promo Code)
         Promotion appliedPromo = (Promotion) session.getAttribute("appliedPromo");
         if (appliedPromo != null) {
             Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -142,7 +144,7 @@ public class CheckoutController extends HttpServlet {
             } else if (totalAmount < appliedPromo.getMinOrderValue()) {
                 isValid = false;
                 invalidReason = "Giá trị đơn hàng tối thiểu chưa đạt " 
-                        + String.format("%,.0fđ", appliedPromo.getMinOrderValue()) + ".";
+                         + String.format("%,.0fđ", appliedPromo.getMinOrderValue()) + ".";
             }
 
             if (isValid) {
@@ -161,7 +163,34 @@ public class CheckoutController extends HttpServlet {
             }
         }
 
-        double totalPayment = totalAmount + shippingFee - discount;
+        // Bổ sung: Tính toán giảm giá theo Hạng thành viên (Membership Tier Discount)
+        MembershipDAO membershipDAO = new MembershipDAO();
+        Membership membership = membershipDAO.getMembershipByUserId(user.getId());
+        double memberDiscountPercent = 0;
+        double memberDiscount = 0;
+        
+        if (membership != null) {
+            String tier = membership.getCurrentTier();
+            if ("Silver".equalsIgnoreCase(tier)) {
+                memberDiscountPercent = membership.getSilverDiscountPercent();
+            } else if ("Gold".equalsIgnoreCase(tier)) {
+                memberDiscountPercent = membership.getGoldDiscountPercent();
+            } else if ("Diamond".equalsIgnoreCase(tier)) {
+                memberDiscountPercent = membership.getDiamondDiscountPercent();
+            }
+            
+            // Số tiền giảm giá theo hạng thành viên (tính trên tổng tiền hàng tạm tính)
+            memberDiscount = totalAmount * (memberDiscountPercent / 100.0);
+        }
+
+        // Tổng số tiền giảm giá = Giảm giá Promo Code + Giảm giá hạng thành viên
+        double totalDiscount = discount + memberDiscount;
+        if (totalDiscount > totalAmount) {
+            totalDiscount = totalAmount;
+        }
+
+        // Tổng thanh toán cuối cùng = Tổng tiền hàng + Ship - Tổng giảm giá
+        double totalPayment = totalAmount + shippingFee - totalDiscount;
         if (totalPayment < 0) {
             totalPayment = 0;
         }
@@ -183,7 +212,10 @@ public class CheckoutController extends HttpServlet {
         request.setAttribute("cartItems", cartItems);
         request.setAttribute("totalAmount", totalAmount);
         request.setAttribute("shippingFee", shippingFee);
-        request.setAttribute("discount", discount);
+        request.setAttribute("discount", discount); // Giảm giá của mã khuyến mãi để hiển thị riêng trên JSP
+        request.setAttribute("memberDiscount", memberDiscount); // Giảm giá của hạng thành viên để hiển thị riêng
+        request.setAttribute("memberDiscountPercent", memberDiscountPercent); // % giảm giá hạng thành viên
+        request.setAttribute("membership", membership); // Thông tin hạng thành viên để lấy tên hạng
         request.setAttribute("totalPayment", totalPayment);
         request.setAttribute("appliedPromo", appliedPromo);
         request.setAttribute("addresses", addresses);
@@ -336,7 +368,7 @@ public class CheckoutController extends HttpServlet {
 
         double shippingFee = (totalAmount >= 150000) ? 0 : 30000;
 
-        double discount = 0;
+        double discount = 0; // Giảm giá từ Promo Code
         Promotion appliedPromo = (Promotion) session.getAttribute("appliedPromo");
         if (appliedPromo != null) {
             if ("Percentage".equalsIgnoreCase(appliedPromo.getDiscountType())) {
@@ -349,7 +381,30 @@ public class CheckoutController extends HttpServlet {
             }
         }
 
-        double totalPayment = totalAmount + shippingFee - discount;
+        // Bổ sung: Tính toán giảm giá theo Hạng thành viên (Membership Tier Discount) cho đơn hàng
+        MembershipDAO membershipDAO = new MembershipDAO();
+        Membership membership = membershipDAO.getMembershipByUserId(user.getId());
+        double memberDiscountPercent = 0;
+        double memberDiscount = 0;
+        if (membership != null) {
+            String tier = membership.getCurrentTier();
+            if ("Silver".equalsIgnoreCase(tier)) {
+                memberDiscountPercent = membership.getSilverDiscountPercent();
+            } else if ("Gold".equalsIgnoreCase(tier)) {
+                memberDiscountPercent = membership.getGoldDiscountPercent();
+            } else if ("Diamond".equalsIgnoreCase(tier)) {
+                memberDiscountPercent = membership.getDiamondDiscountPercent();
+            }
+            memberDiscount = totalAmount * (memberDiscountPercent / 100.0);
+        }
+
+        // Tổng số tiền giảm giá lưu xuống đơn hàng = Giảm giá Promo Code + Giảm giá hạng thành viên
+        double totalDiscount = discount + memberDiscount;
+        if (totalDiscount > totalAmount) {
+            totalDiscount = totalAmount;
+        }
+
+        double totalPayment = totalAmount + shippingFee - totalDiscount;
         if (totalPayment < 0) {
             totalPayment = 0;
         }
@@ -368,7 +423,7 @@ public class CheckoutController extends HttpServlet {
         order.setShippingPhone(address.getReceiverPhone());
         order.setShipperNote(shipperNote);
         
-        order.setDiscountAmount(discount);
+        order.setDiscountAmount(totalDiscount); // Lưu tổng số tiền được giảm giá (Promo + Member) vào DB
         order.setPromoCode(appliedPromo != null ? appliedPromo.getPromoCode() : null);
         order.setShippingFee(shippingFee);
         order.setTotalPayment(totalPayment);

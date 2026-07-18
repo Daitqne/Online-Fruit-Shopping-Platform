@@ -6,8 +6,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import model.Authen;
 import model.Membership;
 
 @WebServlet(name = "AdminMembershipController", urlPatterns = {"/admin-membership"})
@@ -23,7 +25,14 @@ public class AdminMembershipController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Authen user = (Authen) session.getAttribute("user");
 
+        // Kiểm tra quyền Admin
+        if (user == null || user.getRole() == null || !user.getRole().equalsIgnoreCase("Admin")) {
+            response.sendRedirect("login");
+            return;
+        }
         // 1. Đọc tham số Tìm kiếm & Lọc từ request
         String txtSearch = request.getParameter("searchName");
         String selectedTier = request.getParameter("tierFilter");

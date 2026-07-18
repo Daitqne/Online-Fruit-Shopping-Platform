@@ -3,6 +3,7 @@ package controller.shopowner;
 import dal.DeliveryDAO;
 import dal.OrderDAO;
 import dal.NotificationDAO;
+import dal.MembershipDAO; // Bổ sung import MembershipDAO
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -122,6 +123,14 @@ public class ShopOwnerOrderController extends HttpServlet {
                             if (order != null) {
                                 deliveryDAO.createDelivery(orderId, order.getShippingAddress());
                                 notifDAO.notifyDeliveryStaff(orderId);
+                            }
+                        } else if (newStatus.equals("Delivered")) {
+                            // Tự động cộng điểm tích lũy và cập nhật hạng thành viên
+                            try {
+                                MembershipDAO membershipDAO = new MembershipDAO();
+                                membershipDAO.addPointsForOrder(orderId);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                             }
                         }
                         session.setAttribute("orderSuccess",

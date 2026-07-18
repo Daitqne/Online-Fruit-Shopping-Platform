@@ -1,7 +1,9 @@
 package dal;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import model.Membership;
@@ -268,5 +270,103 @@ public boolean updateMembershipRule(
     }
 
     return false;
+}
+
+/**
+ * Tự động cộng điểm và cập nhật hạng thành viên của người dùng khi đơn hàng hoàn thành (Delivered).
+ * Lấy tỷ lệ quy đổi điểm động (point_conversion_rate) từ DB của chính người dùng đó.
+ */
+public boolean addPointsForOrder(int orderId) {
+    String getOrderSql = "SELECT created_by, total_payment FROM Sale_Order WHERE sale_order_id = ?";
+    String getRateSql = "SELECT point_conversion_rate FROM Membership WHERE user_id = ?";
+    String updatePointsSql = "UPDATE Membership SET current_points = current_points + ? WHERE user_id = ?";
+    String recalculateTierSql = """
+        UPDATE m
+        SET m.current_tier = CASE 
+            WHEN m.current_points >= r.diamond_min_point THEN 'Diamond'
+            WHEN m.current_points >= r.gold_min_point THEN 'Gold'
+            WHEN m.current_points >= r.silver_min_point THEN 'Silver'
+            ELSE 'Normal'
+        END,
+        m.tier_updated_at = GETDATE()
+        FROM Membership m
+        CROSS JOIN Membership r
+        WHERE m.user_id = ? AND (m.manual_override = 0 OR m.manual_override IS NULL)
+    """;
+    
+    try {
+        // Sử dụng connection của DBContext
+        connection.setAutoCommit(false);
+        
+        int userId = -1;
+        double totalPayment = 0;
+        
+        // 1. Lấy thông tin khách hàng và số tiền thanh toán thực tế của đơn hàng
+        try (PreparedStatement ps = connection.prepareStatement(getOrderSql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    userId = rs.getInt("created_by");
+                    totalPayment = rs.getDouble("total_payment");
+                }
+            }
+        }
+        
+        if (userId == -1 || totalPayment <= 0) {
+            connection.rollback();
+            connection.setAutoCommit(true);
+            return false;
+        }
+        
+        // 2. Lấy tỷ lệ quy đổi điểm (point_conversion_rate) của khách hàng này
+        int pointConversionRate = 10000; // Giá trị dự phòng (mặc định) nếu lỗi hoặc bằng 0
+        try (PreparedStatement ps = connection.prepareStatement(getRateSql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int rate = rs.getInt("point_conversion_rate");
+                    if (rate > 0) {
+                        pointConversionRate = rate;
+                    }
+                }
+            }
+        }
+        
+        // 3. Tính số điểm được cộng = Tổng thanh toán / Tỷ lệ quy đổi
+        int pointsToAdd = (int) (totalPayment / pointConversionRate);
+        if (pointsToAdd <= 0) {
+            connection.commit();
+            connection.setAutoCommit(true);
+            return true; // Số tiền quá nhỏ không đủ đổi thành 1 điểm
+        }
+        
+        // 4. Thực hiện cộng điểm tích lũy
+        try (PreparedStatement ps = connection.prepareStatement(updatePointsSql)) {
+            ps.setInt(1, pointsToAdd);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+        
+        // 5. Cập nhật lại hạng thăng/hạ theo quy định
+        try (PreparedStatement ps = connection.prepareStatement(recalculateTierSql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        
+        connection.commit();
+        connection.setAutoCommit(true);
+        return true;
+    } catch (SQLException ex) {
+        try {
+            if (connection != null) {
+                connection.rollback();
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException rollbackEx) {
+            rollbackEx.printStackTrace();
+        }
+        ex.printStackTrace();
+        return false;
+    }
 }
 }
