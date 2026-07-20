@@ -37,16 +37,21 @@ public class ShopOwnerProductsController extends HttpServlet {
   
         String search = request.getParameter("search");
         String category = request.getParameter("category");
+        String origin = request.getParameter("origin");
         
         if (category == null || category.trim().isEmpty()) {
             category = "All";
+        }
+        if (origin == null || origin.trim().isEmpty()) {
+            origin = "All";
         }
         
      
         int shopOwnerId = user.getId();
         ProductDAO productDAO = new ProductDAO();
-        List<Product> products = productDAO.getFilteredProducts(search, category, null, null, "All", shopOwnerId);
+        List<Product> products = productDAO.getFilteredProducts(search, category, null, null, "All", shopOwnerId, origin);
         List<String> categories = productDAO.getAllCategories();
+        List<String> origins = productDAO.getAllOrigins(shopOwnerId);
         
         // Thống kê dữ liệu theo shop owner
         List<Product> allProducts = productDAO.getFilteredProducts("", "All", null, null, "All", shopOwnerId);
@@ -69,8 +74,10 @@ public class ShopOwnerProductsController extends HttpServlet {
     
         request.setAttribute("products", products);
         request.setAttribute("categories", categories);
+        request.setAttribute("origins", origins);
         request.setAttribute("searchQuery", search != null ? search : "");
         request.setAttribute("selectedCategory", category);
+        request.setAttribute("selectedOrigin", origin);
         request.setAttribute("totalProducts", totalProducts);
         request.setAttribute("pendingProducts", pendingProducts);
         request.setAttribute("approvedProducts", approvedProducts);

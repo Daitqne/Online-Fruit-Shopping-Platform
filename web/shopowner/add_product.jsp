@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -183,14 +184,19 @@
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold" for="name">Tên sản phẩm <span class="text-danger">*</span></label>
                                                 <input type="text" id="name" name="name" class="form-control" 
-                                                       placeholder="Nhập tên sản phẩm (Ví dụ: Táo Rockit)" required>
+                                                       placeholder="Nhập tên sản phẩm (Ví dụ: Táo Rockit)"
+                                                       minlength="10" required
+                                                       value="${fn:escapeXml(param.name)}"
+                                                       oninput="updateNameCounter(this.value)">
+                                                <small id="nameCounter" class="text-muted"><span id="nameLen">0</span>/10 ký tự tối thiểu</small>
                                             </div>
 
                                             <!-- Category -->
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold" for="category">Danh mục <span class="text-danger">*</span></label>
                                                 <input type="text" id="category" name="category" class="form-control" 
-                                                       list="categoryList" placeholder="Chọn hoặc tự nhập danh mục" required>
+                                                       list="categoryList" placeholder="Chọn hoặc tự nhập danh mục" required
+                                                       value="${fn:escapeXml(param.category)}">
                                                 <datalist id="categoryList">
                                                     <c:forEach var="cat" items="${categories}">
                                                         <option value="${cat}"></option>
@@ -202,35 +208,40 @@
                                             <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="price">Giá gốc (đ / đơn vị)</label>
                                                 <input type="number" id="price" name="price" class="form-control" 
-                                                       placeholder="Ví dụ: 80000" min="0" step="1000">
+                                                       placeholder="Ví dụ: 80000" min="0" step="1000"
+                                                       value="${param.price}">
                                             </div>
 
                                             <!-- Discount Price -->
                                             <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="discountPrice">Giá khuyến mãi (đ)</label>
                                                 <input type="number" id="discountPrice" name="discountPrice" class="form-control" 
-                                                       placeholder="Ví dụ: 69000" min="0" step="1000">
+                                                       placeholder="Ví dụ: 69000" min="0" step="1000"
+                                                       value="${param.discountPrice}">
                                             </div>
 
                                             <!-- Import Price -->
                                             <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="importPrice">Giá nhập (đ)</label>
                                                 <input type="number" id="importPrice" name="importPrice" class="form-control" 
-                                                       placeholder="Ví dụ: 50000" min="0" step="1000">
+                                                       placeholder="Ví dụ: 50000" min="0" step="1000"
+                                                       value="${param.importPrice}">
                                             </div>
 
                                             <!-- Unit -->
                                             <div class="col-md-3">
                                                 <label class="form-label fw-bold" for="unit">Đơn vị tính</label>
                                                 <input type="text" id="unit" name="unit" class="form-control" 
-                                                       placeholder="Ví dụ: Hộp, Kg">
+                                                       placeholder="Ví dụ: Hộp, Kg"
+                                                       value="${fn:escapeXml(param.unit)}">
                                             </div>
 
                                             <!-- Origin -->
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold" for="origin">Xuất xứ</label>
                                                 <input type="text" id="origin" name="origin" class="form-control" 
-                                                       placeholder="Ví dụ: New Zealand, Việt Nam">
+                                                       placeholder="Ví dụ: New Zealand, Việt Nam"
+                                                       value="${fn:escapeXml(param.origin)}">
                                             </div>
 
                                             <!-- Status -->
@@ -254,13 +265,15 @@
                                             <!-- Import Date -->
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold" for="importDate">Ngày nhập hàng</label>
-                                                <input type="date" id="importDate" name="importDate" class="form-control">
+                                                <input type="date" id="importDate" name="importDate" class="form-control"
+                                                       value="${param.importDate}">
                                             </div>
 
                                             <!-- Expired Date -->
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold" for="expiredDate">Ngày hết hạn</label>
-                                                <input type="date" id="expiredDate" name="expiredDate" class="form-control">
+                                                <input type="date" id="expiredDate" name="expiredDate" class="form-control"
+                                                       value="${param.expiredDate}">
                                             </div>
 
                                             <!-- Image URL -->
@@ -280,7 +293,7 @@
                                             <div class="col-12">
                                                 <label class="form-label fw-bold" for="description">Mô tả sản phẩm</label>
                                                 <textarea id="description" name="description" class="form-control" rows="4" 
-                                                          placeholder="Nhập thông tin mô tả chi tiết sản phẩm..."></textarea>
+                                                          placeholder="Nhập thông tin mô tả chi tiết sản phẩm...">${fn:escapeXml(param.description)}</textarea>
                                             </div>
 
                                             <!-- Notice about inventory -->
@@ -349,11 +362,29 @@
             if (typeof feather !== 'undefined') {
                 feather.replace();
             }
+            // Init counter if there's already a value (e.g., on error reload)
+            const nameInput = document.getElementById('name');
+            if (nameInput) updateNameCounter(nameInput.value);
         });
 
         function updatePreview(url) {
             const img = document.getElementById('imgPreview');
             img.src = url || 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600';
+        }
+
+        function updateNameCounter(val) {
+            const len = val.length;
+            const el = document.getElementById('nameLen');
+            const counter = document.getElementById('nameCounter');
+            if (!el || !counter) return;
+            el.textContent = len;
+            if (len === 0) {
+                counter.style.color = '#94a3b8';
+            } else if (len < 10) {
+                counter.style.color = '#EF4444';
+            } else {
+                counter.style.color = '#10B981';
+            }
         }
     </script>
 </body>

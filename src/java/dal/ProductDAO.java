@@ -65,12 +65,18 @@ public class ProductDAO extends DBContext {
     public List<Product> getFilteredProducts(String search, String category,
                                               Double minPrice, Double maxPrice,
                                               String availability) {
-        return getFilteredProducts(search, category, minPrice, maxPrice, availability, null);
+        return getFilteredProducts(search, category, minPrice, maxPrice, availability, null, "All");
     }
 
     public List<Product> getFilteredProducts(String search, String category,
                                               Double minPrice, Double maxPrice,
                                               String availability, Integer shopOwnerId) {
+        return getFilteredProducts(search, category, minPrice, maxPrice, availability, shopOwnerId, "All");
+    }
+
+    public List<Product> getFilteredProducts(String search, String category,
+                                              Double minPrice, Double maxPrice,
+                                              String availability, Integer shopOwnerId, String origin) {
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.import_price, p.import_date, p.expired_date, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
                                               "FROM Product p " +
@@ -89,12 +95,14 @@ public class ProductDAO extends DBContext {
         boolean hasMinPrice     = (minPrice != null && minPrice > 0);
         boolean hasMaxPrice     = (maxPrice != null && maxPrice > 0);
         boolean hasAvailability = (availability != null && !availability.trim().isEmpty() && !availability.equalsIgnoreCase("All"));
+        boolean hasOrigin       = (origin != null && !origin.trim().isEmpty() && !origin.equalsIgnoreCase("All"));
 
         if (hasSearch)       sql.append("AND p.product_name LIKE ? ");
         if (hasCategory)     sql.append("AND c.category_name = ? ");
         if (hasMinPrice)     sql.append("AND p.price >= ? ");
         if (hasMaxPrice)     sql.append("AND p.price <= ? ");
         if (hasAvailability) sql.append("AND p.status = ? ");
+        if (hasOrigin)       sql.append("AND p.origin = ? ");
         
         if (shopOwnerId != null) {
             sql.append("AND p.shop_owner_id = ? ");
@@ -112,6 +120,7 @@ public class ProductDAO extends DBContext {
             if (hasMinPrice)     st.setDouble(paramIndex++, minPrice);
             if (hasMaxPrice)     st.setDouble(paramIndex++, maxPrice);
             if (hasAvailability) st.setNString(paramIndex++, availability.trim());
+            if (hasOrigin)       st.setNString(paramIndex++, origin.trim());
             if (shopOwnerId != null) {
                 st.setInt(paramIndex++, shopOwnerId);
             }
@@ -125,6 +134,32 @@ public class ProductDAO extends DBContext {
             Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         return products;
+    }
+
+    public List<String> getAllOrigins(Integer shopOwnerId) {
+        List<String> origins = new ArrayList<>();
+        String sql;
+        boolean hasShopOwner = (shopOwnerId != null);
+        if (hasShopOwner) {
+            sql = "SELECT DISTINCT origin FROM Product WHERE origin IS NOT NULL AND origin <> '' AND shop_owner_id = ? ORDER BY origin";
+        } else {
+            sql = "SELECT DISTINCT origin FROM Product WHERE origin IS NOT NULL AND origin <> '' ORDER BY origin";
+        }
+
+        try (PreparedStatement st = getConnection().prepareStatement(sql)) {
+            if (hasShopOwner) {
+                st.setInt(1, shopOwnerId);
+            }
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    origins.add(rs.getNString("origin"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve origins!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return origins;
     }
 
     public List<String> getAllCategories() {

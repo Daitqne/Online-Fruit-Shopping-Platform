@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -360,7 +360,7 @@
                     <!-- Search and Filter Panel -->
                     <div class="filter-card">
                         <form action="products-shop-owner" method="GET" class="row g-3 align-items-center">
-                            <div class="col-12 col-md-5">
+                            <div class="col-12 col-md-4">
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0">
                                         <i data-feather="search" style="width:16px;height:16px;"></i>
@@ -369,11 +369,19 @@
                                            placeholder="Tìm theo tên sản phẩm..." value="${searchQuery}">
                                 </div>
                             </div>
-                            <div class="col-12 col-md-3">
+                            <div class="col-12 col-md-2">
                                 <select name="category" class="form-select">
                                     <option value="All" ${selectedCategory eq 'All' ? 'selected' : ''}>Tất cả danh mục</option>
                                     <c:forEach var="cat" items="${categories}">
                                         <option value="${cat}" ${selectedCategory eq cat ? 'selected' : ''}>${cat}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <select name="origin" class="form-select">
+                                    <option value="All" ${selectedOrigin eq 'All' ? 'selected' : ''}>Tất cả xuất xứ</option>
+                                    <c:forEach var="ori" items="${origins}">
+                                        <option value="${ori}" ${selectedOrigin eq ori ? 'selected' : ''}>${ori}</option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -408,6 +416,7 @@
                                             <th>Đơn vị</th>
                                             <th>Tồn kho</th>
                                             <th>Xuất xứ</th>
+                                            <th>Ngày nhập</th>
                                             <th>Trạng thái</th>
                                             <th class="text-center">Hành động</th>
                                         </tr>
@@ -460,6 +469,16 @@
                                                         <td>${p.origin}</td>
                                                         <td>
                                                             <c:choose>
+                                                                <c:when test="${not empty p.importDate}">
+                                                                    <fmt:formatDate value="${p.importDate}" pattern="dd/MM/yyyy" />
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <span class="text-muted">Chưa nhập</span>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td>
+                                                            <c:choose>
                                                                 <c:when test="${p.status eq 'Approved' or p.status eq 'Available' or p.status eq 'Featured'}">
                                                                     <span class="badge" style="background:#DBEAFE;color:#1D4ED8;font-size:0.78rem;">
                                                                         <i data-feather="check-circle" style="width:12px;height:12px;"></i> Đã duyệt
@@ -503,7 +522,7 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <tr>
-                                                    <td colspan="9" class="text-center py-5 text-muted">
+                                                    <td colspan="11" class="text-center py-5 text-muted">
                                                         <i data-feather="info" class="mb-2" style="width:32px;height:32px;"></i>
                                                         <p class="mb-0 fw-bold">Không tìm thấy sản phẩm nào phù hợp!</p>
                                                         <a href="products-shop-owner" class="btn btn-sm btn-link mt-2">Đặt lại bộ lọc</a>

@@ -75,6 +75,12 @@ public class AddProductController extends HttpServlet {
             request.getRequestDispatcher("/shopowner/add_product.jsp").forward(request, response);
             return;
         }
+        if (name.trim().length() < 10) {
+            request.setAttribute("error", "Tên sản phẩm phải có ít nhất 10 ký tự!");
+            request.setAttribute("categories", new ProductDAO().getAllCategories());
+            request.getRequestDispatcher("/shopowner/add_product.jsp").forward(request, response);
+            return;
+        }
 
         double price = 0.0;
         if (priceStr != null && !priceStr.trim().isEmpty()) {
