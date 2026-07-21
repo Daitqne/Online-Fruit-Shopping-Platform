@@ -277,6 +277,12 @@
                                 <span>-<fmt:formatNumber value="${memberDiscount}" maxFractionDigits="0"/>đ</span>
                             </div>
                         </c:if>
+                        <c:if test="${weekendDiscount > 0}">
+        <div class="breakdown-row" style="color: var(--primary); font-weight:600;">
+            <span><i class="fa-solid fa-calendar-days"></i> Ưu đãi cuối tuần (Giảm 5%)</span>
+            <span>-<fmt:formatNumber value="${weekendDiscount}" maxFractionDigits="0"/>đ</span>
+        </div>
+    </c:if>
                         <div class="breakdown-row total">
                             <span>Tổng thanh toán</span>
                             <span class="total-price"><fmt:formatNumber value="${totalPayment}" maxFractionDigits="0"/>đ</span>

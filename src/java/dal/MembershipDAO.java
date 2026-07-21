@@ -14,7 +14,7 @@ public class MembershipDAO extends DBContext {
     public List<Membership> getAllMembership() {
         List<Membership> list = new ArrayList<>();
 
-        // Thực hiện JOIN để lấy trường fullName từ bảng Users (Thay đổi tên bảng Users/cột fullName nếu DB của bạn đặt tên khác)
+        // Thực hiện JOIN để lấy trường fullName từ bảng Users 
         String sql = """
     SELECT m.*, ui.full_name
     FROM Membership m

@@ -164,11 +164,7 @@
                                         <option value="Diamond" ${tierFilter eq 'Diamond' ? 'selected' : ''}>Diamond</option>
                                     </select>
                                 </div>
-                                <div class="col-12 col-md-auto text-md-end">
-                                    <button type="button" class="btn btn-outline-success btn-sm fw-medium">
-                                        <i class="fa-solid fa-file-excel me-1"></i> Xuất Excel
-                                    </button>
-                                </div>
+                                
                             </form>
                         </div>
                     </div>
@@ -290,7 +286,7 @@
                                                                             data-override="${m.manualOverride}">
                                                                         Sửa
                                                                     </button>
-                                                                    <a href="#" class="btn btn-outline-secondary btn-sm py-1 px-2" onclick="alert('Chức năng lịch sử điểm đang được phát triển!')">Lịch sử</a>
+                                                                    <!--<a href="#" class="btn btn-outline-secondary btn-sm py-1 px-2" onclick="alert('Chức năng lịch sử điểm đang được phát triển!')">Lịch sử</a>-->
                                                                 </div>
                                                             </c:when>
                                                             <c:otherwise>

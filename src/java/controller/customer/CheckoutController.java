@@ -32,6 +32,7 @@ import model.SaleOrder;
 import model.SaleOrderItem;
 import model.Membership; // Bổ sung import model Membership
 import utils.VNPayConfig;
+import java.util.Calendar;
 
 @WebServlet(name = "CheckoutController", urlPatterns = {"/checkout"})
 public class CheckoutController extends HttpServlet {
@@ -44,10 +45,10 @@ public class CheckoutController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         Authen user = (Authen) session.getAttribute("user");
-        
+
         if (user == null) {
             session.setAttribute("redirectUrl", request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
             response.sendRedirect(request.getContextPath() + "/login");
@@ -103,11 +104,11 @@ public class CheckoutController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
-            
+
             String pStatus = currentProduct.getStatus();
-            boolean isAvailable = "Approved".equalsIgnoreCase(pStatus) 
-                                || "Available".equalsIgnoreCase(pStatus) 
-                                || "Featured".equalsIgnoreCase(pStatus);
+            boolean isAvailable = "Approved".equalsIgnoreCase(pStatus)
+                    || "Available".equalsIgnoreCase(pStatus)
+                    || "Featured".equalsIgnoreCase(pStatus);
             if (!isAvailable) {
                 session.setAttribute("cartError", "Sản phẩm \"" + currentProduct.getName() + "\" hiện ngừng bán. Vui lòng xóa khỏi giỏ hàng trước khi đặt hàng.");
                 response.sendRedirect(request.getContextPath() + "/cart");
@@ -143,8 +144,8 @@ public class CheckoutController extends HttpServlet {
                 invalidReason = "Mã giảm giá đã hết hạn hoặc chưa có hiệu lực.";
             } else if (totalAmount < appliedPromo.getMinOrderValue()) {
                 isValid = false;
-                invalidReason = "Giá trị đơn hàng tối thiểu chưa đạt " 
-                         + String.format("%,.0fđ", appliedPromo.getMinOrderValue()) + ".";
+                invalidReason = "Giá trị đơn hàng tối thiểu chưa đạt "
+                        + String.format("%,.0fđ", appliedPromo.getMinOrderValue()) + ".";
             }
 
             if (isValid) {
@@ -168,7 +169,7 @@ public class CheckoutController extends HttpServlet {
         Membership membership = membershipDAO.getMembershipByUserId(user.getId());
         double memberDiscountPercent = 0;
         double memberDiscount = 0;
-        
+
         if (membership != null) {
             String tier = membership.getCurrentTier();
             if ("Silver".equalsIgnoreCase(tier)) {
@@ -178,13 +179,22 @@ public class CheckoutController extends HttpServlet {
             } else if ("Diamond".equalsIgnoreCase(tier)) {
                 memberDiscountPercent = membership.getDiamondDiscountPercent();
             }
-            
+
             // Số tiền giảm giá theo hạng thành viên (tính trên tổng tiền hàng tạm tính)
             memberDiscount = totalAmount * (memberDiscountPercent / 100.0);
         }
+        
+        //  (Tsk1)
+        double weekendDiscount = 0;
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
 
-        // Tổng số tiền giảm giá = Giảm giá Promo Code + Giảm giá hạng thành viên
-        double totalDiscount = discount + memberDiscount;
+        if (day == Calendar.SATURDAY || day == Calendar.SUNDAY) {
+            weekendDiscount = totalAmount * 0.05;
+        }
+//        weekendDiscount = totalAmount * 0.05; check 
+        // Tổng số tiền giảm giá = Giảm giá Promo Code + Giảm giá hạng thành viên + Giảm giá cuối tuần
+        double totalDiscount = discount + memberDiscount + weekendDiscount;
         if (totalDiscount > totalAmount) {
             totalDiscount = totalAmount;
         }
@@ -214,6 +224,7 @@ public class CheckoutController extends HttpServlet {
         request.setAttribute("shippingFee", shippingFee);
         request.setAttribute("discount", discount); // Giảm giá của mã khuyến mãi để hiển thị riêng trên JSP
         request.setAttribute("memberDiscount", memberDiscount); // Giảm giá của hạng thành viên để hiển thị riêng
+        request.setAttribute("weekendDiscount", weekendDiscount); // Đẩy thêm thông tin giảm giá cuối tuần ra JSP
         request.setAttribute("memberDiscountPercent", memberDiscountPercent); // % giảm giá hạng thành viên
         request.setAttribute("membership", membership); // Thông tin hạng thành viên để lấy tên hạng
         request.setAttribute("totalPayment", totalPayment);
@@ -230,7 +241,7 @@ public class CheckoutController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession();
         Authen user = (Authen) session.getAttribute("user");
@@ -277,7 +288,7 @@ public class CheckoutController extends HttpServlet {
         if (now.before(promo.getStartDate()) || now.after(promo.getEndDate())) {
             session.setAttribute("promoError", "Mã giảm giá đã hết hạn hoặc chưa có hiệu lực.");
         } else if (totalAmount < promo.getMinOrderValue()) {
-            session.setAttribute("promoError", "Giá trị đơn hàng chưa đạt mức tối thiểu " 
+            session.setAttribute("promoError", "Giá trị đơn hàng chưa đạt mức tối thiểu "
                     + String.format("%,.0fđ", promo.getMinOrderValue()) + " để áp dụng.");
         } else {
             session.setAttribute("appliedPromo", promo);
@@ -296,7 +307,7 @@ public class CheckoutController extends HttpServlet {
 
     private void handlePlaceOrder(HttpServletRequest request, HttpServletResponse response, HttpSession session, Authen user)
             throws IOException {
-        
+
         String addressIdStr = request.getParameter("addressId");
         String paymentMethod = request.getParameter("paymentMethod");
         String shipperNote = request.getParameter("shipperNote");
@@ -340,11 +351,11 @@ public class CheckoutController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
-            
+
             String pStatus = currentProduct.getStatus();
-            boolean isAvailable = "Approved".equalsIgnoreCase(pStatus) 
-                                || "Available".equalsIgnoreCase(pStatus) 
-                                || "Featured".equalsIgnoreCase(pStatus);
+            boolean isAvailable = "Approved".equalsIgnoreCase(pStatus)
+                    || "Available".equalsIgnoreCase(pStatus)
+                    || "Featured".equalsIgnoreCase(pStatus);
             if (!isAvailable) {
                 session.setAttribute("cartError", "Sản phẩm \"" + currentProduct.getName() + "\" hiện ngừng bán. Vui lòng xóa khỏi giỏ hàng trước khi đặt hàng.");
                 response.sendRedirect(request.getContextPath() + "/cart");
@@ -358,7 +369,6 @@ public class CheckoutController extends HttpServlet {
                 return;
             }
         }
-
 
         // Calculate pricing
         double totalAmount = 0;
@@ -398,8 +408,17 @@ public class CheckoutController extends HttpServlet {
             memberDiscount = totalAmount * (memberDiscountPercent / 100.0);
         }
 
-        // Tổng số tiền giảm giá lưu xuống đơn hàng = Giảm giá Promo Code + Giảm giá hạng thành viên
-        double totalDiscount = discount + memberDiscount;
+        // Tsk1: Thêm lại logic tính giảm giá cuối tuần khi thực tế đặt hàng để tránh lệch tiền DB
+        double weekendDiscount = 0;
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+
+        if (day == Calendar.SATURDAY || day == Calendar.SUNDAY) {
+            weekendDiscount = totalAmount * 0.05;
+        }
+        
+        // Tổng số tiền giảm giá lưu xuống đơn hàng = Giảm giá Promo + Giảm giá hạng thành viên + Giảm giá cuối tuần
+        double totalDiscount = discount + memberDiscount + weekendDiscount;
         if (totalDiscount > totalAmount) {
             totalDiscount = totalAmount;
         }
@@ -416,14 +435,14 @@ public class CheckoutController extends HttpServlet {
         order.setOrderStatus("Pending");
         order.setPaymentMethod(paymentMethod != null ? paymentMethod : "COD");
         order.setPaymentStatus("Pending");
-        
+
         // Save the detailed address string
         String fullAddress = address.getLabel() + ": " + address.getReceiverName() + " (" + address.getReceiverPhone() + ") - " + address.getAddressDetails();
         order.setShippingAddress(fullAddress);
         order.setShippingPhone(address.getReceiverPhone());
         order.setShipperNote(shipperNote);
-        
-        order.setDiscountAmount(totalDiscount); // Lưu tổng số tiền được giảm giá (Promo + Member) vào DB
+
+        order.setDiscountAmount(totalDiscount); // Lưu tổng số tiền được giảm giá (Promo + Member + Weekend) vào DB
         order.setPromoCode(appliedPromo != null ? appliedPromo.getPromoCode() : null);
         order.setShippingFee(shippingFee);
         order.setTotalPayment(totalPayment);
@@ -451,10 +470,10 @@ public class CheckoutController extends HttpServlet {
             //notify customer
             dal.NotificationDAO notifDAO = new dal.NotificationDAO();
             notifDAO.addNotification(user.getId(),
-                "Đặt hàng thành công",
-                "Đơn hàng #" + order.getSaleOrderId() + " đã được đặt thành công! Tổng thanh toán: " 
-                + String.format("%,.0fđ", order.getTotalPayment()) + ". Cảm ơn bạn đã mua hàng tại GreenStock!");
-            
+                    "Đặt hàng thành công",
+                    "Đơn hàng #" + order.getSaleOrderId() + " đã được đặt thành công! Tổng thanh toán: "
+                    + String.format("%,.0fđ", order.getTotalPayment()) + ". Cảm ơn bạn đã mua hàng tại GreenStock!");
+
             if ("VNPAY".equals(paymentMethod)) {
                 try {
                     // Generate VNPay URL
@@ -462,14 +481,14 @@ public class CheckoutController extends HttpServlet {
                     String vnp_Command = "pay";
                     String orderType = "190000"; // Grocery / Food
                     long amount = Math.round(order.getTotalPayment() * 100);
-                    
+
                     String vnp_TxnRef = String.valueOf(order.getSaleOrderId());
                     String vnp_IpAddr = VNPayConfig.getIpAddress(request);
                     if (vnp_IpAddr == null || vnp_IpAddr.contains(":") || "0:0:0:0:0:0:0:1".equals(vnp_IpAddr)) {
                         vnp_IpAddr = "127.0.0.1";
                     }
                     String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
-                    
+
                     Map<String, String> vnp_Params = new HashMap<>();
                     vnp_Params.put("vnp_Version", vnp_Version);
                     vnp_Params.put("vnp_Command", vnp_Command);
@@ -480,16 +499,16 @@ public class CheckoutController extends HttpServlet {
                     vnp_Params.put("vnp_OrderInfo", "ThanhToanDonHang" + order.getSaleOrderId());
                     vnp_Params.put("vnp_OrderType", orderType);
                     vnp_Params.put("vnp_Locale", "vn");
-                    
+
                     // Dynamically build return URL
                     String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
                     vnp_Params.put("vnp_ReturnUrl", baseUrl + "/vnpay-return");
                     vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-                    
+
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
                     String vnp_CreateDate = formatter.format(new Date());
                     vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-                    
+
                     List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
                     Collections.sort(fieldNames);
                     StringBuilder hashData = new StringBuilder();
@@ -503,24 +522,24 @@ public class CheckoutController extends HttpServlet {
                                 query.append('&');
                             }
                             isFirst = false;
-                            
+
                             // Build hash data
                             hashData.append(fieldName);
                             hashData.append('=');
                             hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
-                            
+
                             // Build query
                             query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                             query.append('=');
                             query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                         }
                     }
-                    
+
                     String queryUrl = query.toString();
                     String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
                     queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
                     String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
-                    
+
                     // Write debug log to file
                     try {
                         java.io.FileWriter fw = new java.io.FileWriter("d:\\SWP391-G3\\vnpay_debug.log", true);
@@ -535,7 +554,7 @@ public class CheckoutController extends HttpServlet {
                     } catch (Exception ex) {
                         // ignore
                     }
-                    
+
                     response.sendRedirect(paymentUrl);
                 } catch (Exception e) {
                     session.setAttribute("checkoutError", "Không thể khởi tạo thanh toán VNPAY: " + e.getMessage());
@@ -562,7 +581,7 @@ public class CheckoutController extends HttpServlet {
         try {
             orderId = Integer.parseInt(orderIdStr);
             SaleOrder order = orderDAO.getOrderById(orderId);
-            
+
             if (order == null || order.getCreatedBy() != user.getId()) {
                 session.setAttribute("orderError", "Đơn hàng không tồn tại hoặc không thuộc sở hữu của bạn.");
                 response.sendRedirect(request.getContextPath() + "/orders");
@@ -586,14 +605,14 @@ public class CheckoutController extends HttpServlet {
             String vnp_Command = "pay";
             String orderType = "190000"; // Grocery / Food
             long amount = Math.round(order.getTotalPayment() * 100);
-            
+
             String vnp_TxnRef = String.valueOf(order.getSaleOrderId());
             String vnp_IpAddr = VNPayConfig.getIpAddress(request);
             if (vnp_IpAddr == null || vnp_IpAddr.contains(":") || "0:0:0:0:0:0:0:1".equals(vnp_IpAddr)) {
                 vnp_IpAddr = "127.0.0.1";
             }
             String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
-            
+
             Map<String, String> vnp_Params = new HashMap<>();
             vnp_Params.put("vnp_Version", vnp_Version);
             vnp_Params.put("vnp_Command", vnp_Command);
@@ -604,15 +623,15 @@ public class CheckoutController extends HttpServlet {
             vnp_Params.put("vnp_OrderInfo", "ThanhToanDonHang" + order.getSaleOrderId());
             vnp_Params.put("vnp_OrderType", orderType);
             vnp_Params.put("vnp_Locale", "vn");
-            
+
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
             vnp_Params.put("vnp_ReturnUrl", baseUrl + "/vnpay-return");
             vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-            
+
             SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
             String vnp_CreateDate = formatter.format(new Date());
             vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-            
+
             List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
             Collections.sort(fieldNames);
             StringBuilder hashData = new StringBuilder();
@@ -626,22 +645,22 @@ public class CheckoutController extends HttpServlet {
                         query.append('&');
                     }
                     isFirst = false;
-                    
+
                     hashData.append(fieldName);
                     hashData.append('=');
                     hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
-                    
+
                     query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                     query.append('=');
                     query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20"));
                 }
             }
-            
+
             String queryUrl = query.toString();
             String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
             queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
             String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
-            
+
             // Log for debugging
             try {
                 java.io.FileWriter fw = new java.io.FileWriter("d:\\SWP391-G3\\vnpay_debug.log", true);
@@ -653,7 +672,7 @@ public class CheckoutController extends HttpServlet {
             } catch (Exception ex) {
                 // ignore
             }
-            
+
             response.sendRedirect(paymentUrl);
         } catch (Exception e) {
             session.setAttribute("orderError", "Không thể khởi tạo thanh toán lại qua VNPAY: " + e.getMessage());
