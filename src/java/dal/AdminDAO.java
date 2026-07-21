@@ -13,9 +13,14 @@ import model.User;
 public class AdminDAO extends DBContext {
 
     /**
-     * Lấy danh sách người dùng theo tên quyền (Customer / Shop Owner)
-     */
     public List<User> getUsersByRole(String roleName) {
+        return getUsersByRole(roleName, null);
+    }
+
+    /**
+     * Lấy danh sách người dùng theo tên quyền và từ khóa tìm kiếm
+     */
+    public List<User> getUsersByRole(String roleName, String search) {
         List<User> list = new ArrayList<>();
         String sql = "SELECT u.user_id, u.username, u.status, ui.full_name, ui.email, ui.phone, r.role_name " +
                      "FROM Users u " +
@@ -23,9 +28,22 @@ public class AdminDAO extends DBContext {
                      "INNER JOIN Roles r ON ur.role_id = r.role_id " +
                      "LEFT JOIN UserInfo ui ON u.user_id = ui.user_id " +
                      "WHERE r.role_name = ?";
+        
+        boolean hasSearch = (search != null && !search.trim().isEmpty());
+        if (hasSearch) {
+            sql += " AND (u.username LIKE ? OR ui.full_name LIKE ? OR ui.email LIKE ? OR ui.phone LIKE ?)";
+        }
+        
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, roleName);
+            if (hasSearch) {
+                String searchPattern = "%" + search.trim() + "%";
+                ps.setString(2, searchPattern);
+                ps.setString(3, searchPattern);
+                ps.setString(4, searchPattern);
+                ps.setString(5, searchPattern);
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 User u = new User();
@@ -43,6 +61,7 @@ public class AdminDAO extends DBContext {
         }
         return list;
     }
+
 
     /**
      * Khóa hoặc Mở khóa tài khoản (Active <-> Inactive)

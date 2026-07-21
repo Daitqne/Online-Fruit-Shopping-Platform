@@ -563,5 +563,32 @@ public class OrderDAO extends DBContext {
         }
         return false;
     }
+
+    /**
+     * Calculates the total discount amount for delivered orders in a given month and year.
+     */
+    public double getTotalDiscountInMonth(int month, int year) {
+        double totalDiscount = 0.0;
+        String sql = """
+            SELECT SUM(discount_amount) AS total_discount 
+            FROM Sale_Order 
+            WHERE DATEPART(MONTH, delivered_date) = ? 
+              AND DATEPART(YEAR, delivered_date) = ?
+              AND order_status = 'Delivered'
+              AND delivered_date IS NOT NULL
+        """;
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    totalDiscount = rs.getDouble("total_discount");
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(OrderDAO.class.getName()).log(Level.SEVERE, "Failed to get total discount in month", ex);
+        }
+        return totalDiscount;
+    }
 }
 

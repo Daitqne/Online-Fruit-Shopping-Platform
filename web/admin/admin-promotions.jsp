@@ -200,6 +200,34 @@
                             </div>
                         </c:if>
 
+                        <!-- Thống kê giảm giá trong tháng -->
+                        <div class="row mb-4">
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col mt-0">
+                                                <h5 class="card-title text-muted fw-semibold">Tổng Tiền Giảm Giá (Tháng ${currentMonth}/${currentYear})</h5>
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="stat text-success bg-success-light" style="padding: 10px; border-radius: 50%; background: #ECFDF5; color: #10B981; display: inline-flex; align-items: center; justify-content: center;">
+                                                    <i class="align-middle" data-feather="gift" style="width: 24px; height: 24px;"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h1 class="mt-2 mb-2 fw-bold text-success">
+                                            <fmt:formatNumber value="${monthlyDiscountTotal}" type="number" maxFractionDigits="0"/>đ
+                                        </h1>
+                                        <div class="mb-0">
+                                            <span class="badge text-success" style="background: #ECFDF5; padding: 0.35rem 0.5rem; font-size: 0.85rem; border-radius: 4px; display: inline-flex; align-items: center;">
+                                                <i class="align-middle me-1" data-feather="check-circle" style="width: 14px; height: 14px;"></i> Đã giao hàng thành công
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-12 col-md-4">
                                 <div class="card">
