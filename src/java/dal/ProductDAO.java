@@ -136,6 +136,137 @@ public class ProductDAO extends DBContext {
         return products;
     }
 
+    public List<Product> getFilteredProducts(String search, String category,
+                                              Double minPrice, Double maxPrice,
+                                              String availability, int page, int pageSize) {
+        return getFilteredProducts(search, category, minPrice, maxPrice, availability, null, "All", page, pageSize);
+    }
+
+    public List<Product> getFilteredProducts(String search, String category,
+                                              Double minPrice, Double maxPrice,
+                                              String availability, Integer shopOwnerId, String origin,
+                                              int page, int pageSize) {
+        List<Product> products = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT p.product_id, p.product_name, p.price, p.discount_price, p.import_price, p.import_date, p.expired_date, p.unit, p.origin, p.status, p.description, c.category_name, pi.image_url, p.shop_owner_id, p.low_stock_threshold, i.quantity AS stock_quantity " +
+                                              "FROM Product p " +
+                                              "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+                                              "LEFT JOIN Inventory i ON p.product_id = i.product_id " +
+                                              "LEFT JOIN (" +
+                                              "    SELECT product_id, image_url FROM (" +
+                                              "        SELECT product_id, image_url, ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_at DESC, image_id DESC) AS rn " +
+                                              "        FROM Product_Image" +
+                                              "    ) t WHERE rn = 1" +
+                                              ") pi ON pi.product_id = p.product_id " +
+                                              "WHERE 1=1 ");
+
+        boolean hasSearch       = (search != null && !search.trim().isEmpty());
+        boolean hasCategory     = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All"));
+        boolean hasMinPrice     = (minPrice != null && minPrice > 0);
+        boolean hasMaxPrice     = (maxPrice != null && maxPrice > 0);
+        boolean hasAvailability = (availability != null && !availability.trim().isEmpty() && !availability.equalsIgnoreCase("All"));
+        boolean hasOrigin       = (origin != null && !origin.trim().isEmpty() && !origin.equalsIgnoreCase("All"));
+
+        if (hasSearch)       sql.append("AND p.product_name LIKE ? ");
+        if (hasCategory)     sql.append("AND c.category_name = ? ");
+        if (hasMinPrice)     sql.append("AND p.price >= ? ");
+        if (hasMaxPrice)     sql.append("AND p.price <= ? ");
+        if (hasAvailability) sql.append("AND p.status = ? ");
+        if (hasOrigin)       sql.append("AND p.origin = ? ");
+        
+        if (shopOwnerId != null) {
+            sql.append("AND p.shop_owner_id = ? ");
+        } else {
+            sql.append("AND p.status IN ('Approved', 'Available', 'Featured') ");
+        }
+        
+        sql.append("ORDER BY p.product_id DESC ");
+        sql.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        try (PreparedStatement st = getConnection().prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (hasSearch)       st.setNString(paramIndex++, "%" + search.trim() + "%");
+            if (hasCategory)     st.setNString(paramIndex++, category.trim());
+            if (hasMinPrice)     st.setDouble(paramIndex++, minPrice);
+            if (hasMaxPrice)     st.setDouble(paramIndex++, maxPrice);
+            if (hasAvailability) st.setNString(paramIndex++, availability.trim());
+            if (hasOrigin)       st.setNString(paramIndex++, origin.trim());
+            if (shopOwnerId != null) {
+                st.setInt(paramIndex++, shopOwnerId);
+            }
+            
+            int offset = (page - 1) * pageSize;
+            st.setInt(paramIndex++, offset);
+            st.setInt(paramIndex++, pageSize);
+
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapRowToProduct(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve filtered products (paginated)!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return products;
+    }
+
+    public int getFilteredProductsCount(String search, String category,
+                                        Double minPrice, Double maxPrice,
+                                        String availability) {
+        return getFilteredProductsCount(search, category, minPrice, maxPrice, availability, null, "All");
+    }
+
+    public int getFilteredProductsCount(String search, String category,
+                                        Double minPrice, Double maxPrice,
+                                        String availability, Integer shopOwnerId, String origin) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) " +
+                                              "FROM Product p " +
+                                              "LEFT JOIN Product_Category c ON p.category_id = c.category_id " +
+                                              "WHERE 1=1 ");
+
+        boolean hasSearch       = (search != null && !search.trim().isEmpty());
+        boolean hasCategory     = (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All"));
+        boolean hasMinPrice     = (minPrice != null && minPrice > 0);
+        boolean hasMaxPrice     = (maxPrice != null && maxPrice > 0);
+        boolean hasAvailability = (availability != null && !availability.trim().isEmpty() && !availability.equalsIgnoreCase("All"));
+        boolean hasOrigin       = (origin != null && !origin.trim().isEmpty() && !origin.equalsIgnoreCase("All"));
+
+        if (hasSearch)       sql.append("AND p.product_name LIKE ? ");
+        if (hasCategory)     sql.append("AND c.category_name = ? ");
+        if (hasMinPrice)     sql.append("AND p.price >= ? ");
+        if (hasMaxPrice)     sql.append("AND p.price <= ? ");
+        if (hasAvailability) sql.append("AND p.status = ? ");
+        if (hasOrigin)       sql.append("AND p.origin = ? ");
+        
+        if (shopOwnerId != null) {
+            sql.append("AND p.shop_owner_id = ? ");
+        } else {
+            sql.append("AND p.status IN ('Approved', 'Available', 'Featured') ");
+        }
+
+        try (PreparedStatement st = getConnection().prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (hasSearch)       st.setNString(paramIndex++, "%" + search.trim() + "%");
+            if (hasCategory)     st.setNString(paramIndex++, category.trim());
+            if (hasMinPrice)     st.setDouble(paramIndex++, minPrice);
+            if (hasMaxPrice)     st.setDouble(paramIndex++, maxPrice);
+            if (hasAvailability) st.setNString(paramIndex++, availability.trim());
+            if (hasOrigin)       st.setNString(paramIndex++, origin.trim());
+            if (shopOwnerId != null) {
+                st.setInt(paramIndex++, shopOwnerId);
+            }
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("[ProductDAO Error] Failed to retrieve filtered products count!");
+            Logger.getLogger(ProductDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+
     public List<String> getAllOrigins(Integer shopOwnerId) {
         List<String> origins = new ArrayList<>();
         String sql;

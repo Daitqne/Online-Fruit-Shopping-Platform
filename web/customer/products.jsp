@@ -847,6 +847,51 @@
                 }
             }
 
+            /* --- PAGINATION --- */
+            .pagination-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+                margin-top: 3rem;
+                padding: 1rem 0;
+            }
+
+            .pagination-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                border: 1px solid var(--slate-200);
+                background-color: var(--white);
+                color: var(--slate-600);
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+
+            .pagination-btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+                background-color: var(--primary-light);
+                transform: translateY(-2px);
+            }
+
+            .pagination-btn.active {
+                background-color: var(--primary);
+                color: var(--white);
+                border-color: var(--primary);
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+            }
+
+            .pagination-btn.disabled {
+                opacity: 0.5;
+                pointer-events: none;
+                cursor: not-allowed;
+            }
 
         </style>
     </head>
@@ -1020,6 +1065,44 @@
                     </c:otherwise>
                 </c:choose>
                 </div>
+
+                <!-- Pagination Controls -->
+                <c:if test="${totalPages > 1}">
+                    <div class="pagination-container">
+                        <!-- First Page -->
+                        <a href="products?page=1&category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}" 
+                           class="pagination-btn ${currentPage == 1 ? 'disabled' : ''}" title="Trang đầu">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                        
+                        <!-- Previous Page -->
+                        <a href="products?page=${currentPage - 1}&category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}" 
+                           class="pagination-btn ${currentPage == 1 ? 'disabled' : ''}" title="Trang trước">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+
+                        <!-- Page Numbers -->
+                        <c:forEach var="i" begin="${currentPage - 2 < 1 ? 1 : currentPage - 2}" 
+                                   end="${currentPage + 2 > totalPages ? totalPages : currentPage + 2}">
+                            <a href="products?page=${i}&category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}" 
+                               class="pagination-btn ${currentPage == i ? 'active' : ''}">
+                                ${i}
+                            </a>
+                        </c:forEach>
+
+                        <!-- Next Page -->
+                        <a href="products?page=${currentPage + 1}&category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}" 
+                           class="pagination-btn ${currentPage == totalPages ? 'disabled' : ''}" title="Trang sau">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </a>
+                        
+                        <!-- Last Page -->
+                        <a href="products?page=${totalPages}&category=${selectedCategory}&search=${searchQuery}&minPrice=${minPrice}&maxPrice=${maxPrice}&availability=${selectedAvailability}" 
+                           class="pagination-btn ${currentPage == totalPages ? 'disabled' : ''}" title="Trang cuối">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </div>
+                </c:if>
             </div>
         </div>
 

@@ -650,10 +650,10 @@
                     
                     <c:forEach items="${order.items}" var="item">
                         <div class="product-item">
-                            <img src="${pageContext.request.contextPath}/${not empty item.product.image ? item.product.image : 'img/default-fruit.png'}" 
+                            <img src="${not empty item.product.image ? item.product.image : 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'}" 
                                  alt="${item.product.name}" 
                                  class="product-img" 
-                                 onerror="this.src='${pageContext.request.contextPath}/img/default-fruit.png'">
+                                 onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=600'">
                             <div class="product-info">
                                 <h4 class="product-name">${item.product.name}</h4>
                                 <div class="product-meta">

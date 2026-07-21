@@ -45,13 +45,34 @@ public class ProductController extends HttpServlet {
         try { if (minPriceStr != null && !minPriceStr.isEmpty()) minPrice = Double.parseDouble(minPriceStr); } catch (NumberFormatException e) {}
         try { if (maxPriceStr != null && !maxPriceStr.isEmpty()) maxPrice = Double.parseDouble(maxPriceStr); } catch (NumberFormatException e) {}
 
+        String pageStr = request.getParameter("page");
+        int currentPage = 1;
+        int pageSize = 12; // 12 products per page
+        if (pageStr != null && !pageStr.trim().isEmpty()) {
+            try {
+                currentPage = Integer.parseInt(pageStr);
+                if (currentPage < 1) currentPage = 1;
+            } catch (NumberFormatException e) {
+                currentPage = 1;
+            }
+        }
+
         ProductDAO productDAO = new ProductDAO();
 
-        List<Product> products = productDAO.getFilteredProducts(search, category, minPrice, maxPrice, availability);
+        int totalProducts = productDAO.getFilteredProductsCount(search, category, minPrice, maxPrice, availability);
+        int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
+        if (totalPages == 0) totalPages = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        List<Product> products = productDAO.getFilteredProducts(search, category, minPrice, maxPrice, availability, currentPage, pageSize);
         List<String> categories = productDAO.getAllCategories();
 
         request.setAttribute("products", products);
         request.setAttribute("categories", categories);
+        
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalProducts", totalProducts);
 
         request.setAttribute("searchQuery", search);
         request.setAttribute("selectedCategory", category);
