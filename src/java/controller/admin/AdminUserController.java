@@ -42,12 +42,14 @@ public class AdminUserController extends HttpServlet {
             String currentStatus = request.getParameter("status");
             String typeParam = request.getParameter("type");
             if (typeParam == null) typeParam = "customer";
+            String searchParam = request.getParameter("search");
+            if (searchParam == null) searchParam = "";
             
             String newStatus = currentStatus.equalsIgnoreCase("Active") ? "Inactive" : "Active";
             System.out.println("[AdminUserController] Toggle status for user " + id + " from " + currentStatus + " to " + newStatus);
             adminDAO.changeUserStatus(id, newStatus);
             
-            response.sendRedirect("admin-user?type=" + typeParam);
+            response.sendRedirect("admin-user?type=" + typeParam + "&search=" + java.net.URLEncoder.encode(searchParam, "UTF-8"));
             return;
         }
 
@@ -55,15 +57,20 @@ public class AdminUserController extends HttpServlet {
         if (type == null) {
             type = "customer";
         }
+        String search = request.getParameter("search");
+        if (search == null) {
+            search = "";
+        }
+        search = search.trim();
         
-        System.out.println("[AdminUserController] Loading users with type: " + type);
+        System.out.println("[AdminUserController] Loading users with type: " + type + ", search: " + search);
         
         List<User> userList;
         if (type.equalsIgnoreCase("shopowner")) {
-            userList = adminDAO.getUsersByRole("Shop Owner");
+            userList = adminDAO.getUsersByRole("Shop Owner", search);
             request.setAttribute("pageTitle", "Quản lý Shop Owner");
         } else {
-            userList = adminDAO.getUsersByRole("Customer");
+            userList = adminDAO.getUsersByRole("Customer", search);
             request.setAttribute("pageTitle", "Quản lý Khách hàng");
         }
         
@@ -71,6 +78,7 @@ public class AdminUserController extends HttpServlet {
         
         request.setAttribute("userList", userList);
         request.setAttribute("currentType", type);
+        request.setAttribute("search", search);
         
         request.getRequestDispatcher("/admin/admin_user.jsp").forward(request, response);
     }

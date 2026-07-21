@@ -1,10 +1,12 @@
 package controller.admin;
 
 import dal.PromotionDAO;
+import dal.OrderDAO;
 import model.Promotion;
 import model.Authen;
 import java.io.IOException;
 import java.util.List;
+import java.util.Calendar;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -43,13 +45,24 @@ public class AdminPromotionController extends HttpServlet {
         PromotionDAO dao = new PromotionDAO();
         List<Promotion> list = dao.getAllPromotions();
 
+        // Tính tổng tiền giảm giá trong tháng hiện tại cho các đơn hàng giao thành công
+        Calendar cal = Calendar.getInstance();
+        int currentMonth = cal.get(Calendar.MONTH) + 1;
+        int currentYear = cal.get(Calendar.YEAR);
+        
+        OrderDAO orderDAO = new OrderDAO();
+        double monthlyDiscountTotal = orderDAO.getTotalDiscountInMonth(currentMonth, currentYear);
+
         // Đọc thông báo thành công nếu có
         String msg = request.getParameter("msg");
         if ("success".equals(msg)) {
             request.setAttribute("successMessage", "Thêm mã khuyến mãi mới thành công!");
         }
 
-        // Đẩy danh sách list này sang file JSP với tên biến là "promotionList" để khớp với JSP
+        // Đẩy dữ liệu thống kê và danh sách sang file JSP
+        request.setAttribute("monthlyDiscountTotal", monthlyDiscountTotal);
+        request.setAttribute("currentMonth", currentMonth);
+        request.setAttribute("currentYear", currentYear);
         request.setAttribute("promotionList", list);
         request.getRequestDispatcher("/admin/admin-promotions.jsp").forward(request, response);
     }

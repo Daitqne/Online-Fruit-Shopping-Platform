@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -320,14 +320,14 @@
                             <ul class="nav nav-tabs nav-tabs-custom">
                                 <li class="nav-item">
                                     <a class="nav-link ${currentType == 'customer' ? 'active' : ''}" 
-                                       href="admin-user?type=customer">
+                                       href="admin-user?type=customer&search=${fn:escapeXml(search)}">
                                         <i data-feather="users" style="width: 16px; height: 16px;"></i>
                                         Khách hàng (Customer)
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link ${currentType == 'shopowner' ? 'active' : ''}" 
-                                       href="admin-user?type=shopowner">
+                                       href="admin-user?type=shopowner&search=${fn:escapeXml(search)}">
                                         <i data-feather="shopping-bag" style="width: 16px; height: 16px;"></i>
                                         Chủ cửa hàng (Shop Owner)
                                     </a>
@@ -376,8 +376,20 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <h5 class="card-title mb-0">Danh sách ${currentType == 'customer' ? 'Customer' : 'Shop Owner'}</h5>
+                                    <form action="admin-user" method="get" class="d-flex align-items-center gap-2 m-0">
+                                        <input type="hidden" name="type" value="${currentType}">
+                                        <div class="input-group input-group-sm" style="width: 300px;">
+                                            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm tài khoản, tên, email, sđt..." value="${fn:escapeXml(search)}">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="align-middle" data-feather="search"></i> Tìm
+                                            </button>
+                                        </div>
+                                        <c:if test="${not empty search}">
+                                            <a href="admin-user?type=${currentType}" class="btn btn-sm btn-outline-secondary">Xóa</a>
+                                        </c:if>
+                                    </form>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">
@@ -420,14 +432,14 @@
                                                                 <td style="text-align: center;">
                                                                     <c:choose>
                                                                         <c:when test="${u.status == 'Active'}">
-                                                                            <a href="admin-user?action=toggleStatus&id=${u.id}&status=${u.status}&type=${currentType}" 
+                                                                            <a href="admin-user?action=toggleStatus&id=${u.id}&status=${u.status}&type=${currentType}&search=${fn:escapeXml(search)}" 
                                                                                class="btn btn-sm btn-block-user" 
                                                                                onclick="return confirm('Bạn có chắc chắn muốn KHÓA tài khoản [${u.username}] không?')">
                                                                                 <i data-feather="lock" style="width: 14px; height: 14px;"></i> Block
                                                                             </a>
                                                                         </c:when>
                                                                         <c:otherwise>
-                                                                            <a href="admin-user?action=toggleStatus&id=${u.id}&status=${u.status}&type=${currentType}" 
+                                                                            <a href="admin-user?action=toggleStatus&id=${u.id}&status=${u.status}&type=${currentType}&search=${fn:escapeXml(search)}" 
                                                                                class="btn btn-sm btn-unblock-user" 
                                                                                onclick="return confirm('Bạn có chắc chắn muốn MỞ KHÓA tài khoản [${u.username}] không?')">
                                                                                 <i data-feather="unlock" style="width: 14px; height: 14px;"></i> Unblock
