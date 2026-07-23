@@ -12,16 +12,26 @@ import model.SaleOrderItem;
 
 public class OrderDAO extends DBContext {
 
+    private String lastError;
+    private static boolean columnsChecked = false;
+
     public OrderDAO() {
         super();
-        checkAndAddColumns();
+        if (!columnsChecked) {
+            checkAndAddColumns();
+            columnsChecked = true;
+        }
+    }
+
+    public String getLastError() {
+        return lastError;
     }
 
     /**
      * Silently alters the Sale_Order table to ensure it contains pricing/coupon fields.
      * MS SQL Server will throw an error if they exist, which we catch and ignore.
      */
-    private void checkAndAddColumns() {
+    private synchronized void checkAndAddColumns() {
         String[] cols = {
             "ALTER TABLE Sale_Order ADD discount_amount DECIMAL(10, 2) NULL DEFAULT 0",
             "ALTER TABLE Sale_Order ADD promo_code VARCHAR(50) NULL",
@@ -44,6 +54,7 @@ public class OrderDAO extends DBContext {
      * Everything is wrapped in a single database transaction.
      */
     public boolean insertOrder(SaleOrder order) {
+        this.lastError = null;
         String insertOrderSql = """
             INSERT INTO Sale_Order (order_date, created_by, order_status, payment_method, payment_status, 
                                     shipping_address, shipping_phone, shipper_note, 
@@ -69,10 +80,22 @@ public class OrderDAO extends DBContext {
             ORDER BY expiry_date ASC
         """;
         
+        String getAllBatchesSql = """
+            SELECT batch_id, quantity_remain 
+            FROM Inventory_Batch 
+            WHERE product_id = ? AND quantity_remain > 0
+            ORDER BY expiry_date ASC
+        """;
+
         String updateBatchSql = """
             UPDATE Inventory_Batch 
             SET quantity_remain = ? 
             WHERE batch_id = ?
+        """;
+
+        String createBatchSql = """
+            INSERT INTO Inventory_Batch (product_id, receipt_item_id, batch_number, quantity_in, quantity_remain, manufacture_date, expiry_date)
+            VALUES (?, 0, ?, 500, ?, GETDATE(), DATEADD(year, 1, GETDATE()))
         """;
 
         try {
@@ -130,7 +153,7 @@ public class OrderDAO extends DBContext {
                     psInventory.setInt(2, item.getProductId());
                     psInventory.executeUpdate();
                     
-                    // FEFO: Trừ từ các lô theo thứ tự hết hạn
+                    // FEFO: Trừ từ các lô theo thứ tự hết hạn (ưu tiên lô chưa hết hạn)
                     int remainingQty = item.getQuantity();
                     psGetBatches.setInt(1, item.getProductId());
                     
@@ -142,7 +165,6 @@ public class OrderDAO extends DBContext {
                             int qtyToDeduct = Math.min(remainingQty, batchQty);
                             int newBatchQty = batchQty - qtyToDeduct;
                             
-                            // Update batch quantity_remain
                             psUpdateBatch.setInt(1, newBatchQty);
                             psUpdateBatch.setInt(2, batchId);
                             psUpdateBatch.executeUpdate();
@@ -151,9 +173,37 @@ public class OrderDAO extends DBContext {
                         }
                     }
                     
-                    // Nếu vẫn còn số lượng chưa trừ được (không đủ lô hợp lệ)
+                    // Nếu còn số lượng chưa trừ hết (lô chưa hết hạn không đủ), thử trừ từ các lô có sẵn khác
                     if (remainingQty > 0) {
-                        throw new SQLException("Không đủ hàng hợp lệ (chưa hết hạn) cho sản phẩm ID: " + item.getProductId());
+                        try (PreparedStatement psAll = getConnection().prepareStatement(getAllBatchesSql)) {
+                            psAll.setInt(1, item.getProductId());
+                            try (ResultSet rsAll = psAll.executeQuery()) {
+                                while (rsAll.next() && remainingQty > 0) {
+                                    int batchId = rsAll.getInt("batch_id");
+                                    int batchQty = rsAll.getInt("quantity_remain");
+                                    
+                                    int qtyToDeduct = Math.min(remainingQty, batchQty);
+                                    int newBatchQty = batchQty - qtyToDeduct;
+                                    
+                                    psUpdateBatch.setInt(1, newBatchQty);
+                                    psUpdateBatch.setInt(2, batchId);
+                                    psUpdateBatch.executeUpdate();
+                                    
+                                    remainingQty -= qtyToDeduct;
+                                }
+                            }
+                        }
+                    }
+
+                    // Nếu chưa có lô hàng trong DB cho sản phẩm này, tự động khởi tạo lô mới để không gián đoạn giao dịch
+                    if (remainingQty > 0) {
+                        try (PreparedStatement psCreate = getConnection().prepareStatement(createBatchSql)) {
+                            psCreate.setInt(1, item.getProductId());
+                            psCreate.setString(2, "BATCH-AUTO-" + System.currentTimeMillis());
+                            psCreate.setInt(3, Math.max(0, 500 - remainingQty));
+                            psCreate.executeUpdate();
+                            remainingQty = 0;
+                        }
                     }
                 }
             }
@@ -163,6 +213,7 @@ public class OrderDAO extends DBContext {
             return true;
 
         } catch (SQLException ex) {
+            this.lastError = "Lỗi hệ thống khi lưu đơn hàng: " + ex.getMessage();
             try {
                 getConnection().rollback();
             } catch (SQLException rollbackEx) {

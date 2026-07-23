@@ -281,7 +281,7 @@ public class CheckoutController extends HttpServlet {
         List<CartItem> cartItems = cartDAO.getCartItems(cart.getCartId());
         double totalAmount = 0;
         for (CartItem item : cartItems) {
-            totalAmount += item.getQuantity() * item.getProduct().getEffectivePrice();
+            totalAmount += item.getQuantity() * item.getEffectiveUnitPrice();
         }
 
         Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -564,7 +564,11 @@ public class CheckoutController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/checkout?action=success&orderId=" + order.getSaleOrderId());
             }
         } else {
-            session.setAttribute("checkoutError", "Đã xảy ra lỗi hệ thống trong quá trình đặt hàng. Vui lòng thử lại sau.");
+            String errStr = orderDAO.getLastError();
+            if (errStr == null || errStr.trim().isEmpty()) {
+                errStr = "Đã xảy ra lỗi hệ thống trong quá trình đặt hàng. Vui lòng thử lại sau.";
+            }
+            session.setAttribute("checkoutError", errStr);
             response.sendRedirect(request.getContextPath() + "/checkout");
         }
     }

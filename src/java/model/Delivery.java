@@ -12,6 +12,14 @@ public class Delivery {
     private Timestamp shippedDate;
     private Timestamp deliveredDate;
 
+    private String customerName;
+    private String shippingPhone;
+    private String paymentMethod;
+    private String paymentStatus;
+    private double totalAmount;
+    private String shipperNote;
+    private String failureReason;
+
     public Delivery() {
     }
 
@@ -69,5 +77,61 @@ public class Delivery {
 
     public void setDeliveredDate(Timestamp deliveredDate) {
         this.deliveredDate = deliveredDate;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getShippingPhone() {
+        return shippingPhone;
+    }
+
+    public void setShippingPhone(String shippingPhone) {
+        this.shippingPhone = shippingPhone;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public String getShipperNote() {
+        return shipperNote;
+    }
+
+    public void setShipperNote(String shipperNote) {
+        this.shipperNote = shipperNote;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
     }
 }

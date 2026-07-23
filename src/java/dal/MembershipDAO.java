@@ -10,20 +10,71 @@ import model.Membership;
 
 public class MembershipDAO extends DBContext {
 
+    public void syncMissingMemberships() {
+        String createTableSql = """
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name='Membership')
+            CREATE TABLE Membership (
+                membership_id INT IDENTITY(1,1) PRIMARY KEY,
+                user_id INT NOT NULL FOREIGN KEY REFERENCES Users(user_id) ON DELETE CASCADE,
+                current_points INT NOT NULL DEFAULT 0,
+                current_tier NVARCHAR(50) NOT NULL DEFAULT 'Normal',
+                point_conversion_rate INT NOT NULL DEFAULT 10000,
+                silver_min_point INT NOT NULL DEFAULT 100,
+                silver_discount_percent INT NOT NULL DEFAULT 5,
+                gold_min_point INT NOT NULL DEFAULT 500,
+                gold_discount_percent INT NOT NULL DEFAULT 10,
+                diamond_min_point INT NOT NULL DEFAULT 1000,
+                diamond_discount_percent INT NOT NULL DEFAULT 15,
+                manual_override BIT NOT NULL DEFAULT 0,
+                tier_updated_at DATETIME NOT NULL DEFAULT GETDATE()
+            )
+        """;
+
+        String insertMissingSql = """
+            INSERT INTO Membership (user_id, current_points, current_tier, point_conversion_rate, 
+                                    silver_min_point, silver_discount_percent, 
+                                    gold_min_point, gold_discount_percent, 
+                                    diamond_min_point, diamond_discount_percent, manual_override)
+            SELECT u.user_id, 0, 'Normal', 10000, 100, 5, 500, 10, 1000, 15, 0
+            FROM Users u
+            JOIN User_Role ur ON u.user_id = ur.user_id
+            JOIN Roles r ON ur.role_id = r.role_id
+            WHERE (r.role_name = 'Customer' OR ur.role_id = 1)
+              AND NOT EXISTS (SELECT 1 FROM Membership m WHERE m.user_id = u.user_id)
+        """;
+
+        try {
+            Connection conn = getConnection();
+            if (conn != null && !conn.isClosed()) {
+                try (PreparedStatement ps1 = conn.prepareStatement(createTableSql)) {
+                    ps1.executeUpdate();
+                }
+                try (PreparedStatement ps2 = conn.prepareStatement(insertMissingSql)) {
+                    ps2.executeUpdate();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // Lấy toàn bộ danh sách membership kèm họ tên khách hàng
     public List<Membership> getAllMembership() {
+        syncMissingMemberships();
         List<Membership> list = new ArrayList<>();
 
-        // Thực hiện JOIN để lấy trường fullName từ bảng Users 
+        // Thực hiện JOIN để lấy trường fullName từ bảng Users (chỉ lọc khách hàng Customer)
         String sql = """
     SELECT m.*, ui.full_name
     FROM Membership m
-    LEFT JOIN UserInfo ui
-        ON m.user_id = ui.user_id
+    LEFT JOIN UserInfo ui ON m.user_id = ui.user_id
+    JOIN User_Role ur ON m.user_id = ur.user_id
+    JOIN Roles r ON ur.role_id = r.role_id
+    WHERE (r.role_name = 'Customer' OR ur.role_id = 1)
     """;
 
         try {
-            PreparedStatement st = connection.prepareStatement(sql);
+            PreparedStatement st = getConnection().prepareStatement(sql);
             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
@@ -71,7 +122,7 @@ public class MembershipDAO extends DBContext {
     """;
 
         try {
-            PreparedStatement st = connection.prepareStatement(sql);
+            PreparedStatement st = getConnection().prepareStatement(sql);
             st.setInt(1, userId);
             ResultSet rs = st.executeQuery();
 
@@ -120,7 +171,7 @@ public class MembershipDAO extends DBContext {
                      """;
 
         try {
-            PreparedStatement st = connection.prepareStatement(sql);
+            PreparedStatement st = getConnection().prepareStatement(sql);
 
             st.setInt(1, m.getCurrentPoints());
             st.setString(2, m.getCurrentTier());
@@ -138,14 +189,17 @@ public class MembershipDAO extends DBContext {
     }
     // Thêm phương thức này vào file dal/MembershipDAO.java
 public List<Membership> searchAndFilterMembership(String searchName, String tierFilter) {
+    syncMissingMemberships();
     List<Membership> list = new ArrayList<>();
     
-    // Khởi tạo SQL cơ bản
+    // Khởi tạo SQL cơ bản (chỉ lọc khách hàng Customer)
     StringBuilder sql = new StringBuilder("""
         SELECT m.*, ui.full_name
         FROM Membership m
         LEFT JOIN UserInfo ui ON m.user_id = ui.user_id
-        WHERE 1=1
+        JOIN User_Role ur ON m.user_id = ur.user_id
+        JOIN Roles r ON ur.role_id = r.role_id
+        WHERE (r.role_name = 'Customer' OR ur.role_id = 1)
     """);
     
     // Thêm điều kiện tìm kiếm theo tên nếu có
@@ -159,7 +213,7 @@ public List<Membership> searchAndFilterMembership(String searchName, String tier
     }
 
     try {
-        PreparedStatement st = connection.prepareStatement(sql.toString());
+        PreparedStatement st = getConnection().prepareStatement(sql.toString());
         int paramIndex = 1;
         
         if (searchName != null && !searchName.trim().isEmpty()) {
@@ -230,11 +284,12 @@ public boolean updateMembershipRule(
         """;
 
     try {
+        Connection conn = getConnection();
         // Tắt auto commit để thực hiện transaction đảm bảo tính toàn vẹn dữ liệu
-        connection.setAutoCommit(false);
+        conn.setAutoCommit(false);
 
         // 1. Cập nhật các cột quy định
-        PreparedStatement st = connection.prepareStatement(sqlUpdateRule);
+        PreparedStatement st = conn.prepareStatement(sqlUpdateRule);
         st.setInt(1, pointConversionRate);
         st.setInt(2, silverMinPoint);
         st.setInt(3, silverDiscount);
@@ -247,21 +302,22 @@ public boolean updateMembershipRule(
 
         // 2. Nếu cập nhật quy định thành công, tiến hành tính toán lại hạng cho toàn bộ thành viên
         if (rowsUpdated > 0) {
-            PreparedStatement stTiers = connection.prepareStatement(sqlUpdateTiers);
+            PreparedStatement stTiers = conn.prepareStatement(sqlUpdateTiers);
             stTiers.executeUpdate();
         }
 
         // Commit transaction
-        connection.commit();
-        connection.setAutoCommit(true);
+        conn.commit();
+        conn.setAutoCommit(true);
         return rowsUpdated > 0;
 
     } catch (Exception e) {
         // Rollback nếu xảy ra lỗi
         try {
-            if (connection != null) {
-                connection.rollback();
-                connection.setAutoCommit(true);
+            Connection conn = getConnection();
+            if (conn != null) {
+                conn.rollback();
+                conn.setAutoCommit(true);
             }
         } catch (Exception rollbackEx) {
             rollbackEx.printStackTrace();
@@ -295,14 +351,15 @@ public boolean addPointsForOrder(int orderId) {
     """;
     
     try {
+        Connection conn = getConnection();
         // Sử dụng connection của DBContext
-        connection.setAutoCommit(false);
+        conn.setAutoCommit(false);
         
         int userId = -1;
         double totalPayment = 0;
         
         // 1. Lấy thông tin khách hàng và số tiền thanh toán thực tế của đơn hàng
-        try (PreparedStatement ps = connection.prepareStatement(getOrderSql)) {
+        try (PreparedStatement ps = conn.prepareStatement(getOrderSql)) {
             ps.setInt(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -313,14 +370,14 @@ public boolean addPointsForOrder(int orderId) {
         }
         
         if (userId == -1 || totalPayment <= 0) {
-            connection.rollback();
-            connection.setAutoCommit(true);
+            conn.rollback();
+            conn.setAutoCommit(true);
             return false;
         }
         
         // 2. Lấy tỷ lệ quy đổi điểm (point_conversion_rate) của khách hàng này
         int pointConversionRate = 10000; // Giá trị dự phòng (mặc định) nếu lỗi hoặc bằng 0
-        try (PreparedStatement ps = connection.prepareStatement(getRateSql)) {
+        try (PreparedStatement ps = conn.prepareStatement(getRateSql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -335,32 +392,33 @@ public boolean addPointsForOrder(int orderId) {
         // 3. Tính số điểm được cộng = Tổng thanh toán / Tỷ lệ quy đổi
         int pointsToAdd = (int) (totalPayment / pointConversionRate);
         if (pointsToAdd <= 0) {
-            connection.commit();
-            connection.setAutoCommit(true);
+            conn.commit();
+            conn.setAutoCommit(true);
             return true; // Số tiền quá nhỏ không đủ đổi thành 1 điểm
         }
         
         // 4. Thực hiện cộng điểm tích lũy
-        try (PreparedStatement ps = connection.prepareStatement(updatePointsSql)) {
+        try (PreparedStatement ps = conn.prepareStatement(updatePointsSql)) {
             ps.setInt(1, pointsToAdd);
             ps.setInt(2, userId);
             ps.executeUpdate();
         }
         
         // 5. Cập nhật lại hạng thăng/hạ theo quy định
-        try (PreparedStatement ps = connection.prepareStatement(recalculateTierSql)) {
+        try (PreparedStatement ps = conn.prepareStatement(recalculateTierSql)) {
             ps.setInt(1, userId);
             ps.executeUpdate();
         }
         
-        connection.commit();
-        connection.setAutoCommit(true);
+        conn.commit();
+        conn.setAutoCommit(true);
         return true;
     } catch (SQLException ex) {
         try {
-            if (connection != null) {
-                connection.rollback();
-                connection.setAutoCommit(true);
+            Connection conn = getConnection();
+            if (conn != null) {
+                conn.rollback();
+                conn.setAutoCommit(true);
             }
         } catch (SQLException rollbackEx) {
             rollbackEx.printStackTrace();

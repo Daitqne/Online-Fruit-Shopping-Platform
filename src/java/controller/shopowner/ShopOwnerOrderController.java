@@ -118,7 +118,7 @@ public class ShopOwnerOrderController extends HttpServlet {
                 if (newStatus != null) {
                     boolean ok = orderDAO.updateOrderStatus(orderId, newStatus);
                     if (ok) {
-                        if (newStatus.equals("Shipping")) {
+                        if (newStatus.equals("Shipping") || newStatus.equals("Processing")) {
                             SaleOrder order = orderDAO.getOrderById(orderId);
                             if (order != null) {
                                 deliveryDAO.createDelivery(orderId, order.getShippingAddress());

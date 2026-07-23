@@ -77,7 +77,7 @@
                                                     <i class="fa-solid fa-gears"></i> Đang xử lý
                                                 </span>
                                             </c:when>
-                                            <c:when test="${ord.orderStatus == 'Shipped'}">
+                                            <c:when test="${ord.orderStatus == 'Shipping'}">
                                                 <span class="status-badge status-shipped">
                                                     <i class="fa-solid fa-truck-fast"></i> Đang giao hàng
                                                 </span>
@@ -92,6 +92,16 @@
                                                     <i class="fa-solid fa-circle-xmark"></i> Đã hủy đơn
                                                 </span>
                                             </c:when>
+                                            <c:when test="${ord.orderStatus == 'Delivery Failed'}">
+                                                <span class="status-badge status-failed">
+                                                    <i class="fa-solid fa-triangle-exclamation"></i> Giao hàng thất bại
+                                                </span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="status-badge status-pending">
+                                                    <i class="fa-solid fa-circle-notch fa-spin"></i> ${ord.orderStatus}
+                                                </span>
+                                            </c:otherwise>
                                         </c:choose>
                                     </td>
                                     <td class="order-price">

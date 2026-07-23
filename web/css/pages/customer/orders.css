@@ -135,6 +135,10 @@
     background-color: #FEE2E2;
     color: #DC2626;
 }
+.status-failed {
+    background-color: #FFF3E0;
+    color: #E65100;
+}
 
 /* Payment Statuses */
 .pay-pending {

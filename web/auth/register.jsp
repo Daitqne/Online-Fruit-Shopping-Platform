@@ -141,6 +141,7 @@
                             <select id="roleId" name="roleId" required>
                                 <option value="1" <c:if test="${param.roleId == '1' || empty param.roleId}">selected</c:if>>Khách hàng (Customer)</option>
                                 <option value="4" <c:if test="${param.roleId == '4'}">selected</c:if>>Chủ cửa hàng (Shop Owner)</option>
+                                <option value="5" <c:if test="${param.roleId == '5'}">selected</c:if>>Nhân viên giao hàng (Shipper / Delivery)</option>
                             </select>
                         </div>
                     </div>

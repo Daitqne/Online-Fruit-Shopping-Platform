@@ -84,7 +84,13 @@ public class SignupServlet extends HttpServlet {
             roleId = Integer.parseInt(roleIdParam);
         } catch (NumberFormatException ignored) {
         }
-        a.setRoleId(roleId == 4 ? 4 : 1);
+        if (roleId == 4) {
+            a.setRoleId(4);
+        } else if (roleId == 5) {
+            a.setRoleId(5);
+        } else {
+            a.setRoleId(1);
+        }
 
        
         boolean success = authenDAO.register(a);
