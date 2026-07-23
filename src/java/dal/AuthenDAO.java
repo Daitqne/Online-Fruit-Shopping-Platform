@@ -27,7 +27,7 @@ public class AuthenDAO extends DBContext{
         """;
 
         try (
-                PreparedStatement ps = connection.prepareStatement(sql)) {
+                PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
 

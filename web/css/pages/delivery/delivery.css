@@ -1,34 +1,210 @@
 .table > :not(caption) > * > * {
-    padding: .75rem 1rem;
+    padding: 0.85rem 1rem;
     vertical-align: middle;
 }
-.badge-pending   {
-    background: #FEF3C7;
-    color: #92400E;
+
+/* KPI Summary Cards */
+.kpi-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: #ffffff;
+    overflow: hidden;
 }
-.badge-shipping  {
-    background: #EDE9FE;
-    color: #4C1D95;
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
 }
-.badge-delivered {
-    background: #D1FAE5;
-    color: #065F46;
+
+.kpi-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
 }
+
+.kpi-unassigned .kpi-icon-wrapper {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+.kpi-shipping .kpi-icon-wrapper {
+    background: rgba(79, 70, 229, 0.15);
+    color: #4f46e5;
+}
+
+.kpi-delivered .kpi-icon-wrapper {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.kpi-cod .kpi-icon-wrapper {
+    background: rgba(225, 29, 72, 0.15);
+    color: #e11d48;
+}
+
+.kpi-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Filter Toolbar */
+.filter-card {
+    border: none;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+}
+
+.filter-card .form-control,
+.filter-card .form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.88rem;
+}
+
+.filter-card .form-control:focus,
+.filter-card .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Badges */
 .status-badge {
-    padding: .28rem .65rem;
-    border-radius: 20px;
-    font-size: .76rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 30px;
+    font-size: 0.76rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
 }
+
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-shipping {
+    background: #ede9fe;
+    color: #4c1d95;
+}
+
+.badge-delivered {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-failed {
+    background: #ffe4e6;
+    color: #9f1239;
+}
+
+.badge-cod {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #ffedd5;
+}
+
+.badge-prepaid {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #dcfce7;
+}
+
+/* Action Buttons */
 .action-btns {
     display: flex;
-    gap: .4rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
+    align-items: center;
 }
+
 .action-btns .btn {
-    padding: .25rem .6rem;
-    font-size: .78rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    transition: all 0.15s ease;
+}
+
+.btn-maps {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: none;
+}
+
+.btn-maps:hover {
+    background-color: #bae6fd;
+    color: #0284c7;
+}
+
+.btn-quickview {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: none;
+}
+
+.btn-quickview:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn-report-fail {
+    background-color: #fff1f2;
+    color: #be123c;
+    border: none;
+}
+
+.btn-report-fail:hover {
+    background-color: #ffe4e6;
+    color: #9f1239;
+}
+
+/* Modal styling */
+.modal-content {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 1.2rem 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 1rem 1.5rem;
+}
+
+.item-img-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
 }

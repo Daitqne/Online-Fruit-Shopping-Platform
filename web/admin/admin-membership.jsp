@@ -244,7 +244,7 @@
                                                 <tr>
                                                     <td class="text-center fw-bold text-muted">${status.index + 1}</td>
                                                     <td><span class="text-muted fw-semibold">#${m.userId}</span></td>
-                                                    <td class="fw-semibold ${m.currentPoints == 0 ? 'text-danger' : ''}">
+                                                    <td class="fw-semibold text-dark">
                                                         <c:choose>
                                                             <c:when test="${not empty m.fullName}">${m.fullName}</c:when>
                                                             <c:otherwise>Khách chưa có tài khoản</c:otherwise>
@@ -453,6 +453,44 @@
                     editModal.show();
                 });
             });
+
+            // Tự động cập nhật điểm khi đổi Hạng thành viên trong Modal
+            const tierMinPoints = {
+                'Normal': 0,
+                'Silver': ${not empty currentRule ? currentRule.silverMinPoint : 100},
+                'Gold': ${not empty currentRule ? currentRule.goldMinPoint : 500},
+                'Diamond': ${not empty currentRule ? currentRule.diamondMinPoint : 1000}
+            };
+
+            const editTierSelect = document.getElementById('editTier');
+            const editPointsInput = document.getElementById('editPoints');
+            const editOverrideCheckbox = document.getElementById('editManualOverride');
+
+            if (editTierSelect && editPointsInput) {
+                // Khi thay đổi Hạng -> Tự động điền điểm tối thiểu của Hạng đó
+                editTierSelect.addEventListener('change', function () {
+                    const selectedTier = this.value;
+                    if (tierMinPoints.hasOwnProperty(selectedTier)) {
+                        editPointsInput.value = tierMinPoints[selectedTier];
+                    }
+                });
+
+                // Khi thay đổi Điểm -> Tự động cập nhật Hạng tương ứng (nếu không chọn Chỉnh sửa thủ công)
+                editPointsInput.addEventListener('input', function () {
+                    const pts = parseInt(this.value) || 0;
+                    if (editOverrideCheckbox && !editOverrideCheckbox.checked) {
+                        if (pts >= tierMinPoints['Diamond']) {
+                            editTierSelect.value = 'Diamond';
+                        } else if (pts >= tierMinPoints['Gold']) {
+                            editTierSelect.value = 'Gold';
+                        } else if (pts >= tierMinPoints['Silver']) {
+                            editTierSelect.value = 'Silver';
+                        } else {
+                            editTierSelect.value = 'Normal';
+                        }
+                    }
+                });
+            }
             
             // Toggle sidebar (nếu cần xử lý responsive ẩn/hiện menu)
             const toggleBtn = document.getElementById('sidebar-toggle');

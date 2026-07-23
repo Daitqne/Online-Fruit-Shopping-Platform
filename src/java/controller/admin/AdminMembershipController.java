@@ -33,6 +33,9 @@ public class AdminMembershipController extends HttpServlet {
             response.sendRedirect("login");
             return;
         }
+
+        membershipDAO = new MembershipDAO();
+
         // 1. Đọc tham số Tìm kiếm & Lọc từ request
         String txtSearch = request.getParameter("searchName");
         String selectedTier = request.getParameter("tierFilter");
@@ -65,6 +68,8 @@ public class AdminMembershipController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        membershipDAO = new MembershipDAO();
 
         // Nhận hành động từ form
         String action = request.getParameter("action");
@@ -101,8 +106,22 @@ public class AdminMembershipController extends HttpServlet {
                         } else {
                             currentTier = "Normal";
                         }
+                    } else {
+                        // Nếu chọn hạng thủ công, đảm bảo điểm đạt mức tối thiểu của hạng đã chọn
+                        int silverMin = m.getSilverMinPoint() > 0 ? m.getSilverMinPoint() : 100;
+                        int goldMin = m.getGoldMinPoint() > 0 ? m.getGoldMinPoint() : 500;
+                        int diamondMin = m.getDiamondMinPoint() > 0 ? m.getDiamondMinPoint() : 1000;
+
+                        if ("Diamond".equalsIgnoreCase(currentTier) && currentPoints < diamondMin) {
+                            currentPoints = diamondMin;
+                        } else if ("Gold".equalsIgnoreCase(currentTier) && currentPoints < goldMin) {
+                            currentPoints = goldMin;
+                        } else if ("Silver".equalsIgnoreCase(currentTier) && currentPoints < silverMin) {
+                            currentPoints = silverMin;
+                        }
                     }
 
+                    m.setCurrentPoints(currentPoints);
                     m.setCurrentTier(currentTier);
                     m.setManualOverride(manualOverride);
 

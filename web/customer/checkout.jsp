@@ -119,7 +119,7 @@
                         </c:when>
                         <c:otherwise>
                             <div class="coupon-box">
-                                <input type="text" id="promoCodeInput" placeholder="Nhập mã giảm giá (ví dụ: FRUIT10)..." class="coupon-input">
+                                <input type="text" id="promoCodeInput" placeholder="Nhập mã giảm giá (ví dụ: FRUIT10)..." class="coupon-input" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); applyCouponCode(); }">
                                 <button type="button" class="btn-apply-coupon" onclick="applyCouponCode()">Áp dụng</button>
                             </div>
                         </c:otherwise>

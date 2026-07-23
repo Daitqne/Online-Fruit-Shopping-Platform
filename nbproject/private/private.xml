@@ -3,10 +3,15 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/SWP/src/java/dal/AddressDAO.java</file>
-            <file>file:/C:/SWP/src/java/dal/AdminDAO.java</file>
-            <file>file:/C:/SWP/src/java/dal/DBContext.java</file>
-            <file>file:/C:/SWP/src/java/dal/ProductDAO.java</file>
+            <file>file:/D:/SWP-391/src/java/controller/admin/AdminMembershipController.java</file>
+            <file>file:/D:/SWP-391/src/java/controller/admin/AdminUserController.java</file>
+            <file>file:/D:/SWP-391/src/java/dal/OrderDAO.java</file>
+            <file>file:/D:/SWP-391/src/java/dal/DeliveryDAO.java</file>
+            <file>file:/D:/SWP-391/src/java/dal/AdminDAO.java</file>
+            <file>file:/D:/SWP-391/web/admin/admin-promotions.jsp</file>
+            <file>file:/D:/SWP-391/src/java/dal/PromotionDAO.java</file>
+            <file>file:/D:/SWP-391/src/java/controller/delivery/DeliveryController.java</file>
+            <file>file:/D:/SWP-391/src/java/controller/admin/AdminPromotionController.java</file>
         </group>
     </open-files>
 </project-private>
