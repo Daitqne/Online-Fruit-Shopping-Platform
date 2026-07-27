@@ -23,7 +23,7 @@ public class DeliveryDAO extends DBContext {
         int shipperId = rs.getInt("shipper_id");
         d.setShipperId((rs.wasNull() || shipperId == 0) ? null : shipperId);
         d.setStatus(rs.getString("status"));
-        d.setShippingAddress(rs.getString("shipping_address"));
+        d.setShippingAddress(rs.getNString("shipping_address"));
         d.setShippedDate(rs.getTimestamp("shipped_date"));
         d.setDeliveredDate(rs.getTimestamp("delivered_date"));
 
@@ -71,7 +71,7 @@ public class DeliveryDAO extends DBContext {
         try {
             PreparedStatement ps = getConnection().prepareStatement(sql);
             ps.setInt(1, orderId);
-            ps.setString(2, shippingAddress != null ? shippingAddress : "Chưa cập nhật");
+            ps.setNString(2, shippingAddress != null ? shippingAddress : "Chưa cập nhật");
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
