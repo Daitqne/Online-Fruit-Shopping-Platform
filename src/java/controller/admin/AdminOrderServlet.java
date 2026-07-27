@@ -8,9 +8,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.AdminSaleOrder;
-import model.Authen;
 import model.UserInfo;
 
 @WebServlet(name = "AdminOrderServlet", urlPatterns = {"/admin-orders"})
@@ -19,17 +17,7 @@ public class AdminOrderServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Lấy thông tin tài khoản đăng nhập từ session
-        HttpSession session = request.getSession();
-        Authen user = (Authen) session.getAttribute("user");
-
-        // Kiểm tra quyền Admin
-        if (user == null || user.getRole() == null || !user.getRole().equalsIgnoreCase("Admin")) {
-            response.sendRedirect("login");
-            return;
-        }
-
-        System.out.println("===== ADMIN ORDER SERVLET =====");
+System.out.println("===== ADMIN ORDER SERVLET =====");
         AdminOrderDAO dao = new AdminOrderDAO();
 
         try {
@@ -80,16 +68,6 @@ public class AdminOrderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // Lấy thông tin tài khoản đăng nhập từ session
-        HttpSession session = request.getSession();
-        Authen user = (Authen) session.getAttribute("user");
-
-        // Kiểm tra quyền Admin
-        if (user == null || user.getRole() == null || !user.getRole().equalsIgnoreCase("Admin")) {
-            response.sendRedirect("login");
-            return;
-        }
 
         // Xử lý hành động KHÓA ĐƠN khi Admin nhấn nút hủy
         String orderIdRaw = request.getParameter("orderId");
