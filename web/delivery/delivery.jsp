@@ -308,10 +308,7 @@
                                                             </td>
                                                             <td class="text-center">
                                                                 <div class="action-btns justify-content-center">
-                                                                    <a href="https://www.google.com/maps/search/?api=1&query=${d.shippingAddress}" 
-                                                                       target="_blank" class="btn btn-maps" title="Mở bản đồ chỉ đường">
-                                                                        <i class="fa-solid fa-map-location-dot"></i> Bản đồ
-                                                                    </a>
+
                                                                     <button type="button" class="btn btn-quickview" onclick="openQuickView(${d.orderId})" title="Xem sản phẩm">
                                                                         <i class="fa-solid fa-eye"></i> Xem món
                                                                     </button>
@@ -448,10 +445,7 @@
                                                             </td>
                                                             <td class="text-center">
                                                                 <div class="action-btns justify-content-center">
-                                                                    <a href="https://www.google.com/maps/search/?api=1&query=${d.shippingAddress}" 
-                                                                       target="_blank" class="btn btn-maps" title="Chỉ đường Google Maps">
-                                                                        <i class="fa-solid fa-map-location-dot"></i> Bản đồ
-                                                                    </a>
+
                                                                     <button type="button" class="btn btn-quickview" onclick="openQuickView(${d.orderId})" title="Xem món hàng">
                                                                         <i class="fa-solid fa-eye"></i> Xem món
                                                                     </button>
