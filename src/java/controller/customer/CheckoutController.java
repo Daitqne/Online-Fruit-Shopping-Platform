@@ -171,15 +171,7 @@ public class CheckoutController extends HttpServlet {
         double memberDiscount = 0;
 
         if (membership != null) {
-            String tier = membership.getCurrentTier();
-            if ("Silver".equalsIgnoreCase(tier)) {
-                memberDiscountPercent = membership.getSilverDiscountPercent();
-            } else if ("Gold".equalsIgnoreCase(tier)) {
-                memberDiscountPercent = membership.getGoldDiscountPercent();
-            } else if ("Diamond".equalsIgnoreCase(tier)) {
-                memberDiscountPercent = membership.getDiamondDiscountPercent();
-            }
-
+            memberDiscountPercent = membership.getDiscountPercent();
             // Số tiền giảm giá theo hạng thành viên (tính trên tổng tiền hàng tạm tính)
             memberDiscount = totalAmount * (memberDiscountPercent / 100.0);
         }
@@ -397,14 +389,7 @@ public class CheckoutController extends HttpServlet {
         double memberDiscountPercent = 0;
         double memberDiscount = 0;
         if (membership != null) {
-            String tier = membership.getCurrentTier();
-            if ("Silver".equalsIgnoreCase(tier)) {
-                memberDiscountPercent = membership.getSilverDiscountPercent();
-            } else if ("Gold".equalsIgnoreCase(tier)) {
-                memberDiscountPercent = membership.getGoldDiscountPercent();
-            } else if ("Diamond".equalsIgnoreCase(tier)) {
-                memberDiscountPercent = membership.getDiamondDiscountPercent();
-            }
+            memberDiscountPercent = membership.getDiscountPercent();
             memberDiscount = totalAmount * (memberDiscountPercent / 100.0);
         }
 

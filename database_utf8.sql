@@ -1102,28 +1102,48 @@ ALTER TABLE [dbo].[Reviews]  WITH CHECK ADD CHECK  (([rating]>=(1) AND [rating]<
 GO
 
 -- ============================================================
--- Bang Membership: Quan ly diem tich luy va hang thanh vien
+-- 1. Bang MembershipTier: Quan ly quy dinh cac Hang thanh vien (Luat chung)
+-- ============================================================
+IF NOT EXISTS (
+    SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'MembershipTier'
+)
+BEGIN
+    CREATE TABLE [dbo].[MembershipTier] (
+        [tier_id]                [int] IDENTITY(1,1) NOT NULL,
+        [tier_name]              [nvarchar](50) NOT NULL,
+        [min_points]             [int] NOT NULL CONSTRAINT [DF_MembershipTier_min_points] DEFAULT (0),
+        [discount_percent]      [int] NOT NULL CONSTRAINT [DF_MembershipTier_discount]   DEFAULT (0),
+        [point_conversion_rate]  [int] NOT NULL CONSTRAINT [DF_MembershipTier_conv_rate]  DEFAULT (10000),
+        CONSTRAINT [PK_MembershipTier] PRIMARY KEY CLUSTERED ([tier_id] ASC),
+        CONSTRAINT [UQ_MembershipTier_name] UNIQUE ([tier_name])
+    );
+
+    -- Chen du lieu quy dinh mac dinh cho 4 Hang thành viên
+    INSERT INTO [dbo].[MembershipTier] ([tier_name], [min_points], [discount_percent], [point_conversion_rate])
+    VALUES 
+    (N'Normal',  0,    0,  10000),
+    (N'Silver',  100,  5,  10000),
+    (N'Gold',    500,  10, 10000),
+    (N'Diamond', 1000, 15, 10000);
+END
+GO
+
+-- ============================================================
+-- 2. Bang Membership: Quan ly diem tich luy cua tung Khach hang
 -- ============================================================
 IF NOT EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Membership'
 )
 BEGIN
     CREATE TABLE [dbo].[Membership] (
-        [membership_id]           [int] IDENTITY(1,1) NOT NULL,
-        [user_id]                 [int] NOT NULL,
-        [current_points]          [int] NOT NULL CONSTRAINT [DF_Membership_points]      DEFAULT (0),
-        [current_tier]            [nvarchar](20) NOT NULL CONSTRAINT [DF_Membership_tier] DEFAULT (N'Normal'),
-        [point_conversion_rate]   [int] NOT NULL CONSTRAINT [DF_Membership_conv_rate]   DEFAULT (10000),
-        [silver_min_point]        [int] NOT NULL CONSTRAINT [DF_Membership_silver_min]  DEFAULT (100),
-        [silver_discount_percent] [int] NOT NULL CONSTRAINT [DF_Membership_silver_disc] DEFAULT (5),
-        [gold_min_point]          [int] NOT NULL CONSTRAINT [DF_Membership_gold_min]    DEFAULT (500),
-        [gold_discount_percent]   [int] NOT NULL CONSTRAINT [DF_Membership_gold_disc]   DEFAULT (10),
-        [diamond_min_point]       [int] NOT NULL CONSTRAINT [DF_Membership_diamond_min] DEFAULT (1000),
-        [diamond_discount_percent][int] NOT NULL CONSTRAINT [DF_Membership_diamond_disc]DEFAULT (15),
-        [manual_override]         [bit] NOT NULL CONSTRAINT [DF_Membership_override]    DEFAULT (0),
-        [tier_updated_at]         [datetime] NOT NULL CONSTRAINT [DF_Membership_updated] DEFAULT (GETDATE()),
+        [membership_id]   [int] IDENTITY(1,1) NOT NULL,
+        [user_id]         [int] NOT NULL,
+        [current_points]  [int] NOT NULL CONSTRAINT [DF_Membership_points]    DEFAULT (0),
+        [tier_id]         [int] NOT NULL CONSTRAINT [DF_Membership_tier_id] DEFAULT (1), -- Default 1 (Normal)
+        [manual_override] [bit] NOT NULL CONSTRAINT [DF_Membership_override]  DEFAULT (0),
+        [tier_updated_at] [datetime] NOT NULL CONSTRAINT [DF_Membership_updated] DEFAULT (GETDATE()),
         CONSTRAINT [PK_Membership] PRIMARY KEY CLUSTERED ([membership_id] ASC)
-    )
+    );
 END
 GO
 
@@ -1137,6 +1157,13 @@ IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CO
 BEGIN
     ALTER TABLE [dbo].[Membership] WITH CHECK ADD CONSTRAINT [FK_Membership_User]
         FOREIGN KEY ([user_id]) REFERENCES [dbo].[Users] ([user_id]) ON DELETE CASCADE
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_NAME = 'FK_Membership_Tier')
+BEGIN
+    ALTER TABLE [dbo].[Membership] WITH CHECK ADD CONSTRAINT [FK_Membership_Tier]
+        FOREIGN KEY ([tier_id]) REFERENCES [dbo].[MembershipTier] ([tier_id])
 END
 GO
 

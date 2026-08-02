@@ -6,63 +6,29 @@ public class Membership {
 
     private int membershipId;
     private int userId;
-
     private int currentPoints;
-    private String currentTier;
-
-    private int pointConversionRate;
-
-    private int silverMinPoint;
-    private int silverDiscountPercent;
-
-    private int goldMinPoint;
-    private int goldDiscountPercent;
-
-    private int diamondMinPoint;
-    private int diamondDiscountPercent;
-
+    private int tierId;
     private boolean manualOverride;
-
     private Timestamp tierUpdatedAt;
 
-    // THUỘC TÍNH LIÊN KẾT ĐỂ HIỂN THỊ HỌ TÊN
-    private String fullName;
+    // THUỘC TÍNH LIÊN KẾT
+    private String fullName;          // Họ tên khách hàng từ bảng UserInfo
+    private MembershipTier tierInfo;  // Thông tin Hạng thành viên liên kết từ bảng MembershipTier
 
     // Constructor rỗng
     public Membership() {
     }
 
-    // Constructor đầy đủ
-    public Membership(
-            int membershipId,
-            int userId,
-            int currentPoints,
-            String currentTier,
-            int pointConversionRate,
-            int silverMinPoint,
-            int silverDiscountPercent,
-            int goldMinPoint,
-            int goldDiscountPercent,
-            int diamondMinPoint,
-            int diamondDiscountPercent,
-            boolean manualOverride,
-            Timestamp tierUpdatedAt,
-            String fullName) {
-
+    // Constructor cơ bản
+    public Membership(int membershipId, int userId, int currentPoints, int tierId, boolean manualOverride, Timestamp tierUpdatedAt, String fullName, MembershipTier tierInfo) {
         this.membershipId = membershipId;
         this.userId = userId;
         this.currentPoints = currentPoints;
-        this.currentTier = currentTier;
-        this.pointConversionRate = pointConversionRate;
-        this.silverMinPoint = silverMinPoint;
-        this.silverDiscountPercent = silverDiscountPercent;
-        this.goldMinPoint = goldMinPoint;
-        this.goldDiscountPercent = goldDiscountPercent;
-        this.diamondMinPoint = diamondMinPoint;
-        this.diamondDiscountPercent = diamondDiscountPercent;
+        this.tierId = tierId;
         this.manualOverride = manualOverride;
         this.tierUpdatedAt = tierUpdatedAt;
         this.fullName = fullName;
+        this.tierInfo = tierInfo;
     }
 
     public int getMembershipId() {
@@ -89,68 +55,12 @@ public class Membership {
         this.currentPoints = currentPoints;
     }
 
-    public String getCurrentTier() {
-        return currentTier;
+    public int getTierId() {
+        return tierId;
     }
 
-    public void setCurrentTier(String currentTier) {
-        this.currentTier = currentTier;
-    }
-
-    public int getPointConversionRate() {
-        return pointConversionRate;
-    }
-
-    public void setPointConversionRate(int pointConversionRate) {
-        this.pointConversionRate = pointConversionRate;
-    }
-
-    public int getSilverMinPoint() {
-        return silverMinPoint;
-    }
-
-    public void setSilverMinPoint(int silverMinPoint) {
-        this.silverMinPoint = silverMinPoint;
-    }
-
-    public int getSilverDiscountPercent() {
-        return silverDiscountPercent;
-    }
-
-    public void setSilverDiscountPercent(int silverDiscountPercent) {
-        this.silverDiscountPercent = silverDiscountPercent;
-    }
-
-    public int getGoldMinPoint() {
-        return goldMinPoint;
-    }
-
-    public void setGoldMinPoint(int goldMinPoint) {
-        this.goldMinPoint = goldMinPoint;
-    }
-
-    public int getGoldDiscountPercent() {
-        return goldDiscountPercent;
-    }
-
-    public void setGoldDiscountPercent(int goldDiscountPercent) {
-        this.goldDiscountPercent = goldDiscountPercent;
-    }
-
-    public int getDiamondMinPoint() {
-        return diamondMinPoint;
-    }
-
-    public void setDiamondMinPoint(int diamondMinPoint) {
-        this.diamondMinPoint = diamondMinPoint;
-    }
-
-    public int getDiamondDiscountPercent() {
-        return diamondDiscountPercent;
-    }
-
-    public void setDiamondDiscountPercent(int diamondDiscountPercent) {
-        this.diamondDiscountPercent = diamondDiscountPercent;
+    public void setTierId(int tierId) {
+        this.tierId = tierId;
     }
 
     public boolean isManualOverride() {
@@ -177,23 +87,40 @@ public class Membership {
         this.fullName = fullName;
     }
 
+    public MembershipTier getTierInfo() {
+        return tierInfo;
+    }
+
+    public void setTierInfo(MembershipTier tierInfo) {
+        this.tierInfo = tierInfo;
+    }
+
+    // =========================================================================
+    // HÀM TIỆN ÍCH / BACKWARD COMPATIBILITY
+    // =========================================================================
+    public String getCurrentTier() {
+        return (tierInfo != null && tierInfo.getTierName() != null) ? tierInfo.getTierName() : "Normal";
+    }
+
+    public int getPointConversionRate() {
+        return (tierInfo != null && tierInfo.getPointConversionRate() > 0) ? tierInfo.getPointConversionRate() : 10000;
+    }
+
+    public int getDiscountPercent() {
+        return (tierInfo != null) ? tierInfo.getDiscountPercent() : 0;
+    }
+
     @Override
     public String toString() {
         return "Membership{" +
                 "membershipId=" + membershipId +
                 ", userId=" + userId +
                 ", currentPoints=" + currentPoints +
-                ", currentTier='" + currentTier + '\'' +
-                ", pointConversionRate=" + pointConversionRate +
-                ", silverMinPoint=" + silverMinPoint +
-                ", silverDiscountPercent=" + silverDiscountPercent +
-                ", goldMinPoint=" + goldMinPoint +
-                ", goldDiscountPercent=" + goldDiscountPercent +
-                ", diamondMinPoint=" + diamondMinPoint +
-                ", diamondDiscountPercent=" + diamondDiscountPercent +
+                ", tierId=" + tierId +
                 ", manualOverride=" + manualOverride +
                 ", tierUpdatedAt=" + tierUpdatedAt +
                 ", fullName='" + fullName + '\'' +
+                ", tierInfo=" + tierInfo +
                 '}';
     }
 }

@@ -184,7 +184,7 @@
                                         <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
                                         <div>
                                             <div class="fw-bold text-dark small">Normal</div>
-                                            <div class="text-muted" style="font-size: 12px;">0 - ${not empty currentRule ? (currentRule.silverMinPoint - 1) : 99} điểm | Giảm 0%</div>
+                                            <div class="text-muted" style="font-size: 12px;">0 - ${not empty tierList && tierList.size() > 1 ? (tierList[1].minPoints - 1) : 99} điểm | Giảm 0%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -193,7 +193,7 @@
                                         <i class="fa-solid fa-award text-muted fs-4"></i>
                                         <div>
                                             <div class="fw-bold text-dark small">Silver</div>
-                                            <div class="text-muted" style="font-size: 12px;">${not empty currentRule ? currentRule.silverMinPoint : 100} - ${not empty currentRule ? (currentRule.goldMinPoint - 1) : 499} điểm | Giảm ${not empty currentRule ? currentRule.silverDiscountPercent : 5}%</div>
+                                            <div class="text-muted" style="font-size: 12px;">${not empty tierList && tierList.size() > 1 ? tierList[1].minPoints : 100} - ${not empty tierList && tierList.size() > 2 ? (tierList[2].minPoints - 1) : 499} điểm | Giảm ${not empty tierList && tierList.size() > 1 ? tierList[1].discountPercent : 5}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -202,7 +202,7 @@
                                         <i class="fa-solid fa-crown text-warning fs-4"></i>
                                         <div>
                                             <div class="fw-bold small" style="color: #d97706;">Gold</div>
-                                            <div class="text-muted" style="font-size: 12px;">${not empty currentRule ? currentRule.goldMinPoint : 500} - ${not empty currentRule ? (currentRule.diamondMinPoint - 1) : 999} điểm | Giảm ${not empty currentRule ? currentRule.goldDiscountPercent : 10}%</div>
+                                            <div class="text-muted" style="font-size: 12px;">${not empty tierList && tierList.size() > 2 ? tierList[2].minPoints : 500} - ${not empty tierList && tierList.size() > 3 ? (tierList[3].minPoints - 1) : 999} điểm | Giảm ${not empty tierList && tierList.size() > 2 ? tierList[2].discountPercent : 10}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -211,7 +211,7 @@
                                         <i class="fa-solid fa-gem text-info fs-4"></i>
                                         <div>
                                             <div class="fw-bold small" style="color: #0284c7;">Diamond</div>
-                                            <div class="text-muted" style="font-size: 12px;">${not empty currentRule ? currentRule.diamondMinPoint : 1000}+ điểm | Giảm ${not empty currentRule ? currentRule.diamondDiscountPercent : 15}%</div>
+                                            <div class="text-muted" style="font-size: 12px;">${not empty tierList && tierList.size() > 3 ? tierList[3].minPoints : 1000}+ điểm | Giảm ${not empty tierList && tierList.size() > 3 ? tierList[3].discountPercent : 15}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -234,7 +234,6 @@
                                         <th class="text-center" style="width: 140px;">Điểm hiện tại</th>
                                         <th class="text-center" style="width: 160px;">Hạng hiện tại</th>
                                         <th>Ngày cập nhật</th>
-                                        <th class="text-center" style="width: 200px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -273,42 +272,12 @@
                                                     <td class="text-muted">
                                                         <fmt:formatDate value="${m.tierUpdatedAt}" pattern="dd/MM/yyyy HH:mm"/>
                                                     </td>
-                                                    <td class="text-center">
-                                                        <c:choose>
-                                                            <c:when test="${m.currentPoints > 0 || not empty m.currentTier}">
-                                                                <div class="d-flex gap-2 justify-content-center">
-                                                                    <button type="button" 
-                                                                            class="btn btn-primary btn-sm edit-membership-btn py-1 px-3"
-                                                                            data-userid="${m.userId}"
-                                                                            data-fullname="${m.fullName != null ? m.fullName : 'Khách chưa có tài khoản'}"
-                                                                            data-points="${m.currentPoints}"
-                                                                            data-tier="${m.currentTier != null ? m.currentTier : 'Normal'}"
-                                                                            data-override="${m.manualOverride}">
-                                                                        Sửa
-                                                                    </button>
-                                                                    <!--<a href="#" class="btn btn-outline-secondary btn-sm py-1 px-2" onclick="alert('Chức năng lịch sử điểm đang được phát triển!')">Lịch sử</a>-->
-                                                                </div>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <button type="button" 
-                                                                        class="btn btn-success btn-sm w-100 edit-membership-btn py-1" 
-                                                                        style="font-size: 12px;"
-                                                                        data-userid="${m.userId}"
-                                                                        data-fullname="${m.fullName != null ? m.fullName : 'Khách chưa có tài khoản'}"
-                                                                        data-points="${m.currentPoints}"
-                                                                        data-tier="Normal"
-                                                                        data-override="${m.manualOverride}">
-                                                                    + Cấp Membership
-                                                                </button>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </td>
                                                 </tr>
                                             </c:forEach>
                                         </c:when>
                                         <c:otherwise>
                                             <tr>
-                                                <td colspan="7" class="text-center text-muted py-4">
+                                                <td colspan="6" class="text-center text-muted py-4">
                                                     Không thể tải dữ liệu từ database. Vui lòng kiểm tra lại kết nối hệ thống.
                                                 </td>
                                             </tr>
@@ -347,34 +316,34 @@
                 <div class="modal-body">
                      <div class="mb-3">
                          <label class="form-label fw-semibold">Tỷ lệ quy đổi điểm (Bao nhiêu VNĐ = 1 điểm)</label>
-                         <input type="number" class="form-control" name="pointConversionRate" value="${not empty currentRule ? currentRule.pointConversionRate : 10000}">
+                         <input type="number" class="form-control" name="pointConversionRate" value="${not empty tierList && tierList.size() > 0 ? tierList[0].pointConversionRate : 10000}">
                      </div>
                      <div class="row g-3 mb-3">
                          <div class="col-md-4">
                              <label class="form-label small fw-semibold">Silver từ (Điểm)</label>
-                             <input type="number" class="form-control" name="silverMinPoint" value="${not empty currentRule ? currentRule.silverMinPoint : 100}">
+                             <input type="number" class="form-control" name="silverMinPoint" value="${not empty tierList && tierList.size() > 1 ? tierList[1].minPoints : 100}">
                          </div>
                          <div class="col-md-4">
                              <label class="form-label small fw-semibold">Gold từ (Điểm)</label>
-                             <input type="number" class="form-control" name="goldMinPoint" value="${not empty currentRule ? currentRule.goldMinPoint : 500}">
+                             <input type="number" class="form-control" name="goldMinPoint" value="${not empty tierList && tierList.size() > 2 ? tierList[2].minPoints : 500}">
                          </div>
                          <div class="col-md-4">
                              <label class="form-label small fw-semibold">Diamond từ (Điểm)</label>
-                             <input type="number" class="form-control" name="diamondMinPoint" value="${not empty currentRule ? currentRule.diamondMinPoint : 1000}">
+                             <input type="number" class="form-control" name="diamondMinPoint" value="${not empty tierList && tierList.size() > 3 ? tierList[3].minPoints : 1000}">
                          </div>
                      </div>
                      <div class="row g-3">
                          <div class="col-md-4">
                              <label class="form-label small fw-semibold">Giảm giá Silver (%)</label>
-                             <input type="number" class="form-control" name="silverDiscountPercent" value="${not empty currentRule ? currentRule.silverDiscountPercent : 5}">
+                             <input type="number" class="form-control" name="silverDiscountPercent" value="${not empty tierList && tierList.size() > 1 ? tierList[1].discountPercent : 5}">
                          </div>
                          <div class="col-md-4">
                              <label class="form-label small fw-semibold">Giảm giá Gold (%)</label>
-                             <input type="number" class="form-control" name="goldDiscountPercent" value="${not empty currentRule ? currentRule.goldDiscountPercent : 10}">
+                             <input type="number" class="form-control" name="goldDiscountPercent" value="${not empty tierList && tierList.size() > 2 ? tierList[2].discountPercent : 10}">
                          </div>
                          <div class="col-md-4">
                              <label class="form-label small fw-semibold">Giảm giá Diamond (%)</label>
-                             <input type="number" class="form-control" name="diamondDiscountPercent" value="${not empty currentRule ? currentRule.diamondDiscountPercent : 15}">
+                             <input type="number" class="form-control" name="diamondDiscountPercent" value="${not empty tierList && tierList.size() > 3 ? tierList[3].discountPercent : 15}">
                          </div>
                      </div>
                 </div>
@@ -386,112 +355,11 @@
         </div>
     </div>
 
-    <!-- MODAL 2: SỬA MEMBERSHIP CÁ NHÂN -->
-    <div class="modal fade" id="editMembershipModal" tabindex="-1" aria-labelledby="editMembershipModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form action="admin-membership" method="POST" class="modal-content">
-                <input type="hidden" name="action" value="updateMembership">
-                <input type="hidden" name="editUserId" id="editUserId">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="editMembershipModalLabel">Cập nhật thông tin Membership</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Tên khách hàng</label>
-                        <input type="text" class="form-control bg-light" id="editFullName" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editPoints" class="form-label fw-semibold">Điểm tích lũy hiện tại</label>
-                        <input type="number" class="form-control" name="editPoints" id="editPoints" min="0" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editTier" class="form-label fw-semibold">Hạng thành viên</label>
-                        <select class="form-select" name="editTier" id="editTier">
-                            <option value="Normal">Normal</option>
-                            <option value="Silver">Silver</option>
-                            <option value="Gold">Gold</option>
-                            <option value="Diamond">Diamond</option>
-                        </select>
-                    </div>
-                    <div class="mb-2 form-check">
-                        <input type="checkbox" class="form-check-input" name="editManualOverride" id="editManualOverride">
-                        <label class="form-check-label fw-semibold text-danger" for="editManualOverride">Chỉnh sửa thủ công (Không tự động cập nhật hạng theo điểm)</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-3">Lưu thay đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Script đồng bộ Modal và Dữ liệu nút bấm -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const editButtons = document.querySelectorAll('.edit-membership-btn');
-            const editModal = new bootstrap.Modal(document.getElementById('editMembershipModal'));
-
-            editButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const userId = this.getAttribute('data-userid');
-                    const fullName = this.getAttribute('data-fullname');
-                    const points = this.getAttribute('data-points');
-                    const tier = this.getAttribute('data-tier');
-                    const override = this.getAttribute('data-override') === 'true';
-
-                    document.getElementById('editUserId').value = userId;
-                    document.getElementById('editFullName').value = fullName;
-                    document.getElementById('editPoints').value = points;
-                    document.getElementById('editTier').value = tier || 'Normal';
-                    document.getElementById('editManualOverride').checked = override;
-
-                    editModal.show();
-                });
-            });
-
-            // Tự động cập nhật điểm khi đổi Hạng thành viên trong Modal
-            const tierMinPoints = {
-                'Normal': 0,
-                'Silver': ${not empty currentRule ? currentRule.silverMinPoint : 100},
-                'Gold': ${not empty currentRule ? currentRule.goldMinPoint : 500},
-                'Diamond': ${not empty currentRule ? currentRule.diamondMinPoint : 1000}
-            };
-
-            const editTierSelect = document.getElementById('editTier');
-            const editPointsInput = document.getElementById('editPoints');
-            const editOverrideCheckbox = document.getElementById('editManualOverride');
-
-            if (editTierSelect && editPointsInput) {
-                // Khi thay đổi Hạng -> Tự động điền điểm tối thiểu của Hạng đó
-                editTierSelect.addEventListener('change', function () {
-                    const selectedTier = this.value;
-                    if (tierMinPoints.hasOwnProperty(selectedTier)) {
-                        editPointsInput.value = tierMinPoints[selectedTier];
-                    }
-                });
-
-                // Khi thay đổi Điểm -> Tự động cập nhật Hạng tương ứng (nếu không chọn Chỉnh sửa thủ công)
-                editPointsInput.addEventListener('input', function () {
-                    const pts = parseInt(this.value) || 0;
-                    if (editOverrideCheckbox && !editOverrideCheckbox.checked) {
-                        if (pts >= tierMinPoints['Diamond']) {
-                            editTierSelect.value = 'Diamond';
-                        } else if (pts >= tierMinPoints['Gold']) {
-                            editTierSelect.value = 'Gold';
-                        } else if (pts >= tierMinPoints['Silver']) {
-                            editTierSelect.value = 'Silver';
-                        } else {
-                            editTierSelect.value = 'Normal';
-                        }
-                    }
-                });
-            }
-            
             // Toggle sidebar (nếu cần xử lý responsive ẩn/hiện menu)
             const toggleBtn = document.getElementById('sidebar-toggle');
             if(toggleBtn) {
