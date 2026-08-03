@@ -27,13 +27,19 @@
 </style>
 
 <%-- Tự động nạp thông tin hạng thành viên (Membership) vào session khi người dùng đăng nhập --%>
-<c:if test="${not empty sessionScope.user && empty sessionScope.membership}">
+<c:if test="${not empty sessionScope.user}">
     <%
         model.Authen currUser = (model.Authen) session.getAttribute("user");
         if (currUser != null) {
             dal.MembershipDAO mDAO = new dal.MembershipDAO();
-            model.Membership mShip = mDAO.getMembershipByUserId(currUser.getId());
-            session.setAttribute("membership", mShip);
+            if (session.getAttribute("membership") == null) {
+                model.Membership mShip = mDAO.getMembershipByUserId(currUser.getId());
+                session.setAttribute("membership", mShip);
+            }
+            if (session.getAttribute("membershipTiers") == null) {
+                java.util.List<model.MembershipTier> mTiers = mDAO.getAllTiers();
+                session.setAttribute("membershipTiers", mTiers);
+            }
         }
     %>
 </c:if>
@@ -110,31 +116,41 @@
                             <c:set var="m" value="${sessionScope.membership}"/>
                             <c:set var="currentPoints" value="${m.currentPoints}"/>
                             
+                            <%-- Lấy mốc điểm của từng hạng từ sessionScope.membershipTiers --%>
+                            <c:set var="silverMinPoint" value="100"/>
+                            <c:set var="goldMinPoint" value="500"/>
+                            <c:set var="diamondMinPoint" value="1000"/>
+                            <c:forEach var="t" items="${sessionScope.membershipTiers}">
+                                <c:if test="${t.tierName == 'Silver'}"><c:set var="silverMinPoint" value="${t.minPoints}"/></c:if>
+                                <c:if test="${t.tierName == 'Gold'}"><c:set var="goldMinPoint" value="${t.minPoints}"/></c:if>
+                                <c:if test="${t.tierName == 'Diamond'}"><c:set var="diamondMinPoint" value="${t.minPoints}"/></c:if>
+                            </c:forEach>
+                            
                             <%-- Xác định mốc điểm để tính % tiến độ --%>
                             <c:choose>
                                 <c:when test="${m.currentTier == 'Normal'}">
                                     <c:set var="tierName" value="Normal"/>
                                     <c:set var="nextTier" value="Silver"/>
                                     <c:set var="minPoints" value="0"/>
-                                    <c:set var="maxPoints" value="${m.silverMinPoint}"/>
+                                    <c:set var="maxPoints" value="${silverMinPoint}"/>
                                 </c:when>
                                 <c:when test="${m.currentTier == 'Silver'}">
                                     <c:set var="tierName" value="Silver"/>
                                     <c:set var="nextTier" value="Gold"/>
-                                    <c:set var="minPoints" value="${m.silverMinPoint}"/>
-                                    <c:set var="maxPoints" value="${m.goldMinPoint}"/>
+                                    <c:set var="minPoints" value="${silverMinPoint}"/>
+                                    <c:set var="maxPoints" value="${goldMinPoint}"/>
                                 </c:when>
                                 <c:when test="${m.currentTier == 'Gold'}">
                                     <c:set var="tierName" value="Gold"/>
                                     <c:set var="nextTier" value="Diamond"/>
-                                    <c:set var="minPoints" value="${m.goldMinPoint}"/>
-                                    <c:set var="maxPoints" value="${m.diamondMinPoint}"/>
+                                    <c:set var="minPoints" value="${goldMinPoint}"/>
+                                    <c:set var="maxPoints" value="${diamondMinPoint}"/>
                                 </c:when>
                                 <c:otherwise>
                                     <c:set var="tierName" value="Diamond"/>
                                     <c:set var="nextTier" value=""/>
-                                    <c:set var="minPoints" value="${m.diamondMinPoint}"/>
-                                    <c:set var="maxPoints" value="${m.diamondMinPoint}"/>
+                                    <c:set var="minPoints" value="${diamondMinPoint}"/>
+                                    <c:set var="maxPoints" value="${diamondMinPoint}"/>
                                 </c:otherwise>
                             </c:choose>
                             
