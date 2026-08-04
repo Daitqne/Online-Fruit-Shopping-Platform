@@ -50,7 +50,7 @@ public class AIChatServlet extends HttpServlet {
             apiKey = System.getProperty("GEMINI_API_KEY");
         }
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            apiKey = "AIzaSyA_k_Co_3cmgPeeggNIgILsqYgZ99-B6js";
+            apiKey = "";
         }
 
 
@@ -71,7 +71,7 @@ public class AIChatServlet extends HttpServlet {
                 + "2. Trả lời ngắn gọn, cô đọng, dễ đọc (tránh dài dòng, tối đa 2-3 đoạn ngắn, sử dụng gạch đầu dòng nếu cần thiết).\n"
                 + "3. Tập trung tư vấn về trái cây hữu cơ, lợi ích sức khỏe, các chính sách của GreenStock.\n"
                 + "4. Nếu khách hàng hỏi về các chính sách:\n"
-                + "   - Giao nhận: Giao siêu tốc 2h trong nội thành Hà Nội. Miễn phí ship cho hóa đơn trên 500k.\n"
+                + "   - Giao nhận: Giao siêu tốc 2h trong nội thành Hà Nội. Miễn phí ship cho hóa đơn từ 150.000đ trở lên (đơn dưới 150.000đ phí ship 30.000đ).\n"
                 + "   - Đổi trả: Hỗ trợ đổi trả trong vòng 24h nếu sản phẩm không đúng chất lượng cam kết hoặc bị dập nát.\n"
                 + "5. Trả lời bằng Tiếng Việt.";
 
@@ -104,8 +104,8 @@ public class AIChatServlet extends HttpServlet {
         } else if (msg.contains("giao") || msg.contains("ship") || msg.contains("vận chuyển") || msg.contains("nhận")) {
             return "🚚 **Chính sách Giao nhận của GreenStock:**\n\n"
                  + "- Giao hàng siêu tốc trong vòng **2 giờ** đối với khu vực nội thành Hà Nội.\n"
-                 + "- **Miễn phí vận chuyển** cho mọi đơn hàng có giá trị từ **500.000đ** trở lên.\n"
-                 + "- Đơn hàng dưới 500.000đ áp dụng phí giao hàng đồng giá 30.000đ.";
+                 + "- **Miễn phí vận chuyển** cho mọi đơn hàng có giá trị từ **150.000đ** trở lên.\n"
+                 + "- Đơn hàng dưới 150.000đ áp dụng phí giao hàng đồng giá 30.000đ.";
         } else if (msg.contains("trái cây") || msg.contains("bán") || msg.contains("quả") || msg.contains("sản phẩm") || msg.contains("món")) {
             return "🍎 **Sản phẩm tại GreenStock:**\n\n"
                  + "Chúng tôi cung cấp các loại trái cây hữu cơ VietGAP/GlobalGAP cao cấp:\n"

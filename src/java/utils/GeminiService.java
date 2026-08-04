@@ -42,7 +42,7 @@ public class GeminiService {
             apiKey = System.getProperty("GEMINI_API_KEY");
         }
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            apiKey = "AIzaSyA_k_Co_3cmgPeeggNIgILsqYgZ99-B6js";
+            apiKey = "";
         }
 
 

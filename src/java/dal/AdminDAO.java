@@ -35,7 +35,7 @@ public class AdminDAO extends DBContext {
         }
         
         try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+            PreparedStatement ps = getConnection().prepareStatement(sql);
             ps.setString(1, roleName);
             if (hasSearch) {
                 String searchPattern = "%" + search.trim() + "%";
@@ -69,7 +69,7 @@ public class AdminDAO extends DBContext {
     public boolean changeUserStatus(int userId, String newStatus) {
         String sql = "UPDATE Users SET status = ? WHERE user_id = ?";
         try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+            PreparedStatement ps = getConnection().prepareStatement(sql);
             ps.setString(1, newStatus);
             ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
@@ -94,7 +94,7 @@ public class AdminDAO extends DBContext {
                      "LEFT JOIN UserInfo ui ON u.user_id = ui.user_id " +
                      "ORDER BY p.product_id DESC";
         try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+            PreparedStatement ps = getConnection().prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Product p = new Product();
@@ -124,7 +124,7 @@ public class AdminDAO extends DBContext {
     public boolean changeProductStatus(int productId, String newStatus) {
         String sql = "UPDATE Product SET status = ? WHERE product_id = ?";
         try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+            PreparedStatement ps = getConnection().prepareStatement(sql);
             ps.setString(1, newStatus);
             ps.setInt(2, productId);
             return ps.executeUpdate() > 0;
