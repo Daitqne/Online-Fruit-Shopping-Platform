@@ -39,14 +39,14 @@ public class DeliveryDAO extends DBContext {
     // Auto sync missing delivery records for orders in active status
     public void syncMissingDeliveries() {
         String insertSql = "INSERT INTO Delivery (order_id, shipping_address, status) "
-                         + "SELECT so.sale_order_id, ISNULL(so.shipping_address, N'Chưa cập nhật'), 'Pending' "
-                         + "FROM Sale_Order so "
-                         + "WHERE (so.order_status IS NULL OR so.order_status NOT IN ('Cancelled', 'Delivered', 'Delivery Failed')) "
-                         + "  AND NOT EXISTS (SELECT 1 FROM Delivery d WHERE d.order_id = so.sale_order_id)";
+                + "SELECT so.sale_order_id, ISNULL(so.shipping_address, N'Chưa cập nhật'), 'Pending' "
+                + "FROM Sale_Order so "
+                + "WHERE (so.order_status IS NULL OR so.order_status NOT IN ('Cancelled', 'Delivered', 'Delivery Failed')) "
+                + "  AND NOT EXISTS (SELECT 1 FROM Delivery d WHERE d.order_id = so.sale_order_id)";
 
         String fixStatusSql = "UPDATE Delivery SET status = 'Pending' "
-                            + "WHERE (shipper_id IS NULL OR shipper_id = 0) "
-                            + "  AND (status IS NULL OR status = '' OR status NOT IN ('Delivered', 'Failed'))";
+                + "WHERE (shipper_id IS NULL OR shipper_id = 0) "
+                + "  AND (status IS NULL OR status = '' OR status NOT IN ('Delivered', 'Failed'))";
         try {
             Connection conn = getConnection();
             if (conn != null && !conn.isClosed()) {
@@ -82,13 +82,13 @@ public class DeliveryDAO extends DBContext {
     // Check if order has a delivery
     public Delivery getDeliveryByOrderId(int orderId) {
         String sql = "SELECT d.*, "
-                   + "       so.shipping_phone, so.payment_method, so.payment_status, so.shipper_note, "
-                   + "       ui.full_name AS customer_name, "
-                   + "       ISNULL((SELECT SUM(quantity * unit_price) FROM Sale_Order_Item WHERE sale_order_id = d.order_id), 0) AS total_amount "
-                   + "FROM Delivery d "
-                   + "LEFT JOIN Sale_Order so ON d.order_id = so.sale_order_id "
-                   + "LEFT JOIN UserInfo ui ON so.created_by = ui.user_id "
-                   + "WHERE d.order_id = ?";
+                + "       so.shipping_phone, so.payment_method, so.payment_status, so.shipper_note, "
+                + "       ui.full_name AS customer_name, "
+                + "       ISNULL((SELECT SUM(quantity * unit_price) FROM Sale_Order_Item WHERE sale_order_id = d.order_id), 0) AS total_amount "
+                + "FROM Delivery d "
+                + "LEFT JOIN Sale_Order so ON d.order_id = so.sale_order_id "
+                + "LEFT JOIN UserInfo ui ON so.created_by = ui.user_id "
+                + "WHERE d.order_id = ?";
         try {
             PreparedStatement ps = getConnection().prepareStatement(sql);
             ps.setInt(1, orderId);
@@ -114,13 +114,13 @@ public class DeliveryDAO extends DBContext {
         List<Delivery> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT d.*, ")
-           .append("       so.shipping_phone, so.payment_method, so.payment_status, so.shipper_note, ")
-           .append("       ui.full_name AS customer_name, ")
-           .append("       ISNULL((SELECT SUM(quantity * unit_price) FROM Sale_Order_Item WHERE sale_order_id = d.order_id), 0) AS total_amount ")
-           .append("FROM Delivery d ")
-           .append("LEFT JOIN Sale_Order so ON d.order_id = so.sale_order_id ")
-           .append("LEFT JOIN UserInfo ui ON so.created_by = ui.user_id ")
-           .append("WHERE (d.shipper_id IS NULL OR d.shipper_id = 0) AND (d.status IS NULL OR d.status = '' OR d.status NOT IN ('Delivered', 'Failed')) ");
+                .append("       so.shipping_phone, so.payment_method, so.payment_status, so.shipper_note, ")
+                .append("       ui.full_name AS customer_name, ")
+                .append("       ISNULL((SELECT SUM(quantity * unit_price) FROM Sale_Order_Item WHERE sale_order_id = d.order_id), 0) AS total_amount ")
+                .append("FROM Delivery d ")
+                .append("LEFT JOIN Sale_Order so ON d.order_id = so.sale_order_id ")
+                .append("LEFT JOIN UserInfo ui ON so.created_by = ui.user_id ")
+                .append("WHERE (d.shipper_id IS NULL OR d.shipper_id = 0) AND (d.status IS NULL OR d.status = '' OR d.status NOT IN ('Delivered', 'Failed')) ");
 
         List<Object> params = new ArrayList<>();
 
@@ -165,13 +165,13 @@ public class DeliveryDAO extends DBContext {
         List<Delivery> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT d.*, ")
-           .append("       so.shipping_phone, so.payment_method, so.payment_status, so.shipper_note, ")
-           .append("       ui.full_name AS customer_name, ")
-           .append("       ISNULL((SELECT SUM(quantity * unit_price) FROM Sale_Order_Item WHERE sale_order_id = d.order_id), 0) AS total_amount ")
-           .append("FROM Delivery d ")
-           .append("LEFT JOIN Sale_Order so ON d.order_id = so.sale_order_id ")
-           .append("LEFT JOIN UserInfo ui ON so.created_by = ui.user_id ")
-           .append("WHERE d.shipper_id = ? ");
+                .append("       so.shipping_phone, so.payment_method, so.payment_status, so.shipper_note, ")
+                .append("       ui.full_name AS customer_name, ")
+                .append("       ISNULL((SELECT SUM(quantity * unit_price) FROM Sale_Order_Item WHERE sale_order_id = d.order_id), 0) AS total_amount ")
+                .append("FROM Delivery d ")
+                .append("LEFT JOIN Sale_Order so ON d.order_id = so.sale_order_id ")
+                .append("LEFT JOIN UserInfo ui ON so.created_by = ui.user_id ")
+                .append("WHERE d.shipper_id = ? ");
 
         List<Object> params = new ArrayList<>();
         params.add(staffId);
@@ -215,7 +215,7 @@ public class DeliveryDAO extends DBContext {
     // Delivery shipper assigns deliveries to self
     public boolean claimDelivery(int deliveryId, int staffId) {
         String sql = "UPDATE Delivery SET shipper_id = ?, status = 'Shipping', shipped_date=? "
-                   + "WHERE delivery_id=? AND shipper_id IS NULL AND status = 'Pending'";
+                + "WHERE delivery_id=? AND shipper_id IS NULL AND status = 'Pending'";
         try {
             PreparedStatement ps = getConnection().prepareStatement(sql);
             ps.setInt(1, staffId);
@@ -227,6 +227,7 @@ public class DeliveryDAO extends DBContext {
         }
         return false;
     }
+    //truy vấn nhanh mã orderId
 
     private int getOrderIdByDeliveryId(int deliveryId) {
         String sql = "SELECT order_id FROM Delivery WHERE delivery_id = ?";
@@ -260,7 +261,7 @@ public class DeliveryDAO extends DBContext {
     // Update delivery status to Delivered
     public boolean confirmDelivery(int deliveryId, int staffId) {
         String sql = "UPDATE Delivery SET status = 'Delivered', delivered_date=? "
-                   + "WHERE delivery_id=? AND shipper_id=? AND status = 'Shipping'";
+                + "WHERE delivery_id=? AND shipper_id=? AND status = 'Shipping'";
         try {
             getConnection().setAutoCommit(false);
 
@@ -317,10 +318,10 @@ public class DeliveryDAO extends DBContext {
     // Report delivery failure
     public boolean reportDeliveryFailure(int deliveryId, int staffId, String reason) {
         String sqlDelivery = "UPDATE Delivery SET status = 'Failed', delivered_date = ? "
-                           + "WHERE delivery_id = ? AND shipper_id = ? AND status = 'Shipping'";
+                + "WHERE delivery_id = ? AND shipper_id = ? AND status = 'Shipping'";
         String sqlOrder = "UPDATE Sale_Order SET order_status = 'Delivery Failed', "
-                        + "shipper_note = ISNULL(shipper_note, '') + ' [Lý do giao thất bại: ' + ? + ']' "
-                        + "WHERE sale_order_id = ?";
+                + "shipper_note = ISNULL(shipper_note, '') + ' [Lý do giao thất bại: ' + ? + ']' "
+                + "WHERE sale_order_id = ?";
         try {
             getConnection().setAutoCommit(false);
             PreparedStatement psD = getConnection().prepareStatement(sqlDelivery);
@@ -348,7 +349,7 @@ public class DeliveryDAO extends DBContext {
                     NotificationDAO ntd = new NotificationDAO();
                     String title = "\u26A0\uFE0F Giao hàng thất bại - Đơn hàng #" + orderId;
                     String contentCustomer = "Đơn hàng #" + orderId + " của bạn đã bị báo giao hàng thất bại. Lý do: " + reason + ". Vui lòng liên hệ shop để được hỗ trợ.";
-                    String contentOwner   = "Đơn hàng #" + orderId + " giao hàng thất bại. Lý do: " + reason + ". Vui lòng kiểm tra và xử lý đơn hàng.";
+                    String contentOwner = "Đơn hàng #" + orderId + " giao hàng thất bại. Lý do: " + reason + ". Vui lòng kiểm tra và xử lý đơn hàng.";
 
                     // Thông báo cho khách hàng (created_by)
                     int customerId = getCustomerIdByOrderId(orderId);
@@ -404,9 +405,9 @@ public class DeliveryDAO extends DBContext {
     private List<Integer> getShopOwnerIdsByOrderId(int orderId) {
         List<Integer> ids = new ArrayList<>();
         String sql = "SELECT DISTINCT p.shop_owner_id "
-                   + "FROM Sale_Order_Item soi "
-                   + "JOIN Product p ON soi.product_id = p.product_id "
-                   + "WHERE soi.sale_order_id = ? AND p.shop_owner_id IS NOT NULL";
+                + "FROM Sale_Order_Item soi "
+                + "JOIN Product p ON soi.product_id = p.product_id "
+                + "WHERE soi.sale_order_id = ? AND p.shop_owner_id IS NOT NULL";
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setInt(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -424,10 +425,10 @@ public class DeliveryDAO extends DBContext {
     public List<SaleOrderItem> getSaleOrderItems(int orderId) {
         List<SaleOrderItem> list = new ArrayList<>();
         String sql = "SELECT soi.*, p.product_name, "
-                   + "       (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url "
-                   + "FROM Sale_Order_Item soi "
-                   + "JOIN Product p ON soi.product_id = p.product_id "
-                   + "WHERE soi.sale_order_id = ?";
+                + "       (SELECT TOP 1 image_url FROM Product_Image WHERE product_id = p.product_id ORDER BY image_id ASC) AS image_url "
+                + "FROM Sale_Order_Item soi "
+                + "JOIN Product p ON soi.product_id = p.product_id "
+                + "WHERE soi.sale_order_id = ?";
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setInt(1, orderId);
             ResultSet rs = ps.executeQuery();
